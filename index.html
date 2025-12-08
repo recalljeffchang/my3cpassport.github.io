@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>森淮手機，平板，電視，電腦使用規範 (v41)</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #546e7a;
+            --bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --danger: #d32f2f;
+            --warning: #ed6c02;
+            --success: #198754;
+            --btn-blue: #0d6efd;
+            --math-color: #1565c0;
+            --info-bg: #e3f2fd;
+            --info-border: #1976d2;
+            --bedtime-bg: #f3e5f5;
+            --bedtime-border: #7b1fa2;
+            --app-bg: #e0f2f1;
+            --app-border: #00897b;
+            --lock-gray: #e0e0e0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            padding-bottom: 80px;
+            transition: background-color 0.8s ease;
+        }
+
+        /* Themes */
+        body.theme-level-1 { --primary: #2e7d32; --bg: #e8f5e9; }
+        body.theme-level-2 { --primary: #0288d1; --bg: #e1f5fe; }
+        body.theme-level-3 { --primary: #7b1fa2; --bg: #f3e5f5; }
+        body.theme-level-4 { --primary: #fbc02d; --bg: #fffde7; }
+
+        .container { max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--primary); margin: 0; font-size: 1.5rem; line-height: 1.4; transition: color 0.5s; }
+        .header-info { 
+            display: inline-flex; justify-content: center; gap: 15px; margin-top: 8px; 
+            font-size: 0.9rem; color: #555; background: rgba(255,255,255,0.6); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1);
+        }
+        .version-tag { font-weight: bold; color: var(--primary); }
+        .time-tag { font-family: monospace; font-weight: bold; }
+
+        /* Rule Accordion (New v41) */
+        .accordion {
+            background-color: #fff;
+            color: #444;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.4s;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion.active, .accordion:hover { background-color: #f1f1f1; }
+        .accordion:after { content: '\002B'; color: #777; font-weight: bold; float: right; margin-left: 5px; font-size: 1.2rem;}
+        .accordion.active:after { content: "\2212"; }
+        
+        .panel {
+            padding: 0 18px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-radius: 0 0 12px 12px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .rule-list { list-style-type: none; padding: 0; }
+        .rule-list li { margin-bottom: 8px; padding-left: 20px; position: relative; font-size: 0.9rem; line-height: 1.5; }
+        .rule-list li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: bold; }
+        .rule-section-title { font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+
+        /* Definition Box */
+        .definition-box {
+            background-color: rgba(255,255,255,0.8); color: #0d47a1; padding: 8px 15px;
+            border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; border: 1px solid #bbdefb;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            border-top: 4px solid transparent;
+        }
+        body.theme-level-1 .card { border-top-color: #2e7d32; }
+        body.theme-level-2 .card { border-top-color: #0288d1; }
+        body.theme-level-3 .card { border-top-color: #7b1fa2; }
+        body.theme-level-4 .card { border-top-color: #fbc02d; }
+
+        .card.locked { opacity: 0.6; pointer-events: none; background-color: #f5f5f5; }
+        .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+
+        /* Toolbar */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
+        .btn-tool {
+            flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem;
+            display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-save-draft { background-color: #607d8b; }
+        .btn-load-draft { background-color: #ff9800; }
+        .btn-clear-form { background-color: #9e9e9e; }
+
+        /* Lock Banner */
+        #lockBanner {
+            background-color: #ffebee; border: 2px solid var(--danger); color: var(--danger);
+            padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; display: none; 
+        }
+        .btn-unlock {
+            background-color: var(--danger); color: white; border: none; padding: 8px 15px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 0.9rem;
+        }
+
+        /* Rules Box (Deadline) */
+        .time-rule-box {
+            background-color: rgba(255,243,224, 0.9); border: 1px solid #ffe0b2; color: #e65100;
+            padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem; line-height: 1.6;
+        }
+        .time-rule-box ul { margin: 5px 0 0 20px; padding: 0; }
+
+        /* Progress Bar */
+        .progress-container { background-color: #eee; border-radius: 10px; height: 30px; width: 100%; margin-bottom: 20px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
+        .progress-bar { background-color: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease, background-color 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.95rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .progress-text { text-align: center; font-size: 1rem; margin-bottom: 5px; font-weight: bold; color: var(--primary); transition: color 0.5s; }
+
+        /* UI Elements */
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { flex: 1; padding: 12px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
+        .mode-btn.active { background: var(--primary); color: white; }
+
+        .badge-bonus { background: #bbdefb; color: var(--math-color); border: 1px solid var(--math-color); font-weight: bold; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;}
+        .badge-point { background: #fff3e0; color: var(--warning); border: 1px solid var(--warning); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;}
+        .badge-penalty { background: #ffebee; color: var(--danger); border: 1px solid var(--danger); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold;}
+        .badge-required { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
+        .badge-exempt { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
+        
+        .bedtime-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
+        .bedtime-bonus { background-color: #f3e5f5; border: 1px solid #e1bee7; }
+        .bedtime-penalty { background-color: #fff3e0; border: 1px solid #ffe0b2; }
+
+        .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .input-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .input-row select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background-color: white; }
+
+        .custom-input-area { background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px dashed #0d6efd; margin-bottom: 15px; }
+        .app-input-area { background: var(--app-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--app-border); margin-bottom: 15px; }
+        .violation-input-area { background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px dashed var(--danger); margin-bottom: 15px; }
+        
+        .btn-add { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-add-app { background: var(--app-border); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width:100%;}
+        .btn-add-violation { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        
+        .violation-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ffebee; color: var(--danger); }
+        .app-item { display: flex; flex-direction: column; gap:5px; padding: 10px; border-bottom: 1px solid #b2dfdb; color: #004d40; }
+        .app-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .app-item-details { display: flex; gap: 10px; font-size: 0.85rem; color: #00695c; }
+        
+        .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
+
+        .task-group-title { font-size: 0.9rem; color: #666; background: #eee; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
+        .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+        input[type="checkbox"] { width: 24px; height: 24px; margin-right: 15px; accent-color: var(--primary); cursor: pointer; }
+        .task-label { font-size: 1rem; flex: 1; cursor: pointer;}
+        
+        .rule-desc { font-size: 0.85rem; color: #444; margin-top: 5px; line-height: 1.5; padding: 10px; border-radius: 6px; text-align: justify; }
+        .rule-desc.warning { background: #fff3e0; border-left: 4px solid var(--warning); }
+        .rule-desc.info { background: var(--info-bg); border-left: 4px solid var(--info-border); }
+
+        .penalty-calc-list { margin: 5px 0 0 20px; padding: 0; font-size: 0.85rem; color: #666; }
+        .penalty-input-group { display: flex; gap: 10px; align-items: center; margin-top: 15px;}
+        .penalty-input-group input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 8px; width: 60px; font-size: 1rem; text-align: center;}
+        
+        .exam-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; }
+        .exam-row.math { background: #e3f2fd; border: 1px solid #bbdefb; }
+        .exam-input-group { display: flex; align-items: center; gap: 5px; }
+        .exam-input-group input { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ddd; text-align: center; }
+
+        .result-box { background: #fafafa; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; display: none; transition: all 0.3s; }
+        .result-box.pass { background: #e8f5e9; border: 2px solid var(--success); color: var(--success); display: block;}
+        .result-box.fail { background: #ffebee; border: 2px solid var(--danger); color: var(--danger); display: block;}
+        
+        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        .btn-submit.locked { background-color: #aaa; cursor: not-allowed; }
+        .btn-submit:active { transform: scale(0.98); }
+        
+        .csv-actions { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-csv { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-export { background-color: var(--btn-blue); }
+        .btn-import { background-color: #6c757d; position: relative; overflow: hidden; }
+        .btn-import input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        
+        /* 歷史紀錄樣式 */
+        .history-log { font-size: 0.9rem; color: #666; margin-top: 10px; max-height: 350px; overflow-y: auto;}
+        .history-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 5px;}
+        .trophy-icon { font-size: 1.3rem; margin-right: 8px; }
+        .history-item.rank-1 { background-color: #fffde7; border: 1px solid #fbc02d; border-left: 5px solid #fbc02d; color: #333; box-shadow: 0 2px 5px rgba(251, 192, 45, 0.2); }
+        .history-item.rank-2 { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-left: 5px solid #9e9e9e; color: #333; }
+        .history-item.rank-3 { background-color: #ffe0b2; border: 1px solid #ef6c00; border-left: 5px solid #ef6c00; color: #333; }
+
+        /* Certificate Styles */
+        .swal-certificate {
+            background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+            border: 8px double #D4AF37; padding: 20px; text-align: center;
+            font-family: "Times New Roman", serif; color: #333; position: relative;
+        }
+        .cert-title { font-size: 1.8rem; font-weight: bold; color: #D4AF37; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0,0,0,0.1); }
+        .cert-body { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; }
+        .cert-date { font-size: 1.2rem; font-weight: bold; color: #2e7d32; margin-top: 10px; background: #e8f5e9; display: inline-block; padding: 5px 15px; border-radius: 20px; }
+        .cert-icon { font-size: 4rem; margin-bottom: 10px; animation: bounce 2s infinite; }
+        .cert-stamp { 
+            border: 3px solid #d32f2f; color: #d32f2f; font-weight: bold; padding: 5px 10px; border-radius: 5px; 
+            transform: rotate(-10deg); display: inline-block; margin-top: 20px; font-family: sans-serif; letter-spacing: 2px;
+        }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+
+        /* Parent Auth Styles */
+        .parent-auth-area { background: #ffebee; border: 1px dashed var(--danger); padding: 15px; border-radius: 8px; margin-top: 10px; }
+        .auth-label { font-weight: bold; color: var(--danger); display: block; margin-bottom: 10px; }
+        .radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
+        .radio-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .pwd-input { width: 100%; padding: 10px; border: 1px solid var(--danger); border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>森淮手機，平板，電視，電腦使用規範</h1>
+        <div class="header-info">
+            <span class="version-tag">ver 41.0 (Rule Book)</span>
+            <span>|</span>
+            <span id="liveClock" class="time-tag">載入中...</span>
+        </div>
+    </div>
+
+    <button class="accordion">📜 查看完整規範與計分細則 (點擊展開)</button>
+    <div class="panel">
+        <div style="padding: 15px 0;">
+            <div class="definition-box" style="width:100%; box-sizing:border-box; margin-top:0; margin-bottom:15px;">
+                ℹ️ <strong>設備定義：</strong>本規範統稱 <strong>3C</strong> 包含：手機、平板、電腦、電視。
+            </div>
+
+            <div class="rule-section-title">🕒 填寫截止時間</div>
+            <ul class="rule-list">
+                <li><strong>週日 至 週四：</strong>需於 <strong>晚上 10:30</strong> 前完成填寫並提交。</li>
+                <li><strong>週五、週六：</strong>需於 <strong>晚上 11:30</strong> 前完成填寫並提交。</li>
+                <li><span style="color:var(--danger)">超過時間表單將自動鎖定</span>，需輸入家長密碼解鎖。</li>
+            </ul>
+
+            <div class="rule-section-title">🎯 點數與獎勵機制</div>
+            <ul class="rule-list">
+                <li><strong>基本門檻：</strong>每日需累積 <strong>6 點</strong> 以上，隔日方可使用 3C。</li>
+                <li><strong>日常任務：</strong>每完成一項可得 1 點 (如：讀書1小時、寫功課、做家事等)。</li>
+                <li><strong>學業加分：</strong>
+                    <ul style="margin-top:5px;">
+                        <li>數學及格：+2 點</li>
+                        <li>其他科目及格：+1 點/科</li>
+                        <li>寫考卷：+1 點/張 (若 >85分 額外 +2 點，共 3 點)</li>
+                    </ul>
+                </li>
+                <li><strong>就寢獎勵：</strong>睡前將設備放客廳充電：+1 點。</li>
+            </ul>
+
+            <div class="rule-section-title">📱 App 紀錄免填豁免權</div>
+            <ul class="rule-list">
+                <li>若當日無考試不及格，且符合以下任一條件，可免填 App 使用紀錄：
+                    <ul style="margin-top:5px;">
+                        <li>🌟 有任一科目考試分數 > 80 分。</li>
+                        <li>🏆 當日總得分達到 9 分 (含) 以上。</li>
+                    </ul>
+                </li>
+                <li>若有不及格科目，App 紀錄強制必填。</li>
+            </ul>
+
+            <div class="rule-section-title">🚫 扣分與罰則</div>
+            <ul class="rule-list">
+                <li><strong>等一下條款：</strong>經告知後未於5分鐘內改善：
+                    <ul style="margin-top:5px;">
+                        <li>遲延 5 分鐘內：扣 1 點</li>
+                        <li>遲延 5~10 分鐘：扣 2 點</li>
+                        <li>遲延 >10 分鐘：每 5 分鐘扣 3 點 (累加)</li>
+                    </ul>
+                </li>
+                <li><strong>3C 使用違規：</strong>未經同意或超時使用且未休息：每次扣 1 點。</li>
+                <li><strong>就寢違規：</strong>就寢時間擅自使用且勸導無效：扣 2 點。</li>
+                <li><strong>重大違規：</strong>由家長判定並輸入扣分 (需家長密碼)。</li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="lockBanner">
+        <h3 style="margin:0 0 10px 0;">⛔ 已超過當天最晚填寫時間</h3>
+        <p style="margin:0; font-size:0.9rem;" id="lockMessage">目前表單已鎖定，無法進行任何操作。</p>
+        <button class="btn-unlock" onclick="unlockForm()">🔐 經家長同意，解鎖一次</button>
+    </div>
+
+    <div id="mainForm">
+        <div class="toolbar">
+            <button class="btn-tool btn-save-draft" onclick="saveDraft()">💾 暫存進度</button>
+            <button class="btn-tool btn-load-draft" onclick="loadDraft(true)">📂 讀取暫存</button>
+            <button class="btn-tool btn-clear-form" onclick="clearForm()">🗑️ 清空重填</button>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="setMode('weekday')">📅 平日</button>
+            <button class="mode-btn" onclick="setMode('weekend')">⚽ 假日</button>
+        </div>
+
+        <div class="card">
+            <div class="progress-text" id="progressText">目前點數：0 / 6</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📚 學業表現 (額外加分)</div>
+            <div class="exam-row math">
+                <label style="font-weight:bold; display:flex; align-items:center; gap:5px;">
+                    <input type="checkbox" id="mathPassed" onchange="checkStatus()"> 📐 數學及格
+                </label>
+                <span class="badge-bonus">+2 點</span>
+            </div>
+            <div class="exam-row">
+                <div style="font-weight:bold;">📝 其他科目及格</div>
+                <div class="exam-input-group">
+                    <input type="number" id="otherExams" value="0" min="0" oninput="checkStatus()">
+                    <span style="font-size:0.9rem;">科</span>
+                </div>
+                <div style="font-size:0.8rem; color:#666;">(+1/科)</div>
+            </div>
+
+            <div style="margin-top:10px; border-top:1px dashed #ddd; padding-top:10px;">
+                <div style="font-weight:bold; margin-bottom:5px;">📊 今日考試成績</div>
+                <div class="exam-row" style="background:#ffebee; border:1px solid #ef9a9a;">
+                    <div style="font-weight:bold; color:#d32f2f;">📉 不及格科目</div>
+                    <div class="exam-input-group">
+                        <input type="number" id="failedExams" value="0" min="0" oninput="checkStatus()" style="border-color:#d32f2f; color:#d32f2f; font-weight:bold;">
+                        <span style="font-size:0.9rem; color:#d32f2f;">科</span>
+                    </div>
+                </div>
+                <div class="exam-row" style="background:#fffde7; border:1px solid #fff59d;">
+                    <div style="font-weight:bold; color:#fbc02d;">🌟 >80分科目</div>
+                    <div class="exam-input-group">
+                        <input type="number" id="score80Exams" value="0" min="0" oninput="checkStatus()" style="border-color:#fbc02d; font-weight:bold;">
+                        <span style="font-size:0.9rem;">科</span>
+                    </div>
+                </div>
+                <small style="color:#666; display:block; margin-top:5px;">
+                    💡 不及格者，App 紀錄為<strong>必填</strong>。<br>
+                    💡 有 >80分且無不及格，App 紀錄可<strong>免填</strong>。
+                </small>
+            </div>
+
+            <div class="exam-row" style="flex-direction: column; align-items: stretch; gap: 8px; margin-top:10px; border-top:1px dashed #ddd; padding-top:10px;">
+                <div style="font-weight:bold;">✍️ 寫考卷練習</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.9rem;">完成份數</span>
+                    <div class="exam-input-group">
+                        <input type="number" id="testPaperCount" value="0" min="0" oninput="checkStatus()">
+                        <span style="font-size:0.9rem;">張</span>
+                        <span class="badge-point">+1/張</span>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.9rem;">>85分份數</span>
+                    <div class="exam-input-group">
+                        <input type="number" id="testPaperHigh" value="0" min="0" oninput="checkStatus()">
+                        <span style="font-size:0.9rem;">張</span>
+                        <span class="badge-bonus">+2/張</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">✨ 自訂加分項目</div>
+            <div class="custom-input-area">
+                <div class="input-row">
+                    <input type="text" id="customName" placeholder="輸入任務名稱">
+                    <input type="number" id="customPoints" placeholder="點數" value="1" min="0">
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <label style="font-size:0.9rem; display:flex; align-items:center; color:#d32f2f; font-weight:bold;">
+                        <input type="checkbox" id="customRequired"> 設為低標
+                    </label>
+                    <button class="btn-add" onclick="addCustomTask()">＋ 加入</button>
+                </div>
+            </div>
+            <div id="customTaskList"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span id="appLogTitle">📱 當日 App 使用與計畫 <span class="badge-required" id="appRequiredBadge">(必填)</span></span>
+                <button onclick="toggleAppHelp()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;" title="如何查詢?">❓</button>
+            </div>
+            <div id="appHelp" class="help-tip">
+                <strong>🔍 如何查詢使用時間？</strong><br>
+                • <strong>iOS:</strong> 設定 > 螢幕使用時間<br>
+                • <strong>Android:</strong> 設定 > 數位健康 > 儀表板<br>
+                <small style="color:#d32f2f;">* 請依據手機顯示手動輸入。若未使用，請點擊「今日未使用」。</small>
+            </div>
+            
+            <div class="app-input-area">
+                <div class="quick-app-btn-group">
+                    <span style="font-size:0.8rem; color:#666; align-self:center;">快速選：</span>
+                    <button class="quick-app-btn" onclick="quickFillApp('YouTube')">YouTube</button>
+                    <button class="quick-app-btn" onclick="quickFillApp('Roblox')">Roblox</button>
+                    <button class="quick-app-btn" onclick="quickFillApp('Instagram')">Instagram</button>
+                    <button class="quick-app-btn" onclick="quickFillApp('TikTok')">TikTok</button>
+                    <button class="quick-app-btn" onclick="quickFillApp('傳說對決')">傳說對決</button>
+                    <span style="border-left:1px solid #ccc; margin:0 5px;"></span>
+                    <button class="btn-no-use" onclick="addNoUsageLog()">😴 今日未使用(一鍵)</button>
+                </div>
+                
+                <div class="input-row">
+                    <select id="appDevice" style="flex:1; padding:8px; border-radius:6px; border:1px solid #ddd; background:white;">
+                        <option value="POCO">📱 POCO</option>
+                        <option value="iPad Mini">🍎 iPad Mini</option>
+                        <option value="iPad 6">🍏 iPad 6</option>
+                    </select>
+                    <input type="text" id="appName" placeholder="App 名稱" style="flex:2">
+                </div>
+                
+                <div class="input-row">
+                    <input type="number" id="appDuration" placeholder="今日實際 (分)" min="0">
+                    <input type="number" id="appPlanNext" placeholder="📅 隔日預估 (分)" min="0" style="background:#fffde7; border-color:#fbc02d;">
+                </div>
+                <button class="btn-add-app" onclick="addAppLog()">📝 新增紀錄與計畫</button>
+            </div>
+            
+            <div id="appLogList"></div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:15px; border-top:1px solid #b2dfdb; padding-top:10px;">
+                <div style="font-size:0.9rem; color:#00695c;">
+                    今日總計：<span id="totalAppTime" style="font-weight:bold; font-size:1.1rem;">0</span> 分
+                </div>
+                <div style="font-size:0.9rem; color:#f57f17;">
+                    隔日申請：<span id="totalPlanTime" style="font-weight:bold; font-size:1.1rem;">0</span> 分
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span id="listTitle">日常任務清單</span>
+                <span style="font-size:0.8rem; color:#666">每項 1 點</span>
+            </div>
+            <div id="taskList"></div>
+        </div>
+
+        <div class="card" style="border-left: 5px solid #7b1fa2;">
+            <div class="card-title" style="color: #7b1fa2;">🌙 就寢管理與獎懲</div>
+            <div class="bedtime-row bedtime-bonus">
+                <label style="font-weight:bold; display:flex; align-items:center; gap:5px; cursor:pointer;">
+                    <input type="checkbox" id="bedtimeBonus" onchange="checkStatus()"> 🔋 設備放客廳充電
+                </label>
+                <span class="badge-bonus" style="background:#e1bee7; color:#7b1fa2; border-color:#7b1fa2;">+1 點</span>
+            </div>
+            <div class="bedtime-row bedtime-penalty">
+                <label style="font-weight:bold; display:flex; align-items:center; gap:5px; cursor:pointer; color:var(--danger);">
+                    <input type="checkbox" id="bedtimePenalty" onchange="checkStatus()"> 🛌 就寢擅自使用
+                </label>
+                <span class="badge-penalty">-2 點</span>
+            </div>
+            <div class="rule-desc warning" style="margin-top:0;">
+                定義：未經同意於就寢時間擅自使用3C，且經告知後未改善。
+            </div>
+        </div>
+
+        <div class="card" style="border-left: 5px solid var(--danger);">
+            <div class="card-title" style="color: var(--danger);">🚫 罰則與違規</div>
+            
+            <div style="margin-bottom: 20px;">
+                <strong>⏳ 等一下條款 (遲延處罰)</strong>
+                <div class="rule-desc warning">
+                    定義：經家長告知 3C 產品未經同意或超時使用，且經告知後未於五分鐘內改善。
+                </div>
+                <div class="penalty-input-group">
+                    <label>違規遲延幾分鐘？</label>
+                    <input type="number" id="overtimeMinutes" value="0" min="0" oninput="checkStatus()">
+                    <span style="font-weight: bold; color: var(--danger);">扣 <span id="penaltyPoints">0</span> 點</span>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #ddd; margin: 20px 0;">
+
+            <div style="margin-bottom: 20px;">
+                <strong>📱 3C 使用違規 (超時/未申請)</strong>
+                <div class="rule-desc info">
+                    <strong>定義：</strong>未經同意或申請，連續使用超過1小時且未休息10分鐘，經告知後仍未改善。
+                </div>
+                <div class="penalty-input-group" style="justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <label>違規次數：</label>
+                        <input type="number" id="excessiveCount" value="0" min="0" oninput="checkStatus()">
+                        <span>次</span>
+                    </div>
+                    <span style="font-weight: bold; color: var(--danger);">扣 <span id="excessivePenalty">0</span> 點</span>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #ddd; margin: 20px 0;">
+
+            <div>
+                <div class="card-title" style="margin-bottom:10px;">👮 家長簽核 & 重大違規 (必填)</div>
+                <div class="parent-auth-area">
+                    <label class="auth-label">請家長確認今日狀況：</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="violationStatus" value="none" onclick="toggleViolationInput(false)"> ⭕ 本日無違規</label>
+                        <label><input type="radio" name="violationStatus" value="exist" onclick="toggleViolationInput(true)"> ❌ 有發生違規</label>
+                    </div>
+
+                    <div id="violationInputZone" style="display:none; margin-top:15px; border-top:1px dashed #d32f2f; padding-top:10px;">
+                        <div class="input-row">
+                            <input type="text" id="violationName" placeholder="違規事項 (如: 頂嘴、說謊)">
+                            <input type="number" id="violationPoints" placeholder="扣點" value="1" min="1">
+                        </div>
+                        <button class="btn-add-violation" onclick="addMajorViolation()">⚠️ 增加違規扣分</button>
+                        <div id="violationList"></div>
+                    </div>
+
+                    <div class="password-zone" style="margin-top:15px;">
+                        <label style="font-size:0.9rem; color:#666;">🔐 家長密碼確認 (儲存前必填)：</label>
+                        <input type="password" id="parentPwd" class="pwd-input" placeholder="輸入家長密碼">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultArea" class="result-box"></div>
+        <button id="btnSave" class="btn-submit" onclick="saveRecord()">📝 完成並儲存紀錄</button>
+    </div>
+
+    <div class="card" style="margin-top: 30px;">
+        <div class="card-title">歷史紀錄管理 (最高分榮譽榜 🏆)</div>
+        <div style="font-size:0.85rem; color:#666; margin-bottom:10px;">顯示前 10 筆 (包含最高分與近期紀錄)，所有資料仍保留可匯出。</div>
+        <div class="csv-actions">
+            <button class="btn-csv btn-export" onclick="exportToCSV()">📤 匯出完整 CSV</button>
+            <button class="btn-csv btn-import">📥 讀取 CSV<input type="file" id="csvFileInput" accept=".csv" onchange="importFromCSV(this)"></button>
+        </div>
+        <div id="historyList" class="history-log"></div>
+        <button onclick="clearHistory()" style="width:100%; margin-top:10px; padding:8px; background:#fff; border:1px solid #ddd; color:#d32f2f; cursor:pointer;">🗑️ 清除所有紀錄</button>
+    </div>
+</div>
+
+<script>
+    const PARENT_PWD = "jeffjasmine";
+
+    // --- 1. 資料結構 ---
+    const baseWeekdayTasks = [
+        { id: 'w2', text: '連續讀書一小時', points: 1 },
+        { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
+        { id: 'w4', text: '功課寫完', points: 1 },
+        { id: 'w5', text: '洗便當', points: 1 },
+        { id: 'w6', text: '洗澡 (個人衛生)', points: 1 },
+        { id: 'w8', text: '洗餐具', points: 1 },
+        { id: 'w9', text: '丟環保垃圾', points: 1 }
+    ];
+    const baseWeekendTasks = [
+        { id: 'e1', text: '戶外運動一小時', points: 1 },
+        { id: 'e2', text: '吃三餐 (作息正常)', points: 1 },
+        { id: 'e3', text: '整理衣櫃', points: 1 },
+        { id: 'e4', text: '床上沒食物', points: 1 },
+        { id: 'e5', text: '九點前洗澡', points: 1 },
+        { id: 'e6', text: '折衣服', points: 1 }
+    ];
+    
+    const tasks = { weekday: baseWeekdayTasks, weekend: [...baseWeekendTasks, ...baseWeekendTasks] };
+    const TARGET_SCORE = 6; 
+    let currentMode = 'weekday';
+    let historyData = [];
+    let customTasks = [];     
+    let majorViolations = []; 
+    let appUsageLogs = []; 
+    let isFormLocked = false;
+    let isUnlockedByParent = false;
+    let lastCelebratedScore = 5; 
+    let isAppLogRequired = true; 
+
+    // --- 2. 初始化 ---
+    window.onload = function() {
+        const today = new Date();
+        const day = today.getDay();
+        const saved = localStorage.getItem('senhuai_history_v41'); // v41
+        if (saved) historyData = JSON.parse(saved);
+
+        if (day === 0 || day === 6) setMode('weekend');
+        else setMode('weekday');
+        
+        renderHistory();
+        checkDeadline(); 
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Accordion Logic
+        var acc = document.getElementsByClassName("accordion");
+        for (var i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                var panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                } 
+            });
+        }
+
+        if(localStorage.getItem('senhuai_draft_v41')) {
+            Swal.fire({
+                title: '發現暫存檔', text: "載入上次進度？", icon: 'question',
+                showCancelButton: true, confirmButtonText: '載入'
+            }).then((result) => { if (result.isConfirmed) loadDraft(); });
+        }
+    };
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('liveClock').innerText = now.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        if(now.getSeconds() === 0) checkDeadline();
+    }
+
+    function checkDeadline() {
+        const now = new Date();
+        const day = now.getDay(); 
+        const isLateNight = (day === 5 || day === 6);
+        const deadlineHour = isLateNight ? 23 : 22;
+        const deadlineMinute = 30;
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+
+        let isOverdue = false;
+        if (currentHour > deadlineHour) isOverdue = true;
+        else if (currentHour === deadlineHour && currentMinute >= deadlineMinute) isOverdue = true;
+
+        if (isOverdue && !isFormLocked && !isUnlockedByParent) lockForm(isLateNight);
+    }
+
+    function lockForm(isLateNight) {
+        isFormLocked = true;
+        document.getElementById('lockBanner').style.display = 'block';
+        const deadlineTime = isLateNight ? "23:30" : "22:30";
+        document.getElementById('lockMessage').innerHTML = `今日截止時間為 <strong>${deadlineTime}</strong>。<br>目前表單已鎖定，無法進行操作。`;
+        document.querySelectorAll('#mainForm .card').forEach(card => card.classList.add('locked'));
+        document.getElementById('btnSave').disabled = true;
+        document.getElementById('btnSave').classList.add('locked');
+        document.getElementById('btnSave').innerText = '⛔ 已鎖定 (無法儲存)';
+    }
+
+    function unlockForm() {
+        Swal.fire({
+            title: '家長解鎖',
+            text: '請輸入家長密碼以解除時間鎖定',
+            input: 'password',
+            inputPlaceholder: '輸入密碼',
+            showCancelButton: true,
+            confirmButtonText: '解鎖',
+            cancelButtonText: '取消',
+            preConfirm: (password) => {
+                if (password !== PARENT_PWD) {
+                    Swal.showValidationMessage('密碼錯誤！');
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                isFormLocked = false;
+                isUnlockedByParent = true;
+                document.getElementById('lockBanner').style.display = 'none';
+                document.querySelectorAll('#mainForm .card').forEach(card => card.classList.remove('locked'));
+                document.getElementById('btnSave').disabled = false;
+                document.getElementById('btnSave').classList.remove('locked');
+                document.getElementById('btnSave').innerText = '📝 完成並儲存紀錄';
+                Swal.fire('已解鎖', '表單已暫時開放填寫', 'success');
+            }
+        });
+    }
+
+    // --- 3. 核心渲染 ---
+    function setMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        if(mode === 'weekday') {
+            document.querySelectorAll('.mode-btn')[0].classList.add('active');
+            document.getElementById('listTitle').innerText = "日常任務清單";
+            renderTasks(tasks.weekday, false);
+        } else {
+            document.querySelectorAll('.mode-btn')[1].classList.add('active');
+            document.getElementById('listTitle').innerText = "假日綜合清單";
+            renderTasks([], true);
+        }
+        checkStatus(); 
+    }
+
+    function renderTasks(taskList, showGroups) {
+        const container = document.getElementById('taskList');
+        container.innerHTML = '';
+        if (showGroups) {
+            const title1 = document.createElement('div'); title1.className = 'task-group-title'; title1.innerText = '平日基礎'; container.appendChild(title1);
+            baseWeekdayTasks.forEach(task => container.appendChild(createTaskElement(task)));
+            const title2 = document.createElement('div'); title2.className = 'task-group-title'; title2.innerText = '假日加碼'; container.appendChild(title2);
+            baseWeekendTasks.forEach(task => container.appendChild(createTaskElement(task))); 
+        } else {
+            taskList.forEach(task => container.appendChild(createTaskElement(task)));
+        }
+    }
+
+    function createTaskElement(task) {
+        const div = document.createElement('div'); div.className = 'task-item';
+        div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text}</label><span class="badge-point">+${task.points}點</span>`;
+        return div;
+    }
+
+    // --- 暫存 ---
+    function saveDraft() {
+        if(isFormLocked) { Swal.fire('已鎖定', '無法暫存', 'error'); return; }
+        const draft = {
+            mathPassed: document.getElementById('mathPassed').checked,
+            otherExams: document.getElementById('otherExams').value,
+            failedExams: document.getElementById('failedExams').value,
+            score80Exams: document.getElementById('score80Exams').value,
+            testPaperCount: document.getElementById('testPaperCount').value,
+            testPaperHigh: document.getElementById('testPaperHigh').value,
+            bedtimeBonus: document.getElementById('bedtimeBonus').checked,
+            bedtimePenalty: document.getElementById('bedtimePenalty').checked,
+            overtimeMinutes: document.getElementById('overtimeMinutes').value,
+            excessiveCount: document.getElementById('excessiveCount').value,
+            customTasks, majorViolations, appUsageLogs, checkedTasks: [], customTasksChecked: []
+        };
+        document.querySelectorAll('#taskList input[type="checkbox"]').forEach(chk => { if(chk.checked) draft.checkedTasks.push(chk.id); });
+        customTasks.forEach(t => { if(document.getElementById(t.id).checked) draft.customTasksChecked.push(t.id); });
+        localStorage.setItem('senhuai_draft_v41', JSON.stringify(draft)); // v41
+        Swal.fire({ icon: 'success', title: '暫存成功', timer: 1500, showConfirmButton: false });
+    }
+
+    function loadDraft(showMsg) {
+        const saved = localStorage.getItem('senhuai_draft_v41'); // v41
+        if(!saved) { if(showMsg) Swal.fire('無暫存檔', '', 'info'); return; }
+        const draft = JSON.parse(saved);
+        document.getElementById('mathPassed').checked = draft.mathPassed;
+        document.getElementById('otherExams').value = draft.otherExams;
+        document.getElementById('failedExams').value = draft.failedExams || 0;
+        document.getElementById('score80Exams').value = draft.score80Exams || 0;
+        document.getElementById('testPaperCount').value = draft.testPaperCount;
+        document.getElementById('testPaperHigh').value = draft.testPaperHigh;
+        document.getElementById('bedtimeBonus').checked = draft.bedtimeBonus;
+        document.getElementById('bedtimePenalty').checked = draft.bedtimePenalty;
+        document.getElementById('overtimeMinutes').value = draft.overtimeMinutes;
+        document.getElementById('excessiveCount').value = draft.excessiveCount;
+        
+        customTasks = draft.customTasks || []; 
+        majorViolations = draft.majorViolations || []; 
+        appUsageLogs = draft.appUsageLogs || [];
+        
+        renderCustomTasks(); renderMajorViolations(); renderAppLogs();
+        
+        setTimeout(() => {
+            if(draft.checkedTasks) draft.checkedTasks.forEach(id => { const el = document.getElementById(id); if(el) el.checked = true; });
+            if(draft.customTasksChecked) draft.customTasksChecked.forEach(id => { const el = document.getElementById(id); if(el) el.checked = true; });
+            checkStatus(); 
+        }, 50);
+        if(showMsg) Swal.fire({ icon: 'success', title: '讀取成功', timer: 1000, showConfirmButton: false });
+    }
+
+    function clearForm() {
+        Swal.fire({ title: '確定清空？', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: '清空' }).then((result) => {
+            if (result.isConfirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
+        });
+    }
+
+    // --- App Logs ---
+    function quickFillApp(appName) {
+        document.getElementById('appName').value = appName;
+        document.getElementById('appDuration').focus();
+    }
+    function toggleAppHelp() {
+        const help = document.getElementById('appHelp');
+        help.style.display = help.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function addAppLog() {
+        if(isFormLocked) return;
+        const device = document.getElementById('appDevice').value;
+        const name = document.getElementById('appName').value.trim();
+        const duration = parseInt(document.getElementById('appDuration').value) || 0;
+        const planNext = parseInt(document.getElementById('appPlanNext').value) || 0;
+        
+        if (!name) { Swal.fire('請輸入 App', '', 'warning'); return; }
+        if (duration < 0 || planNext < 0) { Swal.fire('時間不能為負', '', 'warning'); return; }
+        
+        appUsageLogs.push({ id: 'app_' + Date.now(), device, name, duration, planNext });
+        
+        document.getElementById('appName').value = '';
+        document.getElementById('appDuration').value = '';
+        document.getElementById('appPlanNext').value = '';
+        renderAppLogs();
+    }
+    
+    function addNoUsageLog() {
+        if(isFormLocked) return;
+        appUsageLogs.push({ id: 'app_' + Date.now(), device: '全裝置', name: '無使用', duration: 0, planNext: 0 });
+        renderAppLogs();
+    }
+    
+    function removeAppLog(id) {
+        if(isFormLocked) return;
+        appUsageLogs = appUsageLogs.filter(app => app.id !== id);
+        renderAppLogs();
+    }
+
+    function renderAppLogs() {
+        const container = document.getElementById('appLogList');
+        const totalSpan = document.getElementById('totalAppTime');
+        const totalPlanSpan = document.getElementById('totalPlanTime');
+        container.innerHTML = '';
+        
+        let total = 0;
+        let totalPlan = 0;
+        
+        appUsageLogs.forEach(app => {
+            total += app.duration;
+            totalPlan += app.planNext || 0;
+            
+            const div = document.createElement('div'); div.className = 'app-item';
+            div.innerHTML = `
+                <div class="app-item-header">
+                    <span><small style="color:#666; font-weight:normal; margin-right:5px;">[${app.device}]</small> ${app.name}</span>
+                    <button class="btn-delete" onclick="removeAppLog('${app.id}')">✕</button>
+                </div>
+                <div class="app-item-details">
+                    <span>今日：${app.duration}分</span>
+                    <span style="color:#f57f17;">📅 預估：${app.planNext || 0}分</span>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        totalSpan.innerText = total;
+        totalPlanSpan.innerText = totalPlan;
+    }
+
+    // --- Parent Auth Logic ---
+    function toggleViolationInput(show) {
+        const zone = document.getElementById('violationInputZone');
+        if(show) {
+            zone.style.display = 'block';
+        } else {
+            zone.style.display = 'none';
+            majorViolations = []; 
+            renderMajorViolations();
+            checkStatus();
+        }
+    }
+
+    function addMajorViolation() {
+        if(isFormLocked) return;
+        const name = document.getElementById('violationName').value.trim();
+        const points = parseInt(document.getElementById('violationPoints').value) || 0;
+        if (!name) { Swal.fire('請輸入違規', '', 'warning'); return; }
+        majorViolations.push({ id: 'violation_' + Date.now(), text: name, points });
+        document.getElementById('violationName').value = ''; document.getElementById('violationPoints').value = 1;
+        renderMajorViolations(); checkStatus();
+    }
+    
+    function removeMajorViolation(id) { 
+        if(isFormLocked) return; 
+        majorViolations = majorViolations.filter(v => v.id !== id); 
+        renderMajorViolations(); 
+        checkStatus(); 
+    }
+    
+    function renderMajorViolations() {
+        const container = document.getElementById('violationList'); container.innerHTML = '';
+        majorViolations.forEach(v => {
+            const div = document.createElement('div'); div.className = 'violation-item';
+            div.innerHTML = `<span>⚠️ ${v.text}</span><div style="display:flex; align-items:center;"><span class="badge-penalty">-${v.points}點</span><button class="btn-delete" style="color:#d32f2f;" onclick="removeMajorViolation('${v.id}')">🗑️</button></div>`;
+            container.appendChild(div);
+        });
+    }
+
+    // --- 其他邏輯 ---
+    function addCustomTask() {
+        if(isFormLocked) return;
+        const name = document.getElementById('customName').value.trim();
+        const points = parseInt(document.getElementById('customPoints').value) || 0;
+        const required = document.getElementById('customRequired').checked;
+        if (!name) { Swal.fire('請輸入名稱', '', 'warning'); return; }
+        customTasks.push({ id: 'custom_' + Date.now(), text: name, points, required });
+        document.getElementById('customName').value = ''; document.getElementById('customPoints').value = 1; document.getElementById('customRequired').checked = false;
+        renderCustomTasks(); checkStatus();
+    }
+    function removeCustomTask(id) { if(isFormLocked) return; customTasks = customTasks.filter(t => t.id !== id); renderCustomTasks(); checkStatus(); }
+    function renderCustomTasks() {
+        const container = document.getElementById('customTaskList'); container.innerHTML = '';
+        customTasks.forEach(task => {
+            const div = document.createElement('div'); div.className = 'task-item';
+            div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text} ${task.required ? '<span class="badge-required">低標</span>' : ''}</label><span class="badge-point" style="background:#e3f2fd; color:#1565c0; border-color:#1565c0;">+${task.points}點</span><button class="btn-delete" onclick="removeCustomTask('${task.id}')">🗑️</button>`;
+            container.appendChild(div);
+        });
+    }
+
+    function calculateTimePenalty() {
+        const mins = parseInt(document.getElementById('overtimeMinutes').value) || 0;
+        let points = 0;
+        if (mins < 5 && mins > 0) points = 1; else if (mins >= 5 && mins < 10) points = 2; else if (mins >= 10) points = 2 + (Math.floor((mins - 10) / 5) + 1) * 3;
+        document.getElementById('penaltyPoints').innerText = points;
+        return points;
+    }
+
+    function checkStatus() {
+        let earnedScore = 0; 
+        let missingRequired = [];
+
+        const failedExams = parseInt(document.getElementById('failedExams').value) || 0;
+        const score80Exams = parseInt(document.getElementById('score80Exams').value) || 0;
+
+        if (document.getElementById('mathPassed').checked) earnedScore += 2;
+        earnedScore += (parseInt(document.getElementById('otherExams').value) || 0);
+        
+        const tpCount = parseInt(document.getElementById('testPaperCount').value) || 0;
+        const tpHigh = parseInt(document.getElementById('testPaperHigh').value) || 0;
+        earnedScore += tpCount * 1; earnedScore += tpHigh * 2;
+
+        document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(chk => { earnedScore += parseInt(chk.value); });
+        customTasks.forEach(task => {
+            const chk = document.getElementById(task.id);
+            if (chk && chk.checked) { earnedScore += task.points; } else if (task.required) { missingRequired.push(task.text); }
+        });
+        if (document.getElementById('bedtimeBonus').checked) earnedScore += 1;
+
+        const timePenalty = calculateTimePenalty();
+        const excessiveCount = parseInt(document.getElementById('excessiveCount').value) || 0;
+        const excessivePenalty = excessiveCount * 1;
+        document.getElementById('excessivePenalty').innerText = excessivePenalty;
+        let violationPenalty = 0; majorViolations.forEach(v => violationPenalty += v.points);
+        let bedtimePenalty = 0; if (document.getElementById('bedtimePenalty').checked) bedtimePenalty = 2;
+
+        const totalPenalty = timePenalty + excessivePenalty + violationPenalty + bedtimePenalty;
+        let finalScore = earnedScore - totalPenalty;
+
+        const badge = document.getElementById('appRequiredBadge');
+        if (failedExams > 0) {
+            isAppLogRequired = true;
+            badge.innerText = '(必填 - 有不及格)';
+            badge.className = 'badge-required';
+        } else if (score80Exams > 0) {
+            isAppLogRequired = false;
+            badge.innerText = '(免填 ✨ - 考80分)';
+            badge.className = 'badge-exempt';
+        } else if (finalScore >= 9) { 
+            isAppLogRequired = false;
+            badge.innerText = '(免填 ✨ - 9分達標)';
+            badge.className = 'badge-exempt';
+        } else {
+            isAppLogRequired = true;
+            badge.innerText = '(必填)';
+            badge.className = 'badge-required';
+        }
+
+        const progressBar = document.getElementById('progressBar');
+        const percent = Math.min((earnedScore / TARGET_SCORE) * 100, 100);
+        progressBar.style.width = percent + '%';
+        
+        if (earnedScore >= TARGET_SCORE) {
+            progressBar.style.backgroundColor = 'var(--success)';
+            document.getElementById('progressText').innerHTML = `原始得分：${earnedScore} / ${TARGET_SCORE} <span style="color:var(--success)">(達標)</span>`;
+        } else {
+            progressBar.style.backgroundColor = 'var(--warning)';
+            document.getElementById('progressText').innerHTML = `原始得分：${earnedScore} / ${TARGET_SCORE} <span style="color:var(--warning)">(差 ${Math.max(0, TARGET_SCORE - earnedScore)})</span>`;
+        }
+
+        renderResultBox(earnedScore, finalScore, missingRequired, totalPenalty);
+        updateTheme(finalScore);
+        
+        if (finalScore >= TARGET_SCORE && missingRequired.length === 0) {
+            if (finalScore > lastCelebratedScore) {
+                triggerCelebration(finalScore);
+                lastCelebratedScore = finalScore;
+            }
+        } else {
+            if (finalScore < TARGET_SCORE) lastCelebratedScore = TARGET_SCORE - 1;
+        }
+
+        return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams };
+    }
+
+    function updateTheme(score) {
+        document.body.className = '';
+        if (score >= 9) document.body.classList.add('theme-level-4');
+        else if (score >= 8) document.body.classList.add('theme-level-3');
+        else if (score >= 7) document.body.classList.add('theme-level-2');
+        else if (score >= 6) document.body.classList.add('theme-level-1');
+    }
+
+    function triggerCelebration(score) {
+        let title = "", icon = "success";
+        if (score === 6) { title = "太棒了！點數已達標 (6分)！"; confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+        else if (score === 7) { title = "太強了！超越極限 (7分)！"; icon = "info"; confetti({ shapes: ['star'], particleCount: 150, spread: 80, colors: ['#00BFFF', '#1E90FF'] }); }
+        else if (score === 8) { 
+            title = "不可思議！你是超人嗎 (8分)？"; icon = "warning"; 
+            var end = Date.now() + 1000, colors = ['#bb0000', '#ffffff'];
+            (function frame() { confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors }); confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors }); if (Date.now() < end) requestAnimationFrame(frame); }());
+        } 
+        else if (score >= 9) { 
+            title = "傳說級表現！已登峰造極 (9分+)！"; icon = "question"; 
+            var duration = 3000, end = Date.now() + duration;
+            var interval = setInterval(function() { if (Date.now() > end) return clearInterval(interval); confetti({ particleCount: 50 * ( (end - Date.now()) / duration ), startVelocity: 30, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } }); }, 250);
+        }
+        Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
+    }
+
+    function renderResultBox(earned, final, missing, totalPenalty) {
+        const resultArea = document.getElementById('resultArea');
+        resultArea.className = 'result-box';
+        let html = '';
+        if (final >= TARGET_SCORE && missing.length === 0) {
+            resultArea.classList.remove('fail'); resultArea.classList.add('pass');
+            html = `<h3>🎉 恭喜達標！</h3><p>最終有效分數：<strong>${final} 點</strong></p><p style="font-size:0.9rem; color:#666;">(原始 ${earned} - 總罰則 ${totalPenalty})</p>`;
+        } else {
+            resultArea.classList.remove('pass'); resultArea.classList.add('fail');
+            if (missing.length > 0) html = `<h3>❌ 未完成低標</h3><p>缺必做：<br><strong>${missing.join('、')}</strong></p>`;
+            else html = `<h3>❌ 分數不足</h3><p>最終有效分數：<strong>${final} 點</strong> (目標 ${TARGET_SCORE})</p><p style="font-size:0.9rem; color:#666;">(原始 ${earned} - 總罰則 ${totalPenalty})</p>`;
+        }
+        if (totalPenalty > 0) html += `<div style="border-top:1px solid #eee; margin-top:10px; padding-top:5px; text-align:left; font-size:0.9rem; color:var(--danger);">⚠️ 包含違規扣分共 -${totalPenalty} 點</div>`;
+        resultArea.innerHTML = html;
+    }
+
+    // --- 儲存 ---
+    function saveRecord() {
+        if(isFormLocked) { Swal.fire('已鎖定', '無法儲存', 'error'); return; }
+        
+        // 1. App Log Check
+        if (isAppLogRequired && appUsageLogs.length === 0) {
+            Swal.fire({ icon: 'warning', title: '資料不完整', text: '依照今日考試狀況，您必須填寫「App 使用紀錄」！', confirmButtonColor: '#d33' });
+            return;
+        }
+
+        // 2. Parent Auth Check
+        const violationStatus = document.querySelector('input[name="violationStatus"]:checked');
+        if (!violationStatus) {
+            Swal.fire({ icon: 'warning', title: '家長簽核未完成', text: '請在「家長簽核區」選擇今日是否有違規！', confirmButtonColor: '#d33' });
+            document.querySelector('.parent-auth-area').scrollIntoView({behavior: 'smooth'});
+            return;
+        }
+
+        if (violationStatus.value === 'exist' && majorViolations.length === 0) {
+             Swal.fire({ icon: 'error', title: '資料不符', text: '您勾選了「有發生違規」，但沒有新增任何違規項目！', confirmButtonColor: '#d33' });
+             return;
+        }
+
+        const pwd = document.getElementById('parentPwd').value;
+        if (pwd !== PARENT_PWD) {
+            Swal.fire({ icon: 'error', title: '密碼錯誤', text: '家長簽核密碼不正確！', confirmButtonColor: '#d33' });
+            return;
+        }
+        
+        const status = checkStatus();
+        const dateStr = new Date().toLocaleString('zh-TW', { hour12: false });
+        let resultStr = status.passed ? "✅達標" : "❌未達標";
+        if(status.missing.length > 0) resultStr = "❌缺必做";
+        
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toLocaleDateString('zh-TW');
+
+        if(status.passed) {
+            const certHtml = `
+                <div class="swal-certificate">
+                    <div class="cert-icon">🏆</div>
+                    <div class="cert-title">3C 設備使用授權書</div>
+                    <div class="cert-body">
+                        茲證明 <strong>森淮</strong> 今日表現優異，<br>
+                        累積點數達標 (${status.score}分)，<br>
+                        特此授予明日 3C 設備使用權限。
+                    </div>
+                    <div class="cert-date">授權日期：${tomorrowStr}</div>
+                    <div><div class="cert-stamp">VERIFIED ✅</div></div>
+                    <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>
+                </div>
+            `;
+            Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
+            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+        } else {
+            Swal.fire({ title: '紀錄已儲存', text: `今日得分：${status.score} 分。`, icon: 'info', timer: 1500, showConfirmButton: false });
+        }
+
+        let doneCustoms = []; customTasks.forEach(t => { if(document.getElementById(t.id).checked) doneCustoms.push(t.text); });
+        let violations = majorViolations.map(v => `${v.text}(-${v.points})`);
+        
+        let appLogStr = appUsageLogs.map(a => `[${a.device}]${a.name}(${a.duration}m/預${a.planNext||0}m)`).join(' | ');
+
+        const record = {
+            date: dateStr, mode: currentMode === 'weekday' ? '平日' : '假日',
+            finalScore: status.score, result: resultStr,
+            earnedScore: status.earned, timePenalty: status.timePenalty, excessivePenalty: status.excessivePenalty,
+            violationPenalty: status.violationPenalty, bedtimePenalty: status.bedtimePenalty, 
+            bedtimeBonus: document.getElementById('bedtimeBonus').checked ? "是" : "否", 
+            violationDetails: violations.join(" | ") || "無", math: document.getElementById('mathPassed').checked ? "是" : "否",
+            others: document.getElementById('otherExams').value, customs: doneCustoms.join(" | ") || "無", excessiveCount: status.excessiveCount,
+            tpCount: status.tpCount, tpHigh: status.tpHigh,
+            failedExams: status.failedExams, score80Exams: status.score80Exams,
+            appLogStr: appLogStr || "無"
+        };
+        
+        historyData.unshift(record);
+        updateStorageAndUI();
+        localStorage.removeItem('senhuai_draft_v41'); // v41
+        document.getElementById('parentPwd').value = ''; 
+    }
+
+    function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
+    
+    function renderHistory() {
+        const list = document.getElementById('historyList'); list.innerHTML = '';
+        if(historyData.length === 0) { list.innerHTML = '<p style="text-align:center; padding:10px; color:#999;">目前尚無紀錄</p>'; return; }
+        
+        let sorted = [...historyData].sort((a,b) => {
+            let sa = parseFloat(a.finalScore), sb = parseFloat(b.finalScore);
+            return sb !== sa ? sb - sa : new Date(b.date) - new Date(a.date);
+        });
+        let top3 = sorted.slice(0,3);
+        let rest = historyData.filter(i => !top3.includes(i)).sort((a,b) => new Date(b.date) - new Date(a.date));
+        let displayList = [...top3, ...rest.slice(0, 7)];
+
+        displayList.forEach(item => {
+            const div = document.createElement('div'); div.className = 'history-item';
+            let rank = top3.indexOf(item), trophy = '', rankClass = '';
+            if(rank === 0) { trophy = '🏆'; rankClass = 'rank-1'; }
+            else if(rank === 1) { trophy = '🥈'; rankClass = 'rank-2'; }
+            else if(rank === 2) { trophy = '🥉'; rankClass = 'rank-3'; }
+            if(rankClass) div.classList.add(rankClass);
+
+            div.innerHTML = `<div>${item.date} <small>(${item.mode})</small></div><div><span class="trophy-icon">${trophy}</span><b>${item.finalScore}分</b> ${item.result}</div>`;
+            list.appendChild(div);
+        });
+    }
+
+    function clearHistory() { 
+        Swal.fire({ title: '確定清空？', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: '清空' }).then((result) => {
+            if (result.isConfirmed) { historyData = []; updateStorageAndUI(); Swal.fire('已刪除', '', 'success'); }
+        });
+    }
+
+    function exportToCSV() {
+        if (historyData.length === 0) { Swal.fire('無資料', '無法匯出', 'info'); return; }
+        let csv = "日期時間,模式,最終分數,結果,原始得分,遲延扣分,3C違規扣,3C違規次,就寢違規扣,就寢獎勵,重大違規扣,重大違規細節,數學,其他科,寫考卷,高分考卷,不及格科,>80分科,自訂任務,App使用紀錄\n";
+        historyData.forEach(row => {
+            const c = (t) => (t || "").toString().replace(/,/g, "，");
+            csv += `${row.date},${row.mode},${row.finalScore},${row.result},${row.earnedScore||0},${row.timePenalty||0},${row.excessivePenalty||0},${row.excessiveCount||0},${row.bedtimePenalty||0},${row.bedtimeBonus||"-"},${row.violationPenalty||0},"${c(row.violationDetails)}",${c(row.math)},${c(row.others)},${row.tpCount||0},${row.tpHigh||0},${row.failedExams||0},${row.score80Exams||0},"${c(row.customs)}","${c(row.appLogStr)}"\n`;
+        });
+        const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `森淮規範_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    }
+
+    function importFromCSV(input) {
+        const file = input.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const rows = e.target.result.split("\n"); const newHistory = [];
+            for (let i = 1; i < rows.length; i++) {
+                const cols = rows[i].trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                if (cols.length >= 5) {
+                    newHistory.push({
+                        date: cols[0], mode: cols[1], finalScore: parseFloat(cols[2]), result: cols[3],
+                        earnedScore: parseFloat(cols[4]), timePenalty: parseFloat(cols[5]), excessivePenalty: parseFloat(cols[6]),
+                        excessiveCount: parseFloat(cols[7]), bedtimePenalty: parseFloat(cols[8]), bedtimeBonus: cols[9],
+                        violationPenalty: parseFloat(cols[10]), violationDetails: cols[11].replace(/"/g, ''), math: cols[12], others: cols[13], 
+                        tpCount: parseFloat(cols[14])||0, tpHigh: parseFloat(cols[15])||0,
+                        failedExams: parseFloat(cols[16])||0, score80Exams: parseFloat(cols[17])||0,
+                        customs: cols[18].replace(/"/g, ''),
+                        appLogStr: cols[19] ? cols[19].replace(/"/g, '') : "無"
+                    });
+                }
+            }
+            if(newHistory.length > 0) { 
+                Swal.fire({ title: `讀取到 ${newHistory.length} 筆資料`, text: "要覆蓋還是合併？", icon: 'question', showDenyButton: true, showCancelButton: true, confirmButtonText: '覆蓋', denyButtonText: '合併' }).then((result) => {
+                    if (result.isConfirmed) { historyData = newHistory; updateStorageAndUI(); Swal.fire('已覆蓋', '', 'success'); } 
+                    else if (result.isDenied) { historyData = [...newHistory, ...historyData]; updateStorageAndUI(); Swal.fire('已合併', '', 'success'); }
+                });
+            }
+        };
+        reader.readAsText(file); input.value = '';
+    }
+</script>
+
+</body>
+</html>

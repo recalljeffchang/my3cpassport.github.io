@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>森淮的冒險日誌 v42 (Game Edition)</title>
+    <title>森淮手機，平板，電視，電腦使用規範 (v43)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -11,7 +11,8 @@
     
     <style>
         :root {
-            --bg-color: #121212;
+            --primary: #546e7a;
+            --bg: #121212;
             --card-bg: #1e1e24;
             --text-main: #e0e0e0;
             --text-dim: #a0a0a0;
@@ -27,7 +28,7 @@
 
         body {
             font-family: 'Roboto Mono', monospace;
-            background-color: var(--bg-color);
+            background-color: var(--bg);
             color: var(--text-main);
             margin: 0;
             padding: 20px;
@@ -35,58 +36,53 @@
             background-image: 
                 linear-gradient(rgba(18, 18, 18, 0.9), rgba(18, 18, 18, 0.9)),
                 url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23222' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            transition: background-color 0.8s ease;
         }
 
-        /* 遊戲化標題 */
-        .game-header { text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
-        .game-header h1 { 
-            font-family: 'Press Start 2P', cursive; 
-            font-size: 1.5rem; 
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        .status-bar {
-            display: inline-flex; gap: 15px; background: #000; border: 1px solid var(--neon-green);
-            padding: 5px 15px; border-radius: 5px; font-size: 0.8rem; color: var(--neon-green);
-            box-shadow: 0 0 5px var(--neon-green);
-        }
+        /* Dynamic Theme Colors for Body Class */
+        body.theme-level-1 { --bg: #0f1e13; }
+        body.theme-level-2 { --bg: #0d1b26; }
+        body.theme-level-3 { --bg: #1a0f26; }
+        body.theme-level-4 { --bg: #26240f; }
 
         .container { max-width: 650px; margin: 0 auto; position: relative; z-index: 1; }
 
-        /* 卡片樣式 */
+        /* Header */
+        .game-header { text-align: center; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 2px; }
+        .game-header h1 { 
+            font-family: 'Press Start 2P', cursive; font-size: 1.5rem; color: var(--neon-blue);
+            text-shadow: 0 0 10px rgba(0, 243, 255, 0.5); margin-bottom: 15px; line-height: 1.5;
+        }
+        .status-bar {
+            display: inline-flex; gap: 15px; background: #000; border: 1px solid var(--neon-green);
+            padding: 8px 15px; border-radius: 4px; font-size: 0.8rem; color: var(--neon-green);
+            box-shadow: 0 0 5px var(--neon-green);
+        }
+
+        /* Cards */
         .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            position: relative;
-            overflow: hidden;
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px;
+            padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative; overflow: visible; /* Changed to visible for tooltips/shadows */
         }
-        .card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-            background: var(--neon-blue);
-        }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--neon-blue); }
         .card.locked { opacity: 0.5; pointer-events: none; filter: grayscale(0.8); }
         
         .card-title { 
             font-family: 'Press Start 2P', cursive; font-size: 0.9rem; color: var(--neon-yellow); 
             margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #444; 
-            display: flex; align-items: center; gap: 10px;
+            display: flex; align-items: center; gap: 10px; justify-content: space-between;
         }
 
-        /* 輸入元件 */
-        input[type="text"], input[type="number"], select, .pwd-input {
+        /* Inputs */
+        input[type="text"], input[type="number"], input[type="password"], select {
             background: var(--input-bg); border: 1px solid #444; color: #fff;
             padding: 10px; border-radius: 4px; font-family: 'Roboto Mono', monospace;
             width: 100%; box-sizing: border-box; transition: 0.3s;
         }
         input:focus, select:focus { border-color: var(--neon-blue); outline: none; box-shadow: 0 0 5px rgba(0, 243, 255, 0.3); }
 
-        /* 按鈕樣式 */
+        /* Buttons */
         .btn-game {
             background: linear-gradient(180deg, #2b2b2b 0%, #1a1a1a 100%);
             border: 1px solid var(--border-color); color: #fff; padding: 12px;
@@ -94,50 +90,67 @@
             text-transform: uppercase; transition: 0.2s; position: relative;
         }
         .btn-game:active { transform: translateY(2px); }
-        .btn-primary { border-color: var(--neon-blue); color: var(--neon-blue); width: 100%; }
-        .btn-primary:hover { background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 10px var(--neon-blue); }
+        .btn-primary { border-color: var(--neon-blue); color: var(--neon-blue); width: 100%; text-shadow: 0 0 5px var(--neon-blue); }
+        .btn-primary:hover { background: rgba(0, 243, 255, 0.1); box-shadow: 0 0 15px var(--neon-blue); }
         
         .mode-btn { flex: 1; border-color: #555; color: #888; }
         .mode-btn.active { border-color: var(--neon-green); color: var(--neon-green); background: rgba(0, 255, 157, 0.1); box-shadow: 0 0 8px var(--neon-green); }
 
-        /* 進度條 (XP Bar) */
-        .xp-bar-container { background: #000; height: 25px; border: 1px solid #555; border-radius: 12px; position: relative; overflow: hidden; margin-bottom: 20px; }
-        .xp-bar-fill { background: linear-gradient(90deg, #00b09b, #96c93d); height: 100%; width: 0%; transition: width 0.5s; }
-        .xp-text { position: absolute; width: 100%; text-align: center; top: 2px; font-weight: bold; text-shadow: 1px 1px 2px #000; font-size: 0.8rem; color: #fff; }
+        /* XP Bar */
+        .xp-bar-container { background: #000; height: 30px; border: 1px solid #555; border-radius: 15px; position: relative; overflow: hidden; margin-bottom: 20px; box-shadow: inset 0 0 10px #000; }
+        .xp-bar-fill { background: linear-gradient(90deg, #00b09b, #96c93d); height: 100%; width: 0%; transition: width 0.5s; box-shadow: 0 0 10px #96c93d; }
+        .xp-text { position: absolute; width: 100%; text-align: center; top: 6px; font-weight: bold; text-shadow: 1px 1px 2px #000; font-size: 0.85rem; color: #fff; z-index: 2; font-family: 'Press Start 2P'; }
 
-        /* Checkbox */
-        .task-item { display: flex; align-items: center; padding: 10px; border-bottom: 1px dashed #333; transition: background 0.2s; }
+        /* Task List */
+        .task-item { display: flex; align-items: center; padding: 12px 10px; border-bottom: 1px dashed #333; transition: background 0.2s; }
         .task-item:hover { background: rgba(255,255,255,0.05); }
+        .task-group-title {
+            color: var(--neon-blue); font-size: 0.8rem; margin: 15px 0 5px 0; padding-left: 10px;
+            border-left: 3px solid var(--neon-blue); font-weight: bold; text-transform: uppercase;
+        }
         input[type="checkbox"] { accent-color: var(--neon-green); width: 20px; height: 20px; cursor: pointer; margin-right: 15px; }
 
-        /* 標籤 */
-        .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 2px; margin-left: 8px; border: 1px solid; }
+        /* Badges */
+        .badge { font-size: 0.7rem; padding: 3px 6px; border-radius: 4px; margin-left: 8px; border: 1px solid; display: inline-block;}
         .badge-xp { border-color: var(--neon-yellow); color: var(--neon-yellow); }
         .badge-bonus { border-color: var(--neon-blue); color: var(--neon-blue); background: rgba(0, 243, 255, 0.1); }
-        .badge-dmg { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255, 0, 85, 0.1); }
+        .badge-penalty { border-color: var(--neon-pink); color: var(--neon-pink); background: rgba(255, 0, 85, 0.1); }
+        .badge-required { border-color: var(--neon-pink); color: var(--neon-pink); font-weight:bold; }
+        .badge-exempt { border-color: var(--neon-green); color: var(--neon-green); font-weight:bold; }
+
+        /* Accordion */
+        .accordion { background: #222; color: var(--neon-blue); border: 1px solid var(--neon-blue); border-radius: 4px; padding: 12px; width: 100%; text-align: left; cursor: pointer; font-family: 'Press Start 2P', cursive; font-size: 0.7rem; margin-bottom: 10px; box-shadow: 0 0 5px rgba(0,243,255,0.2); }
+        .panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1a1a1a; padding: 0 15px; border-left: 2px solid var(--neon-blue); margin-bottom: 20px; }
+        .panel ul { padding-left: 20px; color: #ccc; font-size: 0.9rem; line-height: 1.6; }
+        .panel li { margin-bottom: 5px; }
         
-        /* 規則手冊 */
-        .accordion { background: #222; color: var(--neon-blue); border: 1px solid var(--neon-blue); border-radius: 4px; padding: 10px; width: 100%; text-align: left; cursor: pointer; font-family: 'Press Start 2P', cursive; font-size: 0.7rem; margin-bottom: 10px; }
-        .panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #1a1a1a; padding: 0 15px; border-left: 2px solid var(--neon-blue); margin-bottom: 15px; }
+        /* Lock Banner */
+        #lockBanner { background: rgba(255, 0, 85, 0.1); border: 1px solid var(--neon-pink); color: var(--neon-pink); padding: 15px; text-align: center; display: none; margin-bottom: 20px; border-radius: 4px; box-shadow: 0 0 15px rgba(255,0,85,0.3); }
         
-        /* 鎖定警告 */
-        #lockBanner { background: rgba(255, 0, 85, 0.1); border: 1px solid var(--neon-pink); color: var(--neon-pink); padding: 15px; text-align: center; display: none; margin-bottom: 20px; border-radius: 4px; }
-        
-        /* SweetAlert2 Dark Theme Override */
+        /* SweetAlert Overrides */
         div:where(.swal2-container).swal2-center>.swal2-popup { background: #1e1e24; border: 2px solid var(--neon-blue); color: #fff; }
         div:where(.swal2-container) .swal2-title { color: var(--neon-green); font-family: 'Press Start 2P', cursive; font-size: 1rem; line-height: 1.5; }
+        div:where(.swal2-container) .swal2-html-container { color: #ccc; }
         
-        /* App Log List */
-        .app-item { border-bottom: 1px solid #333; padding: 10px; color: var(--text-dim); }
+        /* App Log & List */
+        .app-item { border-bottom: 1px solid #333; padding: 10px; color: var(--text-dim); display:flex; justify-content:space-between; align-items:center;}
         .app-item span { color: var(--neon-blue); }
+        .app-info-sub { font-size: 0.8rem; color: #666; margin-left: 10px; }
         
         /* Layout Helpers */
         .flex-row { display: flex; gap: 10px; align-items: center; }
         .flex-between { display: flex; justify-content: space-between; align-items: center; }
         .mt-10 { margin-top: 10px; }
+        .w-full { width: 100%; }
 
-        /* Certificate in Modal */
-        .swal-certificate { color: #333; } /* 保持獎狀為亮色底，比較像紙張 */
+        /* Quick Buttons */
+        .quick-app-btn-group { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .btn-small { padding: 5px 10px; font-size: 0.65rem; border-color: #555; color: #aaa; }
+        .btn-small:hover { border-color: var(--neon-blue); color: var(--neon-blue); }
+        
+        .history-log { font-size: 0.85rem; color: #888; margin-top: 10px; max-height: 300px; overflow-y: auto;}
+        .history-item { padding: 10px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; }
+        .trophy { margin-right: 5px; font-size: 1.1rem; }
     </style>
 </head>
 <body>
@@ -146,11 +159,11 @@
     <div class="game-header">
         <h1>森淮的<br>冒險日誌</h1>
         <div class="status-bar">
-            <span>VER: 42.0</span>
+            <span>VER: 43.0</span>
             <span>|</span>
             <span id="liveClock">LOADING...</span>
         </div>
-        <div style="font-size: 0.75rem; color: #666; margin-top: 5px;">
+        <div style="font-size: 0.75rem; color: #666; margin-top: 10px; border: 1px dashed #444; padding: 5px; display: inline-block;">
             [SYSTEM INFO] 3C = PHONE / PAD / PC / TV
         </div>
     </div>
@@ -165,19 +178,27 @@
 
     <button class="accordion">📜 開啟遊戲說明書 (RULES)</button>
     <div class="panel">
-        <div style="padding: 15px 0; color: #ccc; font-size: 0.9rem; line-height: 1.6;">
-            <p><strong style="color:var(--neon-green)">🎯 通關條件：</strong>每日累積 <strong>6 XP</strong> 以上。</p>
-            <p><strong style="color:var(--neon-yellow)">🕒 伺服器關閉：</strong><br>週日~四：22:30<br>週五~六：23:30</p>
-            <p><strong style="color:var(--neon-blue)">💎 免填寫特權：</strong><br>1. 單科成績 > 80分<br>2. 總 XP 達到 9 分<br>(前提：無不及格)</p>
-            <p><strong style="color:var(--neon-pink)">💀 傷害懲罰：</strong><br>違規將扣除 XP，嚴重違規需 GM 介入。</p>
-        </div>
+        <ul>
+            <li><strong style="color:var(--neon-green)">🎯 通關條件：</strong>每日需累積 <strong>6 XP</strong>。</li>
+            <li><strong style="color:var(--neon-yellow)">🕒 伺服器關閉：</strong>週日~四 22:30 / 週五~六 23:30。</li>
+            <li><strong style="color:var(--neon-blue)">💎 免填寫特權：</strong>
+                <br>1. 單科成績 > 80分
+                <br>2. 總 XP 達到 9 分
+                <br>(需無不及格科目)
+            </li>
+            <li><strong style="color:var(--neon-pink)">🚫 傷害懲罰：</strong>
+                <br>• 等一下條款：逾時扣分
+                <br>• 3C違規：扣 1 XP
+                <br>• 就寢違規：扣 2 XP
+            </li>
+        </ul>
     </div>
 
     <div id="mainForm">
         <div class="toolbar">
-            <button class="btn-game" onclick="saveDraft()">💾 SAVE GAME</button>
-            <button class="btn-game" onclick="loadDraft(true)">📂 LOAD GAME</button>
-            <button class="btn-game" onclick="clearForm()">🗑️ RESET</button>
+            <button class="btn-game" style="border-color:#607d8b" onclick="saveDraft()">💾 SAVE</button>
+            <button class="btn-game" style="border-color:#ff9800" onclick="loadDraft(true)">📂 LOAD</button>
+            <button class="btn-game" style="border-color:#9e9e9e" onclick="clearForm()">🗑️ RESET</button>
         </div>
 
         <div class="mode-selector">
@@ -212,14 +233,14 @@
             </div>
 
             <div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #444;">
-                <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:5px;">📊 戰績結算 (影響填寫義務)</div>
+                <div style="font-size:0.8rem; color:var(--text-dim); margin-bottom:8px;">📊 戰績結算 (影響填寫義務)</div>
                 <div class="flex-row">
                     <div style="flex:1;">
-                        <span style="color:var(--neon-pink); font-size:0.8rem;">📉 不及格</span>
+                        <span style="color:var(--neon-pink); font-size:0.7rem; display:block; margin-bottom:5px;">📉 不及格科目</span>
                         <input type="number" id="failedExams" value="0" min="0" oninput="checkStatus()" style="border-color:var(--neon-pink); color:var(--neon-pink);">
                     </div>
                     <div style="flex:1;">
-                        <span style="color:var(--neon-yellow); font-size:0.8rem;">🌟 >80分</span>
+                        <span style="color:var(--neon-yellow); font-size:0.7rem; display:block; margin-bottom:5px;">🌟 >80分科目</span>
                         <input type="number" id="score80Exams" value="0" min="0" oninput="checkStatus()" style="border-color:var(--neon-yellow); color:var(--neon-yellow);">
                     </div>
                 </div>
@@ -255,7 +276,7 @@
                     <label style="font-size:0.8rem; display:flex; align-items:center; color:var(--neon-pink);">
                         <input type="checkbox" id="customRequired"> 設為必解 (Main Quest)
                     </label>
-                    <button class="btn-game" onclick="addCustomTask()" style="border-color:var(--neon-green); color:var(--neon-green);">+ ADD</button>
+                    <button class="btn-game" onclick="addCustomTask()" style="border-color:var(--neon-green); color:var(--neon-green); padding:8px;">+ ADD</button>
                 </div>
             </div>
             <div id="customTaskList"></div>
@@ -266,17 +287,17 @@
                 <span>📱 裝備使用紀錄 <span id="appRequiredBadge" class="badge badge-required">(必填)</span></span>
                 <button onclick="toggleAppHelp()" style="background:none; border:none; color:#fff; cursor:pointer;">❓</button>
             </div>
-            <div id="appHelp" class="help-tip" style="background:#222; border-color:#444; color:#ccc;">
+            <div id="appHelp" class="help-tip" style="background:#222; border-color:#444; color:#ccc; display:none; padding:10px; margin-bottom:10px; font-size:0.8rem;">
                 <strong>🔍 查詢攻略：</strong><br>iOS: 設定 > 螢幕使用時間<br>Android: 設定 > 數位健康
             </div>
             
-            <div class="app-input-area" style="background:rgba(0,0,0,0.3); border-color:#444;">
+            <div class="app-input-area" style="background:rgba(0,0,0,0.3); border:1px solid #444; padding:15px; border-radius:8px;">
                 <div class="quick-app-btn-group">
-                    <span style="font-size:0.7rem; color:#666;">QUICK:</span>
-                    <button class="btn-game" style="padding:2px 6px; font-size:0.6rem;" onclick="quickFillApp('YouTube')">YT</button>
-                    <button class="btn-game" style="padding:2px 6px; font-size:0.6rem;" onclick="quickFillApp('Roblox')">Roblox</button>
-                    <button class="btn-game" style="padding:2px 6px; font-size:0.6rem;" onclick="quickFillApp('IG')">IG</button>
-                    <button class="btn-game" style="padding:2px 6px; font-size:0.6rem;" onclick="addNoUsageLog()">😴 AFK(沒玩)</button>
+                    <button class="btn-game btn-small" onclick="quickFillApp('YouTube')">YT</button>
+                    <button class="btn-game btn-small" onclick="quickFillApp('Roblox')">Roblox</button>
+                    <button class="btn-game btn-small" onclick="quickFillApp('Instagram')">IG</button>
+                    <button class="btn-game btn-small" onclick="quickFillApp('TikTok')">TikTok</button>
+                    <button class="btn-game btn-small" onclick="addNoUsageLog()">😴 AFK(沒玩)</button>
                 </div>
                 
                 <div class="input-row mt-10">
@@ -295,7 +316,7 @@
                 <button class="btn-game" style="width:100%; margin-top:10px;" onclick="addAppLog()">📝 LOG DATA</button>
             </div>
             
-            <div id="appLogList"></div>
+            <div id="appLogList" style="margin-top:10px;"></div>
             
             <div class="flex-between mt-10" style="font-size:0.8rem; color:#888;">
                 <div>Total: <span id="totalAppTime" style="color:var(--neon-green)">0</span> m</div>
@@ -334,9 +355,8 @@
             
             <div style="margin-bottom: 20px;">
                 <strong style="color:var(--text-dim); font-size:0.9rem;">⏳ 技能冷卻超時 (等一下條款)</strong>
-                <div class="penalty-input-group">
-                    <label>超時幾分鐘？</label>
-                    <input type="number" id="overtimeMinutes" value="0" min="0" oninput="checkStatus()">
+                <div class="penalty-input-group flex-row">
+                    <input type="number" id="overtimeMinutes" value="0" min="0" oninput="checkStatus()" placeholder="超時分鐘" style="width:100px;">
                     <span style="color: var(--neon-pink); font-weight:bold;">扣 <span id="penaltyPoints">0</span> XP</span>
                 </div>
             </div>
@@ -347,7 +367,7 @@
                 <strong style="color:var(--text-dim); font-size:0.9rem;">📱 沉迷狀態 (3C 使用違規)</strong>
                 <div class="penalty-input-group flex-between">
                     <div class="flex-row">
-                        <label>違規次數：</label>
+                        <label style="font-size:0.9rem;">次數：</label>
                         <input type="number" id="excessiveCount" value="0" min="0" oninput="checkStatus()" style="width:60px;">
                     </div>
                     <span style="color: var(--neon-pink); font-weight:bold;">扣 <span id="excessivePenalty">0</span> XP</span>
@@ -358,23 +378,23 @@
 
             <div style="margin-top:20px;">
                 <div class="card-title" style="color:var(--neon-pink); font-size:0.9rem;">👮 GM 簽核 (必填)</div>
-                <div class="parent-auth-area" style="background:#2a1a1a; border:1px dashed var(--neon-pink);">
+                <div class="parent-auth-area" style="background:#2a1a1a; border:1px dashed var(--neon-pink); padding:15px; border-radius:8px;">
                     <div style="display:flex; gap:20px; justify-content:center; margin-bottom:15px;">
-                        <label><input type="radio" name="violationStatus" value="none" onclick="toggleViolationInput(false)"> ⭕ 無違規</label>
-                        <label><input type="radio" name="violationStatus" value="exist" onclick="toggleViolationInput(true)"> ❌ 有違規</label>
+                        <label style="cursor:pointer;"><input type="radio" name="violationStatus" value="none" onclick="toggleViolationInput(false)"> ⭕ 無違規</label>
+                        <label style="cursor:pointer;"><input type="radio" name="violationStatus" value="exist" onclick="toggleViolationInput(true)"> ❌ 有違規</label>
                     </div>
 
                     <div id="violationInputZone" style="display:none; border-top:1px dashed #555; padding-top:15px;">
                         <div class="input-row">
                             <input type="text" id="violationName" placeholder="違規事項">
-                            <input type="number" id="violationPoints" placeholder="扣XP" value="1" min="1">
+                            <input type="number" id="violationPoints" placeholder="扣XP" value="1" min="1" style="flex:0.5">
                         </div>
-                        <button class="btn-game" style="width:100%; border-color:var(--neon-pink); color:var(--neon-pink);" onclick="addMajorViolation()">⚠️ 增加傷害</button>
-                        <div id="violationList"></div>
+                        <button class="btn-game" style="width:100%; border-color:var(--neon-pink); color:var(--neon-pink); margin-top:10px;" onclick="addMajorViolation()">⚠️ 增加傷害</button>
+                        <div id="violationList" style="margin-top:10px;"></div>
                     </div>
 
                     <div style="margin-top:15px;">
-                        <input type="password" id="parentPwd" class="pwd-input" placeholder="🔑 GM Password">
+                        <input type="password" id="parentPwd" class="pwd-input" placeholder="🔑 GM Password (Required)">
                     </div>
                 </div>
             </div>
@@ -386,9 +406,9 @@
 
     <div class="card" style="margin-top: 30px;">
         <div class="card-title">🏆 排行榜 (Leaderboard)</div>
-        <div class="csv-actions" style="margin-bottom:10px;">
-            <button class="btn-game" onclick="exportToCSV()">📤 EXPORT DATA</button>
-            <button class="btn-game" style="position:relative;">📥 IMPORT DATA <input type="file" id="csvFileInput" accept=".csv" onchange="importFromCSV(this)" style="position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; cursor:pointer;"></button>
+        <div class="csv-actions" style="margin-bottom:10px; display:flex; gap:10px;">
+            <button class="btn-game" style="flex:1" onclick="exportToCSV()">📤 EXPORT</button>
+            <button class="btn-game" style="flex:1; position:relative;">📥 IMPORT <input type="file" id="csvFileInput" accept=".csv" onchange="importFromCSV(this)" style="position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; cursor:pointer;"></button>
         </div>
         <div id="historyList" class="history-log"></div>
         <button class="btn-game" style="width:100%; margin-top:10px; color:#666; border-color:#333;" onclick="clearHistory()">🗑️ CLEAR ALL DATA</button>
@@ -398,7 +418,7 @@
 <script>
     const PARENT_PWD = "jeffjasmine";
 
-    // Data Structure
+    // 1. Data Structure (FIXED ORDER)
     const baseWeekdayTasks = [
         { id: 'w2', text: '連續讀書一小時', points: 1 },
         { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
@@ -416,29 +436,35 @@
         { id: 'e5', text: '九點前洗澡', points: 1 },
         { id: 'e6', text: '折衣服', points: 1 }
     ];
-    const tasks = { weekday: baseWeekdayTasks, weekend: [...baseWeekendTasks, ...baseWeekendTasks] };
+    
+    // Updated Logic: Weekend includes BOTH lists
+    const tasks = { 
+        weekday: baseWeekdayTasks, 
+        weekend: [...baseWeekdayTasks, ...baseWeekendTasks] 
+    };
+
     const TARGET_SCORE = 6; 
     let currentMode = 'weekday';
     let historyData = [], customTasks = [], majorViolations = [], appUsageLogs = [];
     let isFormLocked = false, isUnlockedByParent = false, lastCelebratedScore = 5, isAppLogRequired = true;
 
-    // Initialization
+    // 2. Initialization
     window.onload = function() {
         const today = new Date();
-        document.getElementById('currentDate').innerText = today.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
-        const saved = localStorage.getItem('senhuai_history_v42'); 
+        const day = today.getDay();
+        const saved = localStorage.getItem('senhuai_history_v43'); 
         if (saved) historyData = JSON.parse(saved);
         
-        const day = today.getDay();
+        // Auto set mode
         if (day === 0 || day === 6) setMode('weekend'); else setMode('weekday');
         
         renderHistory(); checkDeadline(); updateClock(); setInterval(updateClock, 1000);
         setupAccordion();
 
-        if(localStorage.getItem('senhuai_draft_v42')) {
+        if(localStorage.getItem('senhuai_draft_v43')) {
             Swal.fire({
-                title: '發現未完成進度', text: "要載入上次的存檔嗎？", icon: 'question',
-                showCancelButton: true, confirmButtonText: '載入 (Load)', cancelButtonText: '取消'
+                title: '發現存檔', text: "Load Game?", icon: 'question', background: '#1e1e24', color:'#fff',
+                showCancelButton: true, confirmButtonText: 'Load', cancelButtonText: 'Cancel'
             }).then((result) => { if (result.isConfirmed) loadDraft(); });
         }
     };
@@ -500,7 +526,7 @@
         });
     }
 
-    // Core Logic
+    // 3. Core Render Logic (FIXED)
     function setMode(mode) {
         currentMode = mode;
         document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
@@ -511,7 +537,7 @@
         } else {
             document.querySelectorAll('.mode-btn')[1].classList.add('active');
             document.getElementById('listTitle').innerText = "假日綜合副本";
-            renderTasks([], true);
+            renderTasks([], true); // Weekend uses special grouping logic
         }
         checkStatus(); 
     }
@@ -520,11 +546,14 @@
         const container = document.getElementById('taskList');
         container.innerHTML = '';
         if (showGroups) {
+            // Weekend Mode: Show both groups explicitly
             const t1 = document.createElement('div'); t1.className='task-group-title'; t1.innerText='平日基礎'; container.appendChild(t1);
             baseWeekdayTasks.forEach(task => container.appendChild(createTaskElement(task)));
+            
             const t2 = document.createElement('div'); t2.className='task-group-title'; t2.innerText='假日加碼'; container.appendChild(t2);
-            baseWeekendTasks.forEach(task => container.appendChild(createTaskElement(task))); // Fix variable
+            baseWeekendTasks.forEach(task => container.appendChild(createTaskElement(task)));
         } else {
+            // Weekday Mode: Show simple list
             taskList.forEach(task => container.appendChild(createTaskElement(task)));
         }
     }
@@ -535,7 +564,7 @@
         return div;
     }
 
-    // --- Draft ---
+    // --- Draft System ---
     function saveDraft() {
         if(isFormLocked) { Swal.fire('Locked', 'System is locked.', 'error'); return; }
         const draft = {
@@ -553,12 +582,12 @@
         };
         document.querySelectorAll('#taskList input[type="checkbox"]').forEach(chk => { if(chk.checked) draft.checkedTasks.push(chk.id); });
         customTasks.forEach(t => { if(document.getElementById(t.id).checked) draft.customTasksChecked.push(t.id); });
-        localStorage.setItem('senhuai_draft_v42', JSON.stringify(draft));
+        localStorage.setItem('senhuai_draft_v43', JSON.stringify(draft));
         Swal.fire({icon:'success', title:'Saved', background:'#1e1e24', color:'#fff', timer:1500, showConfirmButton:false});
     }
 
     function loadDraft(showMsg) {
-        const saved = localStorage.getItem('senhuai_draft_v42');
+        const saved = localStorage.getItem('senhuai_draft_v43');
         if(!saved) { if(showMsg) Swal.fire('No Data', '', 'info'); return; }
         const draft = JSON.parse(saved);
         document.getElementById('mathPassed').checked = draft.mathPassed;
@@ -585,7 +614,7 @@
 
     function clearForm() {
         Swal.fire({title:'Reset Game?', background:'#1e1e24', color:'#fff', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33', confirmButtonText:'Reset'}).then((result) => {
-            if(result.isConfirmed) { localStorage.removeItem('senhuai_draft_v42'); location.reload(); }
+            if(result.isConfirmed) { localStorage.removeItem('senhuai_draft_v43'); location.reload(); }
         });
     }
 
@@ -777,8 +806,8 @@
             appLogStr: status.appLogStr
         };
         historyData.unshift(record);
-        localStorage.setItem('senhuai_history_v42', JSON.stringify(historyData));
-        localStorage.removeItem('senhuai_draft_v42');
+        localStorage.setItem('senhuai_history_v43', JSON.stringify(historyData));
+        localStorage.removeItem('senhuai_draft_v43'); // Fix variable
         document.getElementById('parentPwd').value = '';
         renderHistory();
     }
@@ -792,9 +821,9 @@
         });
     }
 
-    function clearHistory() { if(confirm('Wipe Data?')) { historyData=[]; localStorage.setItem('senhuai_history_v42', '[]'); renderHistory(); } }
+    function clearHistory() { if(confirm('Wipe Data?')) { historyData=[]; localStorage.setItem('senhuai_history_v43', '[]'); renderHistory(); } }
     
-    function exportToCSV() { /* Simplifed export for brevity, same logic as v41 */ 
+    function exportToCSV() { 
         if (historyData.length === 0) { Swal.fire('No Data', '', 'info'); return; }
         let csv = "Date,Mode,Score,Result,AppLogs\n";
         historyData.forEach(row => { csv += `${row.date},${row.mode},${row.finalScore},${row.result},"${row.appLogStr}"\n`; });

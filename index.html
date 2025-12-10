@@ -2,916 +2,638 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S.H. OPERATOR PROTOCOL (v44)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>S.H. OPERATOR PROTOCOL (v45 GAMIFIED)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* Delta Force Palette */
-            --df-gold: #f0b90b;       /* 戰術黃/金 */
-            --df-gold-dim: #99780a;
-            --df-dark: #0a0c10;       /* 極深藍黑 */
-            --df-panel: #14161a;      /* 面板底色 */
-            --df-gray: #2d343f;       /* 邊框灰 */
+            --df-gold: #f0b90b;
+            --df-gold-glow: rgba(240, 185, 11, 0.6);
+            --df-dark: #050505;
+            --df-panel: #111;
+            --df-gray: #333;
             --df-text: #e0e0e0;
-            --df-red: #ff3b3b;        /* 警告紅 */
-            --df-blue: #00e5ff;       /* 科技藍 (裝飾用) */
-            
-            --clip-size: 15px;        /* 切角大小 */
+            --df-red: #ff3333;
+            --df-red-glow: rgba(255, 51, 51, 0.6);
+            --df-cyan: #00f3ff;
+            --scanline-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* CRT Effect Overlay */
+        .crt::before {
+            content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999; background-size: 100% 2px, 3px 100%; pointer-events: none;
         }
 
         body {
             font-family: 'Chakra Petch', sans-serif;
             background-color: var(--df-dark);
             color: var(--df-text);
-            margin: 0;
-            padding: 20px;
-            padding-bottom: 100px;
-            /* 網格背景 */
-            background-image: 
-                linear-gradient(rgba(10, 12, 16, 0.95), rgba(10, 12, 16, 0.95)),
-                repeating-linear-gradient(0deg, transparent, transparent 19px, #222 20px),
-                repeating-linear-gradient(90deg, transparent, transparent 19px, #222 20px);
-            background-size: 100% 100%, 40px 40px, 40px 40px;
+            margin: 0; padding: 0;
+            overflow-x: hidden;
+            /* Hexagon Background */
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
         }
 
-        .container { max-width: 700px; margin: 0 auto; position: relative; z-index: 1; }
+        /* Boot Screen */
+        #bootScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 10000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; font-family: 'Share Tech Mono', monospace;
+            color: var(--df-gold);
+        }
+        .boot-text { font-size: 1.2rem; margin-bottom: 10px; opacity: 0; animation: fadeIn 0.2s forwards; }
 
-        /* Header Style */
-        .header { 
-            text-align: center; margin-bottom: 30px; position: relative; 
-            border-bottom: 2px solid var(--df-gold); padding-bottom: 20px;
-        }
-        .header h1 { 
-            color: var(--df-text); margin: 0; font-size: 1.8rem; letter-spacing: 2px; text-transform: uppercase; 
-            text-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
-        }
-        .header h1 span { color: var(--df-gold); }
-        .header-sub {
-            display: flex; justify-content: space-between; align-items: center; margin-top: 10px;
-            font-family: 'Roboto Mono', monospace; font-size: 0.75rem; color: #666;
-        }
-        .header-sub span { border: 1px solid #333; padding: 2px 8px; background: #000; }
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; padding-bottom: 120px; position: relative; z-index: 1; opacity: 0; transition: opacity 1s; }
 
-        /* Definition Box */
-        .definition-box {
-            background: rgba(0, 229, 255, 0.05); border-left: 3px solid var(--df-blue);
-            color: var(--df-blue); padding: 10px; font-size: 0.85rem; margin-top: 15px; text-align: left;
-        }
-
-        /* 戰術卡片 (Tactical Card) */
-        .card {
-            background: var(--df-panel);
-            border: 1px solid var(--df-gray);
-            /* 45度切角 */
-            clip-path: polygon(
-                0 0, 
-                100% 0, 
-                100% calc(100% - var(--clip-size)), 
-                calc(100% - var(--clip-size)) 100%, 
-                0 100%
-            );
-            padding: 25px; margin-bottom: 20px;
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        .card::after {
-            /* 裝飾角落 */
-            content: ''; position: absolute; bottom: 0; right: 0; 
-            width: var(--clip-size); height: 2px; background: var(--df-gold);
-            transform: rotate(-45deg); transform-origin: 100% 100%;
-        }
-        .card.locked { opacity: 0.4; pointer-events: none; border-color: #333; }
-        
-        .card-title { 
-            font-size: 1.1rem; color: var(--df-gold); margin-bottom: 20px; 
-            border-left: 4px solid var(--df-gold); padding-left: 15px;
-            text-transform: uppercase; letter-spacing: 1px;
+        /* HUD Header */
+        .hud-header {
+            border: 1px solid var(--df-gray); border-top: 4px solid var(--df-gold);
+            background: rgba(20, 20, 20, 0.9); padding: 15px; margin-bottom: 25px;
             display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 0 15px rgba(240, 185, 11, 0.1);
+        }
+        .rank-badge {
+            display: flex; flex-direction: column; align-items: flex-start;
+        }
+        .rank-title { font-size: 0.7rem; color: #888; letter-spacing: 2px; }
+        .rank-name { font-size: 1.5rem; font-weight: 700; color: var(--df-gold); text-shadow: 0 0 10px var(--df-gold-glow); }
+        .rank-xp { font-size: 0.8rem; font-family: 'Share Tech Mono'; color: var(--df-cyan); }
+
+        /* Progress Circle/Bar */
+        .hud-stats { text-align: right; }
+        .big-score { font-size: 2.5rem; font-weight: bold; line-height: 1; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); transition: transform 0.2s; }
+        .big-score.pulse { transform: scale(1.3); color: var(--df-gold); }
+
+        /* Cards with interaction */
+        .card {
+            background: rgba(20, 20, 20, 0.8); border: 1px solid var(--df-gray);
+            margin-bottom: 15px; padding: 20px; position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
+        }
+        .card:hover { border-color: var(--df-gold); box-shadow: 0 0 15px rgba(240, 185, 11, 0.15); transform: translateY(-2px); }
+        .card.locked { filter: grayscale(1) blur(2px); opacity: 0.5; pointer-events: none; }
+
+        .card-title {
+            font-size: 1.1rem; color: var(--df-gold); margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px dashed #333; padding-bottom: 8px;
+        }
+
+        /* Gamified Checkbox */
+        .task-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; margin-bottom: 5px; background: #0a0a0a; border: 1px solid #222;
+            transition: 0.2s; cursor: pointer;
+        }
+        .task-item:hover { background: #151515; border-color: #444; }
+        .task-item.active { border-color: var(--df-gold); background: rgba(240, 185, 11, 0.05); }
+        
+        /* Hidden real checkbox, custom UI */
+        .g-checkbox {
+            width: 20px; height: 20px; border: 2px solid #555; display: inline-block;
+            margin-right: 15px; position: relative; transition: 0.2s;
+        }
+        .task-item.active .g-checkbox {
+            background: var(--df-gold); border-color: var(--df-gold); box-shadow: 0 0 10px var(--df-gold);
         }
 
         /* Inputs */
-        input[type="text"], input[type="number"], input[type="password"], select {
-            background: #000; border: 1px solid var(--df-gray); color: #fff;
-            padding: 12px; font-family: 'Chakra Petch', sans-serif;
-            width: 100%; box-sizing: border-box; transition: 0.3s;
-            text-transform: uppercase;
+        input, select {
+            background: #080808; border: 1px solid #444; color: #fff; padding: 10px;
+            font-family: 'Chakra Petch'; font-size: 1rem; width: 100%; box-sizing: border-box;
+            transition: 0.3s;
         }
-        input:focus, select:focus { border-color: var(--df-gold); box-shadow: 0 0 5px rgba(240, 185, 11, 0.4); outline: none; }
+        input:focus { border-color: var(--df-cyan); outline: none; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
 
-        /* Tactical Buttons */
+        /* Buttons */
         .btn-game {
-            background: #222; color: #fff; border: 1px solid var(--df-gray);
-            padding: 12px; font-family: 'Chakra Petch', sans-serif; font-weight: bold; cursor: pointer;
+            background: #222; color: #fff; border: 1px solid #444; padding: 12px;
+            font-family: 'Chakra Petch'; font-weight: 700; cursor: pointer;
             text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+            position: relative; overflow: hidden;
         }
-        .btn-game:hover { background: #333; border-color: var(--df-text); }
-        .btn-game:active { transform: scale(0.98); }
+        .btn-game::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s;
+        }
+        .btn-game:hover::before { left: 100%; }
+        .btn-game:hover { border-color: var(--df-gold); color: var(--df-gold); }
         
         .btn-primary { 
-            background: var(--df-gold); color: #000; border: none; width: 100%; font-size: 1rem; 
-            box-shadow: 0 0 10px rgba(240, 185, 11, 0.2);
+            background: var(--df-gold); color: #000; border: none; width: 100%; 
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
         }
-        .btn-primary:hover { background: #ffca28; box-shadow: 0 0 20px rgba(240, 185, 11, 0.6); color: #000;}
+        .btn-primary:hover { background: #fff; color: #000; box-shadow: 0 0 20px var(--df-gold); }
 
-        /* Mode Selector */
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; border: 1px solid var(--df-gray); opacity: 0.6; }
-        .mode-btn.active { 
-            border: 1px solid var(--df-gold); opacity: 1; background: rgba(240, 185, 11, 0.1); 
-            color: var(--df-gold); box-shadow: inset 0 0 10px rgba(240, 185, 11, 0.2);
-        }
+        /* XP Bar */
+        .xp-bar-container { height: 6px; background: #222; margin-top: 5px; width: 100%; position: relative; overflow: hidden;}
+        .xp-bar-fill { height: 100%; background: var(--df-cyan); width: 0%; transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 10px var(--df-cyan); }
 
-        /* Merits Bar (XP) */
-        .xp-bar-container { background: #000; height: 10px; border-radius: 0; margin-bottom: 25px; border: 1px solid #333; position: relative; }
-        .xp-bar-fill { background: var(--df-gold); height: 100%; width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--df-gold); }
-        .xp-text { text-align: right; color: var(--df-gold); font-size: 1.5rem; font-weight: bold; margin-bottom: 5px; font-family: 'Roboto Mono'; }
+        /* Badges & Tags */
+        .badge { font-size: 0.7rem; padding: 2px 6px; border: 1px solid; border-radius: 2px; }
+        .badge-bonus { color: var(--df-cyan); border-color: var(--df-cyan); }
+        .badge-penalty { color: var(--df-red); border-color: var(--df-red); }
 
-        /* Task List */
-        .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #222; }
-        .task-item:last-child { border-bottom: none; }
-        .task-group-title {
-            color: #666; font-size: 0.75rem; margin: 15px 0 5px 0; letter-spacing: 1px;
-            border-bottom: 1px solid var(--df-gray); padding-bottom: 5px;
-        }
-        
-        /* Custom Checkbox */
-        input[type="checkbox"] {
-            appearance: none; width: 20px; height: 20px; border: 2px solid var(--df-gray);
-            background: #000; cursor: pointer; position: relative; margin-right: 15px;
-        }
-        input[type="checkbox"]:checked { background: var(--df-gold); border-color: var(--df-gold); }
-        input[type="checkbox"]:checked::after {
-            content: '✓'; position: absolute; color: #000; font-size: 14px; top: -1px; left: 3px; font-weight: bold;
-        }
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
 
-        /* Badges */
-        .badge { font-size: 0.7rem; padding: 3px 6px; border: 1px solid; margin-left: 8px; text-transform: uppercase;}
-        .badge-point { border-color: var(--df-gold); color: var(--df-gold); }
-        .badge-bonus { border-color: var(--df-blue); color: var(--df-blue); }
-        .badge-penalty { border-color: var(--df-red); color: var(--df-red); }
-        .badge-required { background: var(--df-red); color: #000; border: none; font-weight: bold; }
-        .badge-exempt { background: var(--df-gold); color: #000; border: none; font-weight: bold; }
+        /* Floating Info */
+        .floating-text {
+            position: fixed; color: var(--df-gold); font-weight: bold; pointer-events: none;
+            animation: floatUp 1s forwards; z-index: 9999; font-size: 1.2rem; text-shadow: 0 0 5px #000;
+        }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
 
-        /* Alert Box */
-        .alert-box { 
-            background: rgba(255, 59, 59, 0.1); border: 1px solid var(--df-red); color: var(--df-red); 
-            padding: 15px; text-align: center; margin-bottom: 20px; display: none;
-        }
-        .info-box {
-            background: rgba(240, 185, 11, 0.1); border: 1px solid var(--df-gold-dim); color: var(--df-gold);
-            padding: 15px; margin-bottom: 20px; font-size: 0.85rem; line-height: 1.6;
-        }
+        .toolbar { display: flex; gap: 5px; margin-bottom: 15px; }
+        .toolbar button { flex: 1; font-size: 0.8rem; }
 
-        /* Layout */
-        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; }
-        
-        /* App Log */
-        .app-item { border-bottom: 1px solid #222; padding: 10px 0; color: #aaa; display:flex; justify-content:space-between;}
-        .app-item span { color: var(--df-blue); }
-        
-        .quick-app-btn {
-            background: #222; border: 1px solid #444; color: #888;
-            padding: 5px 10px; font-size: 0.75rem; cursor: pointer; transition: 0.2s;
-        }
-        .quick-app-btn:hover { border-color: var(--df-gold); color: var(--df-gold); }
-        
-        /* Accordion */
-        .accordion { background: #1a1a1a; color: #888; border: 1px solid #333; padding: 15px; width: 100%; text-align: left; cursor: pointer; margin-bottom: 10px; transition:0.3s;}
-        .accordion:hover { color: var(--df-gold); border-color: var(--df-gold); }
-        .panel { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: #111; padding: 0 15px; border-left: 2px solid var(--df-gold); margin-bottom: 20px; }
-        
-        /* SweetAlert2 Delta Theme */
-        div:where(.swal2-container).swal2-center>.swal2-popup { 
-            background: #14161a; border: 2px solid var(--df-gold); color: #fff; 
-            border-radius: 0; clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
-        }
-        div:where(.swal2-container) .swal2-title { color: var(--df-gold); font-family: 'Chakra Petch'; }
-        div:where(.swal2-container) .swal2-confirm { background: var(--df-gold) !important; color: #000 !important; border-radius: 0 !important; }
-        div:where(.swal2-container) .swal2-cancel { background: #333 !important; color: #fff !important; border-radius: 0 !important; }
+        /* Mute Button */
+        #muteBtn { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: #000; border: 1px solid #333; color: #666; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
+        #muteBtn:hover { opacity: 1; border-color: var(--df-gold); color: var(--df-gold); }
 
-        /* History */
-        .history-item { background: #111; padding: 10px; border-left: 3px solid #333; margin-bottom: 5px; display:flex; justify-content:space-between; font-family:'Roboto Mono'; font-size:0.85rem;}
-        .history-item.rank-1 { border-left-color: var(--df-gold); background: rgba(240, 185, 11, 0.1); }
-        
-        #pdfTemplate { display: none; } /* PDF 隱藏 */
-        
-        .btn-delete { color: var(--df-red); background:none; border:none; cursor:pointer; font-weight:bold;}
     </style>
 </head>
-<body>
+<body class="crt">
 
-<div class="container">
-    <div class="header">
-        <div class="header-sub">
-            <span>OPERATOR: SENHUAI</span>
-            <span id="liveClock">00:00:00</span>
+<!-- Boot Screen -->
+<div id="bootScreen">
+    <div class="boot-text" style="animation-delay: 0.2s">> SYSTEM INITIALIZING...</div>
+    <div class="boot-text" style="animation-delay: 0.8s">> LOADING ASSETS...</div>
+    <div class="boot-text" style="animation-delay: 1.5s">> CONNECTING TO SERVER...</div>
+    <div class="boot-text" style="animation-delay: 2.2s; color:var(--df-cyan)">> ACCESS GRANTED</div>
+    <div class="boot-text" style="animation-delay: 2.5s; font-size: 0.8rem; margin-top:20px;">TOUCH TO START</div>
+</div>
+
+<div class="container" id="mainUI">
+    <!-- Header with Rank -->
+    <div class="hud-header">
+        <div class="rank-badge">
+            <span class="rank-title">OPERATOR RANK</span>
+            <span class="rank-name" id="rankName">ROOKIE</span>
+            <span class="rank-xp">TOTAL XP: <span id="totalXP">0</span></span>
+            <div class="xp-bar-container" style="width: 150px; margin-top: 5px;">
+                <div class="xp-bar-fill" id="rankProgress" style="background: var(--df-gold);"></div>
+            </div>
         </div>
-        <h1>S.H. <span>PROTOCOL</span></h1>
-        <div style="font-size: 0.8rem; color: var(--df-text); letter-spacing: 5px; opacity: 0.7;">DAILY STATUS REPORT</div>
+        <div class="hud-stats">
+            <div style="font-size: 0.8rem; color: #888;">DAILY MERITS</div>
+            <div class="big-score" id="scoreDisplay">0</div>
+            <div style="font-size: 0.8rem; color: #666;">TARGET: 6</div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <button class="btn-game" onclick="setMode('weekday')">📅 WEEKDAY</button>
+        <button class="btn-game" onclick="setMode('weekend')">⚽ WEEKEND</button>
+        <button class="btn-game" onclick="saveDraft()">💾 SAVE</button>
+        <button class="btn-game" onclick="clearForm()">🗑️ RESET</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div style="margin-bottom: 20px;">
+        <div class="xp-bar-container" style="height: 12px; border: 1px solid #333;">
+            <div class="xp-bar-fill" id="dailyProgress"></div>
+        </div>
+    </div>
+
+    <!-- Cards Container -->
+    <div id="gameContent">
         
-        <div class="definition-box">
-            <strong>[INFO] CLASSIFIED DEVICES (3C):</strong><br>
-            PHONE / TABLET / PC / TV
-        </div>
-    </div>
-
-    <div id="lockBanner" class="alert-box">
-        <h3>⛔ ACCESS DENIED (LOCKED)</h3>
-        <p style="margin:5px 0;" id="lockMessage">TIMELINE EXPIRED.</p>
-        <button class="btn-game" style="border-color:var(--df-red); color:var(--df-red);" onclick="unlockForm()">
-            REQUEST COMMANDER OVERRIDE 🔐
-        </button>
-    </div>
-
-    <div class="time-rule-box info-box">
-        <strong>🕒 SUBMISSION DEADLINE (截止時間)</strong>
-        <ul style="margin: 5px 0 0 20px; padding: 0;">
-            <li><strong>SUN - THU:</strong> 22:30 HOURS</li>
-            <li><strong>FRI - SAT:</strong> 23:30 HOURS</li>
-        </ul>
-    </div>
-
-    <button class="accordion">📜 MISSION BRIEFING (查看規則)</button>
-    <div class="panel">
-        <div style="padding: 15px 0; color: #aaa;">
-            <p><strong>OBJECTIVE:</strong> 每日累積 <strong>6 MERITS</strong> 以解鎖明日裝備使用權。</p>
-            <p><strong>EXEMPTION (免填權):</strong> <br>1. 單科成績 > 80 <br>2. 總分 >= 9 <br>(且無不及格)</p>
-            <p><strong>PENALTIES:</strong> 違規將扣除分數，嚴重者需指揮官介入。</p>
-        </div>
-    </div>
-
-    <div id="mainForm">
-        <div class="toolbar">
-            <button class="btn-game btn-tool" onclick="saveDraft()">💾 SAVE</button>
-            <button class="btn-game btn-tool" onclick="loadDraft(true)">📂 LOAD</button>
-            <button class="btn-game btn-tool" onclick="clearForm()">🗑️ CLEAR</button>
-        </div>
-
-        <div class="mode-selector">
-            <button class="btn-game mode-btn active" onclick="setMode('weekday')">📅 WEEKDAY OPS</button>
-            <button class="btn-game mode-btn" onclick="setMode('weekend')">⚽ WEEKEND OPS</button>
-        </div>
-
-        <div class="xp-text" id="progressText">0 / 6</div>
-        <div class="xp-bar-container">
-            <div class="xp-bar-fill" id="progressBar"></div>
-        </div>
-
+        <!-- ACADEMIC CARD -->
         <div class="card">
-            <div class="card-title">
-                <span>📚 ACADEMIC INTEL (學業)</span>
-                <span class="badge badge-bonus">BONUS</span>
-            </div>
+            <div class="card-title">📚 ACADEMIC (學業)</div>
             
-            <div class="task-item flex-between">
-                <label style="cursor:pointer; display:flex; align-items:center;">
-                    <input type="checkbox" id="mathPassed" onchange="checkStatus()"> 
-                    <span>📐 MATH PASSED</span>
-                </label>
-                <span class="badge badge-bonus">+2</span>
+            <div class="task-item" onclick="toggleTask('mathPassed', 2)">
+                <div style="display:flex; align-items:center;">
+                    <div class="g-checkbox"></div>
+                    <span>MATH PASSED</span>
+                </div>
+                <span class="badge badge-bonus">+2 XP</span>
+                <input type="checkbox" id="mathPassed" style="display:none;">
             </div>
-            
-            <div class="task-item flex-between">
-                <span>📝 OTHERS PASSED</span>
-                <div style="display:flex; align-items:center; gap:5px;">
-                    <input type="number" id="otherExams" value="0" min="0" oninput="checkStatus()" style="width:50px; text-align:center;">
-                    <span style="font-size:0.7rem;">(+1/SUB)</span>
+
+            <div class="task-item" style="cursor: default;">
+                <div style="display:flex; align-items:center; width: 100%;">
+                    <span>📝 OTHER PASS (+1)</span>
+                    <input type="number" id="otherExams" value="0" min="0" oninput="sfx.play('blip'); checkStatus()" style="width: 60px; margin-left: auto; text-align: center;">
                 </div>
             </div>
 
-            <div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #333;">
-                <div style="font-size:0.75rem; color:#666; margin-bottom:8px;">📊 BATTLE DAMAGE ASSESSMENT (成績結算)</div>
-                <div class="flex-row">
-                    <div style="flex:1;">
-                        <span style="color:var(--df-red); font-size:0.7rem; display:block; margin-bottom:5px;">📉 FAILED (不及格)</span>
-                        <input type="number" id="failedExams" value="0" min="0" oninput="checkStatus()" style="border-color:var(--df-red); color:var(--df-red);">
+             <div class="task-item" style="cursor: default; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <div style="flex:1; margin-right:5px;">
+                        <span style="font-size:0.7rem; color:var(--df-red);">FAILED</span>
+                        <input type="number" id="failedExams" value="0" min="0" oninput="sfx.play('error'); checkStatus()" style="border-color:var(--df-red); color:var(--df-red);">
                     </div>
-                    <div style="flex:1;">
-                        <span style="color:var(--df-gold); font-size:0.7rem; display:block; margin-bottom:5px;">🌟 ELITE (>80分)</span>
-                        <input type="number" id="score80Exams" value="0" min="0" oninput="checkStatus()" style="border-color:var(--df-gold); color:var(--df-gold);">
-                    </div>
-                </div>
-            </div>
-
-            <div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #333;">
-                <div style="font-size:0.75rem; color:#666; margin-bottom:5px;">✍️ DRILLS (考卷練習)</div>
-                <div class="task-item flex-between">
-                    <span>COMPLETED</span>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <input type="number" id="testPaperCount" value="0" min="0" oninput="checkStatus()" style="width:50px;">
-                        <span class="badge badge-point">+1</span>
-                    </div>
-                </div>
-                <div class="task-item flex-between">
-                    <span>HIGH SCORE (>85)</span>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <input type="number" id="testPaperHigh" value="0" min="0" oninput="checkStatus()" style="width:50px;">
-                        <span class="badge badge-bonus">+2</span>
+                    <div style="flex:1; margin-left:5px;">
+                        <span style="font-size:0.7rem; color:var(--df-gold);">ELITE (>80)</span>
+                        <input type="number" id="score80Exams" value="0" min="0" oninput="sfx.play('success'); checkStatus()" style="border-color:var(--df-gold); color:var(--df-gold);">
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- OPS LIST -->
         <div class="card">
-            <div class="card-title">✨ SIDE MISSIONS (自訂任務)</div>
-            <div class="custom-input-area">
-                <div class="input-row">
-                    <input type="text" id="customName" placeholder="MISSION NAME">
-                    <input type="number" id="customPoints" placeholder="PTS" value="1" min="0" style="flex:0.4">
-                </div>
-                <div class="flex-between" style="margin-top:10px;">
-                    <label style="font-size:0.8rem; display:flex; align-items:center; color:var(--df-red);">
-                        <input type="checkbox" id="customRequired"> PRIORITY (必做)
-                    </label>
-                    <button class="btn-game" onclick="addCustomTask()" style="border-color:var(--df-gold); color:var(--df-gold); padding:5px 15px;">+ ADD</button>
-                </div>
-            </div>
-            <div id="customTaskList"></div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span>📱 EQUIPMENT LOGS <span id="appRequiredBadge" class="badge badge-required">REQUIRED</span></span>
-                <button onclick="toggleAppHelp()" style="background:none; border:none; color:#666; cursor:pointer;">[?]</button>
-            </div>
-            <div id="appHelp" class="help-tip" style="background:#222; border:1px solid #444; color:#aaa; display:none; padding:10px; margin-bottom:10px; font-size:0.8rem;">
-                CHECK SCREEN TIME IN SETTINGS.
-            </div>
-            
-            <div class="app-input-area" style="background:rgba(0,0,0,0.3); border:1px solid #333; padding:15px;">
-                <div class="quick-app-btn-group" style="display:flex; flex-wrap:wrap; gap:5px; margin-bottom:10px;">
-                    <button class="quick-app-btn" onclick="quickFillApp('YouTube')">YT</button>
-                    <button class="quick-app-btn" onclick="quickFillApp('Roblox')">RBX</button>
-                    <button class="quick-app-btn" onclick="quickFillApp('Instagram')">IG</button>
-                    <button class="quick-app-btn" onclick="quickFillApp('TikTok')">TT</button>
-                    <button class="quick-app-btn" style="border-color:#666;" onclick="addNoUsageLog()">🚫 NO USAGE</button>
-                </div>
-                
-                <div class="input-row">
-                    <select id="appDevice" style="flex:1; background:#000; color:#fff;">
-                        <option value="POCO">📱 POCO</option>
-                        <option value="iPad Mini">🍎 MINI</option>
-                        <option value="iPad 6">🍏 IPAD6</option>
-                    </select>
-                    <input type="text" id="appName" placeholder="APP NAME" style="flex:2">
-                </div>
-                
-                <div class="input-row">
-                    <input type="number" id="appDuration" placeholder="USED (MIN)" min="0">
-                    <input type="number" id="appPlanNext" placeholder="PLAN (MIN)" min="0" style="border-color:var(--df-gold); color:var(--df-gold);">
-                </div>
-                <button class="btn-game" style="width:100%; margin-top:10px;" onclick="addAppLog()">📝 LOG ENTRY</button>
-            </div>
-            
-            <div id="appLogList" style="margin-top:10px;"></div>
-            
-            <div class="flex-between" style="margin-top:15px; font-size:0.8rem; color:#666; font-family:'Roboto Mono';">
-                <div>USED: <span id="totalAppTime" style="color:var(--df-text)">0</span> m</div>
-                <div>PLAN: <span id="totalPlanTime" style="color:var(--df-gold)">0</span> m</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">
-                <span id="listTitle">TACTICAL OBJECTIVES (日常)</span>
-            </div>
+            <div class="card-title"><span id="listTitle">TACTICAL OPS</span></div>
             <div id="taskList"></div>
         </div>
 
-        <div class="card" style="border-left: 3px solid var(--bedtime-border);">
-            <div class="card-title" style="color: #ba68c8;">🌙 NIGHT OPS (就寢)</div>
-            <div class="task-item flex-between">
-                <label style="cursor:pointer; display:flex; align-items:center;">
-                    <input type="checkbox" id="bedtimeBonus" onchange="checkStatus()"> 
-                    <span>🔋 CHARGE AT BASE (客廳充電)</span>
-                </label>
-                <span class="badge badge-bonus">+1</span>
+        <!-- EQUIPMENT -->
+        <div class="card">
+            <div class="card-title">📱 EQUIPMENT LOGS</div>
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <input type="text" id="appName" placeholder="APP / GAME" style="flex:2">
+                <input type="number" id="appDuration" placeholder="MIN" style="flex:1">
             </div>
-            <div class="task-item flex-between">
-                <label style="cursor:pointer; display:flex; align-items:center; color:var(--df-red);">
-                    <input type="checkbox" id="bedtimePenalty" onchange="checkStatus()"> 
-                    <span>🛌 UNAUTHORIZED USE (偷玩)</span>
-                </label>
-                <span class="badge badge-penalty">-2</span>
-            </div>
+            <button class="btn-game" style="width:100%; border-color:var(--df-cyan); color:var(--df-cyan);" onclick="addAppLog()">+ LOG ENTRY</button>
+            <div id="appLogList" style="margin-top:10px; font-size:0.85rem; color:#aaa;"></div>
         </div>
 
-        <div class="card" style="border-left: 3px solid var(--df-red);">
-            <div class="card-title" style="color: var(--df-red);">🚫 INFRACTIONS (違規)</div>
-            
-            <div style="margin-bottom: 20px;">
-                <div style="color:#888; font-size:0.8rem; margin-bottom:5px;">⏳ DELAY VIOLATION (拖延)</div>
-                <div class="penalty-input-group flex-between">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                         <input type="number" id="overtimeMinutes" value="0" min="0" oninput="checkStatus()" style="width:80px;">
-                         <span style="font-size:0.8rem; color:#666;">MINS</span>
-                    </div>
-                    <span style="color: var(--df-red); font-weight:bold;">-<span id="penaltyPoints">0</span></span>
-                </div>
-            </div>
-
-            <div style="margin-bottom: 20px;">
-                <div style="color:#888; font-size:0.8rem; margin-bottom:5px;">📱 OVERUSE / UNAPPROVED (濫用)</div>
-                <div class="penalty-input-group flex-between">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <input type="number" id="excessiveCount" value="0" min="0" oninput="checkStatus()" style="width:80px;">
-                        <span style="font-size:0.8rem; color:#666;">TIMES</span>
-                    </div>
-                    <span style="color: var(--df-red); font-weight:bold;">-<span id="excessivePenalty">0</span></span>
-                </div>
-            </div>
-
-            <hr style="border:0; border-top:1px dashed #333; margin:15px 0;">
-
-            <div>
-                <div class="card-title" style="color:var(--df-red); font-size:0.9rem; border:none; padding:0;">👮 COMMANDER AUTH (家長簽核)</div>
-                <div class="parent-auth-area" style="background:#1a0505; border:1px solid var(--df-red); padding:15px; margin-top:10px;">
-                    <div style="display:flex; gap:20px; justify-content:center; margin-bottom:15px;">
-                        <label style="cursor:pointer; color:#aaa;"><input type="radio" name="violationStatus" value="none" onclick="toggleViolationInput(false)"> ⭕ CLEAN</label>
-                        <label style="cursor:pointer; color:var(--df-red);"><input type="radio" name="violationStatus" value="exist" onclick="toggleViolationInput(true)"> ❌ VIOLATION</label>
-                    </div>
-
-                    <div id="violationInputZone" style="display:none; border-top:1px dashed #555; padding-top:15px;">
-                        <div class="input-row">
-                            <input type="text" id="violationName" placeholder="REASON">
-                            <input type="number" id="violationPoints" placeholder="DEMERIT" value="1" min="1" style="flex:0.5">
-                        </div>
-                        <button class="btn-game" style="width:100%; border-color:var(--df-red); color:var(--df-red); margin-top:5px;" onclick="addMajorViolation()">REPORT INCIDENT</button>
-                        <div id="violationList" style="margin-top:10px;"></div>
-                    </div>
-
-                    <div style="margin-top:15px;">
-                        <input type="password" id="parentPwd" placeholder="🔑 COMMANDER PASSCODE" style="border-color:#555;">
-                    </div>
-                </div>
-            </div>
+        <!-- PENALTIES -->
+        <div class="card" style="border-left: 2px solid var(--df-red);">
+             <div class="card-title" style="color:var(--df-red)">⚠️ INFRACTIONS</div>
+             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                 <span>DELAY (MINS)</span>
+                 <input type="number" id="overtimeMinutes" value="0" oninput="checkStatus()" style="width:80px; border-color:var(--df-red);">
+             </div>
+             <div style="display:flex; justify-content:space-between; align-items:center;">
+                 <span>VIOLATION (TIMES)</span>
+                 <input type="number" id="excessiveCount" value="0" oninput="checkStatus()" style="width:80px; border-color:var(--df-red);">
+             </div>
         </div>
 
-        <div id="resultArea" class="result-box"></div>
-        <button id="btnSave" class="btn-game btn-primary" style="margin-top:20px; font-size:1.1rem;" onclick="saveAndGeneratePDF()">📝 SUBMIT REPORT</button>
-    </div>
+        <button id="btnSave" class="btn-game btn-primary" style="margin-top:20px; font-size:1.2rem;" onclick="submitReport()">
+            📝 SUBMIT & SYNC
+        </button>
 
-    <div class="card" style="margin-top: 30px;">
-        <div class="card-title">🏆 HALL OF FAME (榮譽榜)</div>
-        <div class="csv-actions" style="margin-bottom:10px; display:flex; gap:10px;">
-            <button class="btn-game" style="flex:1; font-size:0.7rem;" onclick="exportToCSV()">📤 EXPORT CSV</button>
-            <button class="btn-game" style="flex:1; font-size:0.7rem; position:relative;">📥 IMPORT CSV <input type="file" id="csvFileInput" accept=".csv" onchange="importFromCSV(this)" style="position:absolute; left:0; top:0; width:100%; height:100%; opacity:0; cursor:pointer;"></button>
-        </div>
-        <div id="historyList" class="history-log"></div>
-        <button class="btn-game" style="width:100%; margin-top:10px; color:#666; border:none; font-size:0.7rem;" onclick="clearHistory()">🗑️ WIPE DATABASE</button>
+        <div id="resultArea" style="margin-top:20px; text-align:center; font-family:'Share Tech Mono'; display:none;"></div>
     </div>
 </div>
 
-<div id="pdfTemplate" style="position:fixed; left:-9999px; top:0; width:210mm; background:white; color:#000; padding:20mm; font-family:sans-serif;">
-    <h1 style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px;">S.H. OPERATOR DAILY REPORT</h1>
-    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-        <span id="pdfDate">DATE: --</span>
-        <span id="pdfMode">MODE: --</span>
-    </div>
-    <div style="background:#eee; padding:20px; text-align:center; margin-bottom:30px;">
-        <div>TOTAL MERITS</div>
-        <div style="font-size:3em; font-weight:bold;" id="pdfFinalScore">0</div>
-        <div id="pdfResultText">STATUS</div>
-    </div>
-    <h3>EARNED MERITS</h3>
-    <div id="pdfEarnedList" style="border-top:1px solid #ccc; padding-top:10px;"></div>
-    <h3 style="margin-top:30px;">PENALTIES</h3>
-    <div id="pdfPenaltyList" style="border-top:1px solid #ccc; padding-top:10px;"></div>
-    <div style="margin-top:50px; display:flex; justify-content:space-between;">
-        <span>COMMANDER: _______________</span>
-        <span>OPERATOR: _______________</span>
-    </div>
+<button id="muteBtn" onclick="toggleMute()">🔊</button>
+
+<!-- PDF Template (Hidden) -->
+<div id="pdfTemplate" style="display:none; font-family:sans-serif; padding:20px;">
+    <h1>S.H. OPERATOR LOG</h1>
+    <p id="pdfContent"></p>
 </div>
 
 <script>
-    const PARENT_PWD = "jeffjasmine";
+    // --- 1. Audio System (Web Audio API) ---
+    class SoundFX {
+        constructor() {
+            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            this.muted = false;
+        }
 
-    // 1. Data (v43 Fix)
-    const baseWeekdayTasks = [
-        { id: 'w2', text: 'STUDY 1HR (讀書)', points: 1 },
-        { id: 'w3', text: 'SLEEP 7.5HR (睡眠)', points: 1 },
-        { id: 'w4', text: 'HOMEWORK (功課)', points: 1 },
-        { id: 'w5', text: 'LUNCH BOX (洗便當)', points: 1 },
-        { id: 'w6', text: 'SHOWER (洗澡)', points: 1 },
-        { id: 'w8', text: 'DISHES (洗碗)', points: 1 },
-        { id: 'w9', text: 'TRASH (倒垃圾)', points: 1 }
+        play(type) {
+            if (this.muted) return;
+            if (this.ctx.state === 'suspended') this.ctx.resume();
+            
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+
+            const now = this.ctx.currentTime;
+            
+            if (type === 'hover') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } 
+            else if (type === 'click') { // Checkbox check
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now); osc.stop(now + 0.1);
+            }
+            else if (type === 'blip') { // Input typing
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, now);
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.03);
+                osc.start(now); osc.stop(now + 0.03);
+            }
+            else if (type === 'success') { // Task complete
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.linearRampToValueAtTime(1000, now + 0.1);
+                osc.frequency.linearRampToValueAtTime(1500, now + 0.3);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.start(now); osc.stop(now + 0.5);
+            }
+            else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+    }
+    const sfx = new SoundFX();
+    function toggleMute() {
+        sfx.muted = !sfx.muted;
+        document.getElementById('muteBtn').innerText = sfx.muted ? '🔇' : '🔊';
+    }
+
+    // --- 2. Rank System ---
+    const RANKS = [
+        { xp: 0, name: "ROOKIE (新兵)", color: "#fff" },
+        { xp: 50, name: "PRIVATE (二兵)", color: "#ddd" },
+        { xp: 150, name: "SPECIALIST (上等兵)", color: "#ccc" },
+        { xp: 300, name: "CORPORAL (下士)", color: "#aaddff" },
+        { xp: 500, name: "SERGEANT (中士)", color: "#55aaff" },
+        { xp: 800, name: "LIEUTENANT (尉官)", color: "#f0b90b" },
+        { xp: 1200, name: "COMMANDER (指揮官)", color: "#ff3333" }
     ];
-    const baseWeekendTasks = [
-        { id: 'e1', text: 'OUTDOOR 1HR (運動)', points: 1 },
-        { id: 'e2', text: 'MEALS (三餐)', points: 1 },
-        { id: 'e3', text: 'CLOSET (衣櫃)', points: 1 },
-        { id: 'e4', text: 'BED CLEAN (整潔)', points: 1 },
-        { id: 'e5', text: 'SHOWER EARLY (早洗澡)', points: 1 },
-        { id: 'e6', text: 'LAUNDRY (折衣服)', points: 1 }
-    ];
-    
-    const tasks = { 
-        weekday: baseWeekdayTasks, 
-        weekend: [...baseWeekdayTasks, ...baseWeekendTasks] 
+
+    let totalXP = parseInt(localStorage.getItem('senhuai_total_xp_v45') || '0');
+
+    function updateRankDisplay() {
+        let currentRank = RANKS[0];
+        let nextRankXP = 50;
+        
+        for (let i = 0; i < RANKS.length; i++) {
+            if (totalXP >= RANKS[i].xp) {
+                currentRank = RANKS[i];
+                nextRankXP = RANKS[i+1] ? RANKS[i+1].xp : totalXP * 1.5;
+            }
+        }
+
+        document.getElementById('rankName').innerText = currentRank.name;
+        document.getElementById('rankName').style.color = currentRank.color;
+        document.getElementById('totalXP').innerText = totalXP;
+
+        // Rank Progress Bar (Current XP towards Next Rank)
+        let prevRankXP = 0;
+        const rankIndex = RANKS.indexOf(currentRank);
+        if(rankIndex > 0) prevRankXP = RANKS[rankIndex].xp;
+        
+        const progress = Math.min(100, ((totalXP - prevRankXP) / (nextRankXP - prevRankXP)) * 100);
+        document.getElementById('rankProgress').style.width = progress + '%';
+    }
+
+    // --- 3. Logic & Game Loop ---
+    const baseTasks = {
+        weekday: [
+            { id: 'w1', text: '📖 STUDY (讀書 1hr)', pts: 1 },
+            { id: 'w2', text: '💤 SLEEP (睡眠 7.5hr)', pts: 1 },
+            { id: 'w3', text: '🍱 LUNCH BOX (洗便當)', pts: 1 },
+            { id: 'w4', text: '🚿 SHOWER (洗澡)', pts: 1 },
+            { id: 'w5', text: '🍽️ DISHES (洗碗)', pts: 1 },
+            { id: 'w6', text: '🗑️ TRASH (垃圾)', pts: 1 }
+        ],
+        weekend: [
+            { id: 'e1', text: '⚽ OUTDOOR (運動 1hr)', pts: 1 },
+            { id: 'e2', text: '🍚 MEALS (正常三餐)', pts: 1 },
+            { id: 'e3', text: '👕 CLOSET (整理衣櫃)', pts: 1 },
+            { id: 'e4', text: '🛏️ ROOM CLEAN (整潔)', pts: 1 },
+            { id: 'e5', text: '🧺 LAUNDRY (折衣服)', pts: 1 }
+        ]
     };
 
-    const TARGET_SCORE = 6; 
     let currentMode = 'weekday';
-    let historyData = [], customTasks = [], majorViolations = [], appUsageLogs = [];
-    let isFormLocked = false, isUnlockedByParent = false, lastCelebratedScore = 5, isAppLogRequired = true;
+    let appLogs = [];
 
-    // 2. Init
+    // Boot Sequence
     window.onload = function() {
-        const today = new Date();
-        const day = today.getDay();
-        const saved = localStorage.getItem('senhuai_history_v44'); 
-        if (saved) historyData = JSON.parse(saved);
-        
-        if (day === 0 || day === 6) setMode('weekend'); else setMode('weekday');
-        
-        renderHistory(); checkDeadline(); updateClock(); setInterval(updateClock, 1000);
-        setupAccordion();
+        const bootScreen = document.getElementById('bootScreen');
+        bootScreen.addEventListener('click', () => {
+            sfx.ctx.resume(); // Ensure Audio Context starts on user gesture
+            sfx.play('success');
+            bootScreen.style.opacity = '0';
+            setTimeout(() => { 
+                bootScreen.style.display = 'none'; 
+                document.querySelector('.container').style.opacity = '1';
+                renderTasks();
+                updateRankDisplay();
+                loadDraft();
+            }, 500);
+        });
 
-        if(localStorage.getItem('senhuai_draft_v44')) {
-            Swal.fire({
-                title: 'RESUME SESSION?', text: "Found unsaved data.", icon: 'question', background: '#14161a', color:'#fff',
-                showCancelButton: true, confirmButtonText: 'LOAD', cancelButtonText: 'DISCARD'
-            }).then((result) => { if (result.isConfirmed) loadDraft(); });
-        }
+        // Auto-select mode based on day
+        const day = new Date().getDay();
+        if(day === 0 || day === 6) currentMode = 'weekend';
     };
 
-    function setupAccordion() {
-        const acc = document.getElementsByClassName("accordion");
-        for (let i = 0; i < acc.length; i++) {
-            acc[i].addEventListener("click", function() {
-                this.classList.toggle("active");
-                const panel = this.nextElementSibling;
-                if (panel.style.maxHeight) panel.style.maxHeight = null; else panel.style.maxHeight = panel.scrollHeight + "px";
-            });
-        }
+    function setMode(mode) {
+        currentMode = mode;
+        sfx.play('blip');
+        renderTasks();
+        checkStatus();
     }
 
-    function updateClock() {
-        const now = new Date();
-        document.getElementById('liveClock').innerText = now.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-        if(now.getSeconds() === 0) checkDeadline();
-    }
-
-    function checkDeadline() {
-        const now = new Date();
-        const day = now.getDay(); 
-        const isLateNight = (day === 5 || day === 6);
-        const deadlineHour = isLateNight ? 23 : 22;
-        const deadlineMinute = 30;
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-        let isOverdue = (currentHour > deadlineHour) || (currentHour === deadlineHour && currentMinute >= deadlineMinute);
+    function renderTasks() {
+        const list = document.getElementById('taskList');
+        list.innerHTML = '';
+        const items = currentMode === 'weekday' ? baseTasks.weekday : [...baseTasks.weekday, ...baseTasks.weekend];
         
-        if (isOverdue && !isFormLocked && !isUnlockedByParent) lockForm(isLateNight);
+        items.forEach(t => {
+            const div = document.createElement('div');
+            div.className = 'task-item';
+            div.setAttribute('onclick', `toggleTask('${t.id}', ${t.pts})`);
+            div.innerHTML = `
+                <div style="display:flex; align-items:center;">
+                    <div class="g-checkbox"></div>
+                    <span>${t.text}</span>
+                </div>
+                <span class="badge badge-bonus">+${t.pts}</span>
+                <input type="checkbox" id="${t.id}" value="${t.pts}" style="display:none;">
+            `;
+            list.appendChild(div);
+        });
+        document.getElementById('listTitle').innerText = currentMode === 'weekday' ? 'DAILY OPS (日常)' : 'JOINT OPS (假日)';
     }
 
-    function lockForm(isLateNight) {
-        isFormLocked = true;
-        document.getElementById('lockBanner').style.display = 'block';
-        document.getElementById('lockMessage').innerHTML = `MISSION EXPIRED (${isLateNight?"23:30":"22:30"}).<br>REQUIRE AUTH.`;
-        document.querySelectorAll('#mainForm .card').forEach(card => card.classList.add('locked'));
-        document.getElementById('btnSave').disabled = true;
-        document.getElementById('btnSave').innerText = '⛔ LOCKED';
+    function toggleTask(id, pts) {
+        const chk = document.getElementById(id);
+        const parent = chk.closest('.task-item');
+        chk.checked = !chk.checked;
+        
+        if (chk.checked) {
+            parent.classList.add('active');
+            sfx.play('click');
+            showFloatingText(pts, event.clientX, event.clientY);
+        } else {
+            parent.classList.remove('active');
+            sfx.play('hover'); // simpler sound for uncheck
+        }
+        checkStatus();
     }
 
-    function unlockForm() {
+    function showFloatingText(pts, x, y) {
+        const el = document.createElement('div');
+        el.className = 'floating-text';
+        el.innerText = `+${pts} XP`;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    }
+
+    function checkStatus() {
+        let earned = 0;
+        
+        // Math
+        if(document.getElementById('mathPassed').checked) earned += 2;
+        // Others
+        earned += (parseInt(document.getElementById('otherExams').value) || 0);
+        // Tasks
+        document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(c => earned += parseInt(c.value));
+
+        // Penalties
+        const failed = parseInt(document.getElementById('failedExams').value) || 0;
+        const lateMins = parseInt(document.getElementById('overtimeMinutes').value) || 0;
+        const violations = parseInt(document.getElementById('excessiveCount').value) || 0;
+        
+        let penalty = 0;
+        // Late calculation
+        if (lateMins > 0) {
+            if(lateMins < 5) penalty += 1;
+            else if(lateMins < 10) penalty += 2;
+            else penalty += (2 + Math.ceil((lateMins-10)/5));
+        }
+        penalty += (violations * 1);
+
+        const finalScore = earned - penalty;
+        
+        // Update UI
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        scoreDisplay.innerText = finalScore;
+        
+        // Pulse effect
+        scoreDisplay.classList.remove('pulse');
+        void scoreDisplay.offsetWidth; // trigger reflow
+        scoreDisplay.classList.add('pulse');
+
+        // Progress Bar
+        const pct = Math.min(100, (finalScore / 6) * 100);
+        document.getElementById('dailyProgress').style.width = pct + '%';
+        document.getElementById('dailyProgress').style.backgroundColor = finalScore >= 6 ? 'var(--df-cyan)' : 'var(--df-gold)';
+
+        return { finalScore, failed };
+    }
+
+    // --- 4. App Logging ---
+    function addAppLog() {
+        const name = document.getElementById('appName').value;
+        const dur = document.getElementById('appDuration').value;
+        if(!name) return;
+        appLogs.push({name, dur});
+        renderAppLogs();
+        document.getElementById('appName').value = '';
+        document.getElementById('appDuration').value = '';
+        sfx.play('blip');
+    }
+    function renderAppLogs() {
+        document.getElementById('appLogList').innerHTML = appLogs.map(a => `<div>> ${a.name} (${a.dur}m)</div>`).join('');
+    }
+
+    // --- 5. Submission & Rank Up ---
+    function submitReport() {
+        const status = checkStatus();
+        
+        if (status.failed > 0 && appLogs.length === 0) {
+            Swal.fire({ title:'LOGS MISSING', text:'Failed exams require App Logs.', icon:'warning', background:'#111', color:'#fff' });
+            return;
+        }
+
         Swal.fire({
-            title: 'SECURITY CLEARANCE',
-            input: 'password', inputPlaceholder: 'PASSCODE',
-            background: '#14161a', color: '#fff',
-            showCancelButton: true, confirmButtonText: 'ACCESS', cancelButtonText: 'ABORT',
-            preConfirm: (pwd) => { if (pwd !== PARENT_PWD) Swal.showValidationMessage('ACCESS DENIED'); }
+            title: 'CONFIRM UPLOAD?',
+            text: `SCORE: ${status.finalScore}`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'EXECUTE',
+            background: '#111', color: '#fff',
+            confirmButtonColor: 'var(--df-gold)'
         }).then((result) => {
-            if (result.isConfirmed) {
-                isFormLocked = false; isUnlockedByParent = true;
-                document.getElementById('lockBanner').style.display = 'none';
-                document.querySelectorAll('#mainForm .card').forEach(card => card.classList.remove('locked'));
-                document.getElementById('btnSave').disabled = false;
-                document.getElementById('btnSave').innerText = '📝 SUBMIT REPORT';
-                Swal.fire({icon:'success', title:'ACCESS GRANTED', background:'#14161a', color:'#fff', timer:1000, showConfirmButton:false});
+            if(result.isConfirmed) {
+                // Add to Total XP
+                if (status.finalScore > 0) {
+                    totalXP += status.finalScore;
+                    localStorage.setItem('senhuai_total_xp_v45', totalXP);
+                    updateRankDisplay();
+                }
+
+                // Effect
+                sfx.play('success');
+                if(status.finalScore >= 6) {
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f3ff', '#f0b90b'] });
+                }
+
+                Swal.fire({ 
+                    title: 'DATA SYNCED', 
+                    text: `Total XP Updated: ${totalXP}`, 
+                    icon: 'success', 
+                    background: '#111', color: '#fff' 
+                });
+                
+                // Clear draft
+                localStorage.removeItem('senhuai_draft_v45');
             }
         });
     }
 
-    // 3. Render
-    function setMode(mode) {
-        currentMode = mode;
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-        if(mode === 'weekday') {
-            document.querySelectorAll('.mode-btn')[0].classList.add('active');
-            document.getElementById('listTitle').innerText = "DAILY OPS (日常任務)";
-            renderTasks(tasks.weekday, false);
-        } else {
-            document.querySelectorAll('.mode-btn')[1].classList.add('active');
-            document.getElementById('listTitle').innerText = "JOINT OPS (假日綜合)";
-            renderTasks([], true);
-        }
-        checkStatus(); 
-    }
-
-    function renderTasks(taskList, showGroups) {
-        const container = document.getElementById('taskList');
-        container.innerHTML = '';
-        if (showGroups) {
-            const t1 = document.createElement('div'); t1.className='task-group-title'; t1.innerText='BASIC (平日)'; container.appendChild(t1);
-            baseWeekdayTasks.forEach(task => container.appendChild(createTaskElement(task)));
-            const t2 = document.createElement('div'); t2.className='task-group-title'; t2.innerText='BONUS (假日)'; container.appendChild(t2);
-            baseWeekendTasks.forEach(task => container.appendChild(createTaskElement(task)));
-        } else {
-            taskList.forEach(task => container.appendChild(createTaskElement(task)));
-        }
-    }
-
-    function createTaskElement(task) {
-        const div = document.createElement('div'); div.className = 'task-item';
-        div.innerHTML = `<label style="cursor:pointer; display:flex; align-items:center; width:100%"><input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><span>${task.text}</span><span class="badge badge-point">+${task.points}</span></label>`;
-        return div;
-    }
-
-    // --- Draft ---
+    // --- 6. Save/Load Draft ---
     function saveDraft() {
-        if(isFormLocked) { Swal.fire('LOCKED', '', 'error'); return; }
-        const draft = {
-            mathPassed: document.getElementById('mathPassed').checked,
-            otherExams: document.getElementById('otherExams').value,
-            failedExams: document.getElementById('failedExams').value,
-            score80Exams: document.getElementById('score80Exams').value,
-            testPaperCount: document.getElementById('testPaperCount').value,
-            testPaperHigh: document.getElementById('testPaperHigh').value,
-            bedtimeBonus: document.getElementById('bedtimeBonus').checked,
-            bedtimePenalty: document.getElementById('bedtimePenalty').checked,
-            overtimeMinutes: document.getElementById('overtimeMinutes').value,
-            excessiveCount: document.getElementById('excessiveCount').value,
-            customTasks, majorViolations, appUsageLogs, checkedTasks: [], customTasksChecked: []
+        const data = {
+            math: document.getElementById('mathPassed').checked,
+            others: document.getElementById('otherExams').value,
+            failed: document.getElementById('failedExams').value,
+            checked: Array.from(document.querySelectorAll('#taskList input:checked')).map(el => el.id),
+            appLogs: appLogs,
+            mode: currentMode
         };
-        document.querySelectorAll('#taskList input[type="checkbox"]').forEach(chk => { if(chk.checked) draft.checkedTasks.push(chk.id); });
-        customTasks.forEach(t => { if(document.getElementById(t.id).checked) draft.customTasksChecked.push(t.id); });
-        localStorage.setItem('senhuai_draft_v44', JSON.stringify(draft));
-        Swal.fire({icon:'success', title:'GAME SAVED', background:'#14161a', color:'#fff', timer:1000, showConfirmButton:false});
+        localStorage.setItem('senhuai_draft_v45', JSON.stringify(data));
+        sfx.play('blip');
+        Swal.fire({title:'GAME SAVED', toast:true, position:'top-end', showConfirmButton:false, timer:1500, background:'#111', color:'#fff', icon:'success'});
     }
 
-    function loadDraft(showMsg) {
-        const saved = localStorage.getItem('senhuai_draft_v44');
-        if(!saved) { if(showMsg) Swal.fire('NO SAVE DATA', '', 'info'); return; }
-        const draft = JSON.parse(saved);
-        document.getElementById('mathPassed').checked = draft.mathPassed;
-        document.getElementById('otherExams').value = draft.otherExams;
-        document.getElementById('failedExams').value = draft.failedExams || 0;
-        document.getElementById('score80Exams').value = draft.score80Exams || 0;
-        document.getElementById('testPaperCount').value = draft.testPaperCount;
-        document.getElementById('testPaperHigh').value = draft.testPaperHigh;
-        document.getElementById('bedtimeBonus').checked = draft.bedtimeBonus;
-        document.getElementById('bedtimePenalty').checked = draft.bedtimePenalty;
-        document.getElementById('overtimeMinutes').value = draft.overtimeMinutes;
-        document.getElementById('excessiveCount').value = draft.excessiveCount;
-        
-        customTasks = draft.customTasks || []; majorViolations = draft.majorViolations || []; appUsageLogs = draft.appUsageLogs || [];
-        renderCustomTasks(); renderMajorViolations(); renderAppLogs();
-        
-        setTimeout(() => {
-            if(draft.checkedTasks) draft.checkedTasks.forEach(id => { const el = document.getElementById(id); if(el) el.checked = true; });
-            if(draft.customTasksChecked) draft.customTasksChecked.forEach(id => { const el = document.getElementById(id); if(el) el.checked = true; });
-            checkStatus(); 
-        }, 50);
-        if(showMsg) Swal.fire({icon:'success', title:'GAME LOADED', background:'#14161a', color:'#fff', timer:1000, showConfirmButton:false});
+    function loadDraft() {
+        const saved = localStorage.getItem('senhuai_draft_v45');
+        if(saved) {
+            const data = JSON.parse(saved);
+            if(data.mode) setMode(data.mode);
+            if(data.math) toggleTask('mathPassed', 2);
+            document.getElementById('otherExams').value = data.others;
+            document.getElementById('failedExams').value = data.failed;
+            if(data.checked) data.checked.forEach(id => {
+                 const el = document.getElementById(id);
+                 if(el && !el.checked) toggleTask(id, el.value);
+            });
+            appLogs = data.appLogs || [];
+            renderAppLogs();
+            checkStatus();
+        }
     }
-
+    
     function clearForm() {
-        Swal.fire({title:'RESET?', background:'#14161a', color:'#fff', icon:'warning', showCancelButton:true, confirmButtonColor:'#d33', confirmButtonText:'YES'}).then((result) => {
-            if(result.isConfirmed) { localStorage.removeItem('senhuai_draft_v44'); location.reload(); }
-        });
-    }
-
-    // --- App Logs ---
-    function quickFillApp(appName) { document.getElementById('appName').value = appName; document.getElementById('appDuration').focus(); }
-    function toggleAppHelp() { document.getElementById('appHelp').style.display = document.getElementById('appHelp').style.display==='block'?'none':'block'; }
-    function addAppLog() {
-        if(isFormLocked) return;
-        const device = document.getElementById('appDevice').value;
-        const name = document.getElementById('appName').value.trim();
-        const duration = parseInt(document.getElementById('appDuration').value) || 0;
-        const planNext = parseInt(document.getElementById('appPlanNext').value) || 0;
-        if(!name) { Swal.fire('Error', 'ENTER NAME', 'warning'); return; }
-        appUsageLogs.push({ id: 'app_' + Date.now(), device, name, duration, planNext });
-        document.getElementById('appName').value = ''; document.getElementById('appDuration').value = ''; document.getElementById('appPlanNext').value = '';
-        renderAppLogs();
-    }
-    function addNoUsageLog() {
-        if(isFormLocked) return;
-        appUsageLogs.push({ id: 'app_' + Date.now(), device: 'SYS', name: 'NO USAGE (AFK)', duration: 0, planNext: 0 });
-        renderAppLogs();
-    }
-    function removeAppLog(id) { if(isFormLocked) return; appUsageLogs = appUsageLogs.filter(a => a.id !== id); renderAppLogs(); }
-    function renderAppLogs() {
-        const c = document.getElementById('appLogList'); c.innerHTML = '';
-        let total = 0, totalPlan = 0;
-        appUsageLogs.forEach(app => {
-            total += app.duration; totalPlan += app.planNext || 0;
-            const div = document.createElement('div'); div.className = 'app-item';
-            div.innerHTML = `<div><small>[${app.device}]</small> ${app.name}</div><div style="display:flex;align-items:center;gap:10px;"><span>${app.duration}m</span><span style="color:var(--df-gold)">Plan:${app.planNext}</span><button class="btn-delete" onclick="removeAppLog('${app.id}')">✕</button></div>`;
-            c.appendChild(div);
-        });
-        document.getElementById('totalAppTime').innerText = total; document.getElementById('totalPlanTime').innerText = totalPlan;
-    }
-
-    // --- Violation / Custom ---
-    function addCustomTask() {
-        if(isFormLocked) return;
-        const name = document.getElementById('customName').value.trim();
-        const points = parseInt(document.getElementById('customPoints').value) || 0;
-        const required = document.getElementById('customRequired').checked;
-        if(!name) { Swal.fire('Error', 'ENTER MISSION', 'warning'); return; }
-        customTasks.push({ id: 'custom_' + Date.now(), text: name, points, required });
-        document.getElementById('customName').value = ''; renderCustomTasks(); checkStatus();
-    }
-    function removeCustomTask(id) { if(isFormLocked) return; customTasks = customTasks.filter(t => t.id !== id); renderCustomTasks(); checkStatus(); }
-    function renderCustomTasks() {
-        const c = document.getElementById('customTaskList'); c.innerHTML = '';
-        customTasks.forEach(t => {
-            const div = document.createElement('div'); div.className = 'task-item';
-            div.innerHTML = `<label style="cursor:pointer;display:flex;align-items:center;width:100%"><input type="checkbox" id="${t.id}" value="${t.points}" onchange="checkStatus()"><span>${t.text} ${t.required?'(MAIN)':''}</span><span class="badge badge-bonus">+${t.points}</span></label><button class="btn-delete" onclick="removeCustomTask('${t.id}')">✕</button>`;
-            c.appendChild(div);
-        });
-    }
-
-    function toggleViolationInput(show) {
-        document.getElementById('violationInputZone').style.display = show ? 'block' : 'none';
-        if(!show) { majorViolations = []; renderMajorViolations(); checkStatus(); }
-    }
-    function addMajorViolation() {
-        if(isFormLocked) return;
-        const name = document.getElementById('violationName').value.trim();
-        const points = parseInt(document.getElementById('violationPoints').value) || 0;
-        if(!name) { Swal.fire('Error', 'ENTER REASON', 'warning'); return; }
-        majorViolations.push({ id: 'violation_' + Date.now(), text: name, points });
-        document.getElementById('violationName').value = ''; renderMajorViolations(); checkStatus();
-    }
-    function removeMajorViolation(id) { if(isFormLocked) return; majorViolations = majorViolations.filter(v => v.id !== id); renderMajorViolations(); checkStatus(); }
-    function renderMajorViolations() {
-        const c = document.getElementById('violationList'); c.innerHTML = '';
-        majorViolations.forEach(v => {
-            const div = document.createElement('div'); div.className = 'violation-item';
-            div.innerHTML = `<span>⚠️ ${v.text}</span><div style="display:flex;align-items:center;gap:10px;"><span class="badge badge-penalty">-${v.points}</span><button class="btn-delete" onclick="removeMajorViolation('${v.id}')">✕</button></div>`;
-            c.appendChild(div);
-        });
-    }
-
-    // --- Status ---
-    function calculateTimePenalty() {
-        const mins = parseInt(document.getElementById('overtimeMinutes').value) || 0;
-        let points = 0;
-        if(mins<5 && mins>0) points=1; else if(mins>=5 && mins<10) points=2; else if(mins>=10) points=2+(Math.floor((mins-10)/5)+1)*3;
-        document.getElementById('penaltyPoints').innerText = points; return points;
-    }
-
-    function checkStatus() {
-        let earnedScore = 0; let missingRequired = [];
-        const failedExams = parseInt(document.getElementById('failedExams').value) || 0;
-        const score80Exams = parseInt(document.getElementById('score80Exams').value) || 0;
-
-        if (document.getElementById('mathPassed').checked) earnedScore += 2;
-        earnedScore += (parseInt(document.getElementById('otherExams').value) || 0);
-        const tpCount = parseInt(document.getElementById('testPaperCount').value) || 0;
-        const tpHigh = parseInt(document.getElementById('testPaperHigh').value) || 0;
-        earnedScore += tpCount * 1 + tpHigh * 2;
-
-        document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(chk => earnedScore += parseInt(chk.value));
-        customTasks.forEach(t => {
-            const el = document.getElementById(t.id);
-            if(el && el.checked) earnedScore += t.points; else if(t.required) missingRequired.push(t.text);
-        });
-        if(document.getElementById('bedtimeBonus').checked) earnedScore += 1;
-
-        const timePenalty = calculateTimePenalty();
-        const excessiveCount = parseInt(document.getElementById('excessiveCount').value) || 0;
-        const excessivePenalty = excessiveCount * 1;
-        document.getElementById('excessivePenalty').innerText = excessivePenalty;
-        let violationPenalty = 0; majorViolations.forEach(v => violationPenalty += v.points);
-        let bedtimePenalty = 0; if (document.getElementById('bedtimePenalty').checked) bedtimePenalty = 2;
-
-        const totalPenalty = timePenalty + excessivePenalty + violationPenalty + bedtimePenalty;
-        let finalScore = earnedScore - totalPenalty;
-
-        const badge = document.getElementById('appRequiredBadge');
-        if (failedExams > 0) { isAppLogRequired = true; badge.innerText = 'REQUIRED (FAILED)'; badge.className = 'badge badge-penalty'; }
-        else if (score80Exams > 0) { isAppLogRequired = false; badge.innerText = 'EXEMPT (ELITE)'; badge.className = 'badge badge-exempt'; }
-        else if (finalScore >= 9) { isAppLogRequired = false; badge.innerText = 'EXEMPT (LEGEND)'; badge.className = 'badge badge-exempt'; }
-        else { isAppLogRequired = true; badge.innerText = 'REQUIRED'; badge.className = 'badge badge-penalty'; }
-
-        const percent = Math.min((earnedScore / TARGET_SCORE) * 100, 100);
-        document.getElementById('progressBar').style.width = percent + '%';
-        
-        let statusText = "";
-        if (earnedScore >= TARGET_SCORE) {
-            statusText = `${earnedScore} / ${TARGET_SCORE} <span style="color:var(--neon-green)">[READY]</span>`;
-            if(finalScore>lastCelebratedScore && missingRequired.length===0) { triggerCelebration(finalScore); lastCelebratedScore=finalScore; }
-        } else {
-            statusText = `${earnedScore} / ${TARGET_SCORE} <span style="color:var(--warning)">[PENDING]</span>`;
-        }
-        document.getElementById('progressText').innerHTML = statusText;
-
-        renderResultBox(earnedScore, finalScore, missingRequired, totalPenalty);
-        return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, appLogStr: appUsageLogs.map(a => `[${a.device}]${a.name}(${a.duration}m)`).join('|')||"N/A" };
-    }
-
-    function triggerCelebration(score) {
-        let title = "OBJECTIVE UPDATED", icon = "info";
-        if (score === 6) { title = "MISSION ACCOMPLISHED (6XP)"; icon="success"; confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
-        else if (score >= 9) { title = "LEGENDARY STATUS (9XP+)"; icon="success"; confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors:['#f0b90b', '#fff'] }); }
-        Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: '#14161a', color:'#fff' });
-    }
-
-    function renderResultBox(earned, final, missing, totalPenalty) {
-        const r = document.getElementById('resultArea');
-        r.style.display = 'block';
-        if (final >= TARGET_SCORE && missing.length === 0) {
-            r.innerHTML = `<div style="color:var(--neon-green); text-align:center; padding:10px; border:1px solid var(--neon-green);"><h3>✅ MISSION SUCCESS</h3><p>SCORE: ${final}</p></div>`;
-        } else {
-            let msg = missing.length > 0 ? `MISSING: ${missing.join(', ')}` : "INSUFFICIENT XP";
-            r.innerHTML = `<div style="color:var(--df-red); text-align:center; padding:10px; border:1px solid var(--df-red);"><h3>🚫 MISSION FAILED</h3><p>${msg}</p><p>SCORE: ${final}</p></div>`;
+        if(confirm('RESET ALL MISSION DATA?')) {
+            localStorage.removeItem('senhuai_draft_v45');
+            location.reload();
         }
     }
 
-    // --- Save & PDF ---
-    function saveAndGeneratePDF() {
-        if(isFormLocked) { Swal.fire('LOCKED', '', 'error'); return; }
-        if(isAppLogRequired && appUsageLogs.length === 0) { Swal.fire({icon:'warning', title:'LOGS REQUIRED', text:'Please log app usage or select AFK.', background:'#1e1e24', color:'#fff'}); return; }
-        
-        const vStatus = document.querySelector('input[name="violationStatus"]:checked');
-        if(!vStatus) { Swal.fire({icon:'warning', title:'AUTH REQUIRED', text:'Commander verification needed.', background:'#1e1e24', color:'#fff'}); document.querySelector('.parent-auth-area').scrollIntoView({behavior:'smooth'}); return; }
-        if(vStatus.value==='exist' && majorViolations.length===0) { Swal.fire('ERROR', 'Enter violation details.', 'error'); return; }
-        
-        const pwd = document.getElementById('parentPwd').value;
-        if(pwd !== PARENT_PWD) { Swal.fire({icon:'error', title:'DENIED', text:'Invalid Passcode.', background:'#1e1e24', color:'#fff'}); return; }
-
-        const status = checkStatus();
-        const dateStr = new Date().toLocaleDateString('zh-TW');
-
-        if(status.passed) {
-            const tmr = new Date(); tmr.setDate(tmr.getDate()+1);
-            const certHtml = `
-                <div class="swal-certificate">
-                    <div class="cert-icon">🎖️</div>
-                    <div class="cert-title">AUTHORIZATION GRANTED</div>
-                    <div class="cert-body">OPERATOR <strong>SENHUAI</strong> CLEARED.<br>MERITS: ${status.score}</div>
-                    <div class="cert-date">VALID: ${tmr.toLocaleDateString()}</div>
-                    <div class="cert-stamp" style="border-color:var(--df-gold); color:var(--df-gold)">APPROVED</div>
-                </div>
-            `;
-            Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: 'ACKNOWLEDGED', backdrop: `rgba(0,0,0,0.9)`, background: '#fff' });
-            confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 }, colors:['#f0b90b'] });
-        } else {
-            Swal.fire({title:'LOGGED', text:`Score: ${status.score}`, icon:'info', background:'#1e1e24', color:'#fff'});
-        }
-
-        // PDF Generation
-        const el = document.getElementById('pdfTemplate');
-        el.style.display = 'block'; 
-        document.getElementById('pdfDate').innerText = `DATE: ${dateStr}`;
-        document.getElementById('pdfFinalScore').innerText = status.score;
-        document.getElementById('pdfResultText').innerText = status.passed ? "APPROVED" : "DENIED";
-        
-        let eList = "";
-        if(document.getElementById('mathPassed').checked) eList += "<div>MATH (+2)</div>";
-        document.querySelectorAll('#taskList input:checked').forEach(c => eList += `<div>${c.nextElementSibling.innerText} (+${c.value})</div>`);
-        document.getElementById('pdfEarnedList').innerHTML = eList;
-
-        const opt = { margin: 10, filename: `OPS_LOG_${dateStr}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } };
-        html2pdf().set(opt).from(el).save().then(() => { el.style.display = 'none'; });
-
-        const record = { date: new Date().toLocaleString(), mode: currentMode, finalScore: status.score, result: status.passed?"PASS":"FAIL", appLogStr: status.appLogStr };
-        historyData.unshift(record);
-        localStorage.setItem('senhuai_history_v44', JSON.stringify(historyData));
-        localStorage.removeItem('senhuai_draft_v44');
-        document.getElementById('parentPwd').value = '';
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const list = document.getElementById('historyList'); list.innerHTML = '';
-        // Sort Top 3
-        let sorted = [...historyData].sort((a,b) => parseFloat(b.finalScore) - parseFloat(a.finalScore));
-        let top3 = sorted.slice(0,3);
-        let rest = historyData.filter(x => !top3.includes(x)).slice(0, 7);
-        [...top3, ...rest].forEach(item => {
-            const div = document.createElement('div'); div.className = 'history-item';
-            let rank = top3.indexOf(item), trophy = rank===0?'🥇':rank===1?'🥈':rank===2?'🥉':'';
-            if(rank>=0) div.classList.add(`rank-${rank+1}`);
-            div.innerHTML = `<div>${item.date}</div><div><span class="trophy">${trophy}</span><span style="color:${item.result==='PASS'?'var(--df-gold)':'var(--df-red)'}">${item.finalScore} XP</span></div>`;
-            list.appendChild(div);
-        });
-    }
-
-    function clearHistory() { if(confirm('WIPE?')) { historyData=[]; localStorage.setItem('senhuai_history_v44', '[]'); renderHistory(); } }
-    function exportToCSV() { /* Standard CSV Logic */ }
-    function importFromCSV(input) { /* Standard Import Logic */ }
 </script>
 </body>
 </html>

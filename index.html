@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>S.H. OPERATOR PROTOCOL (v45 GAMIFIED)</title>
+    <title>S.H. OPERATOR PROTOCOL (v45.1 ULTIMATE)</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -18,9 +18,7 @@
             --df-gray: #333;
             --df-text: #e0e0e0;
             --df-red: #ff3333;
-            --df-red-glow: rgba(255, 51, 51, 0.6);
             --df-cyan: #00f3ff;
-            --scanline-color: rgba(0, 0, 0, 0.5);
         }
 
         /* CRT Effect Overlay */
@@ -36,8 +34,8 @@
             color: var(--df-text);
             margin: 0; padding: 0;
             overflow-x: hidden;
-            /* Hexagon Background */
             background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
+            padding-bottom: 100px;
         }
 
         /* Boot Screen */
@@ -49,117 +47,83 @@
         }
         .boot-text { font-size: 1.2rem; margin-bottom: 10px; opacity: 0; animation: fadeIn 0.2s forwards; }
 
-        .container { max-width: 700px; margin: 0 auto; padding: 20px; padding-bottom: 120px; position: relative; z-index: 1; opacity: 0; transition: opacity 1s; }
+        /* Lock Screen */
+        #lockOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 0, 0, 0.95); z-index: 5000; display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            border: 5px solid var(--df-red);
+        }
+        .lock-icon { font-size: 4rem; margin-bottom: 20px; animation: pulseRed 1s infinite; }
+
+        .container { max-width: 700px; margin: 0 auto; padding: 20px; opacity: 0; transition: opacity 1s; position: relative; z-index: 1;}
+        .system-locked { pointer-events: none; filter: grayscale(1) contrast(1.2); opacity: 0.5; }
 
         /* HUD Header */
         .hud-header {
             border: 1px solid var(--df-gray); border-top: 4px solid var(--df-gold);
-            background: rgba(20, 20, 20, 0.9); padding: 15px; margin-bottom: 25px;
+            background: rgba(20, 20, 20, 0.9); padding: 15px; margin-bottom: 15px;
             display: flex; justify-content: space-between; align-items: center;
             box-shadow: 0 0 15px rgba(240, 185, 11, 0.1);
         }
-        .rank-badge {
-            display: flex; flex-direction: column; align-items: flex-start;
-        }
-        .rank-title { font-size: 0.7rem; color: #888; letter-spacing: 2px; }
-        .rank-name { font-size: 1.5rem; font-weight: 700; color: var(--df-gold); text-shadow: 0 0 10px var(--df-gold-glow); }
-        .rank-xp { font-size: 0.8rem; font-family: 'Share Tech Mono'; color: var(--df-cyan); }
+        .rank-info { font-family: 'Share Tech Mono'; font-size: 0.8rem; color: #888; }
+        .clock-display { font-family: 'Share Tech Mono'; color: var(--df-gold); font-size: 1.2rem; letter-spacing: 1px; }
 
-        /* Progress Circle/Bar */
-        .hud-stats { text-align: right; }
-        .big-score { font-size: 2.5rem; font-weight: bold; line-height: 1; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); transition: transform 0.2s; }
-        .big-score.pulse { transform: scale(1.3); color: var(--df-gold); }
-
-        /* Cards with interaction */
+        /* Cards */
         .card {
             background: rgba(20, 20, 20, 0.8); border: 1px solid var(--df-gray);
             margin-bottom: 15px; padding: 20px; position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%);
         }
-        .card:hover { border-color: var(--df-gold); box-shadow: 0 0 15px rgba(240, 185, 11, 0.15); transform: translateY(-2px); }
-        .card.locked { filter: grayscale(1) blur(2px); opacity: 0.5; pointer-events: none; }
+        .card:hover { border-color: var(--df-gold); box-shadow: 0 0 10px rgba(240, 185, 11, 0.1); }
+        .card-title { font-size: 1.1rem; color: var(--df-gold); margin-bottom: 15px; border-bottom: 1px dashed #333; padding-bottom: 8px; display:flex; justify-content:space-between; }
 
-        .card-title {
-            font-size: 1.1rem; color: var(--df-gold); margin-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px dashed #333; padding-bottom: 8px;
-        }
-
-        /* Gamified Checkbox */
+        /* UI Elements */
         .task-item {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px; margin-bottom: 5px; background: #0a0a0a; border: 1px solid #222;
+            padding: 10px; margin-bottom: 5px; background: #0a0a0a; border: 1px solid #222;
             transition: 0.2s; cursor: pointer;
         }
         .task-item:hover { background: #151515; border-color: #444; }
         .task-item.active { border-color: var(--df-gold); background: rgba(240, 185, 11, 0.05); }
         
-        /* Hidden real checkbox, custom UI */
         .g-checkbox {
-            width: 20px; height: 20px; border: 2px solid #555; display: inline-block;
-            margin-right: 15px; position: relative; transition: 0.2s;
+            width: 18px; height: 18px; border: 2px solid #555; display: inline-block;
+            margin-right: 12px; position: relative; transition: 0.2s;
         }
-        .task-item.active .g-checkbox {
-            background: var(--df-gold); border-color: var(--df-gold); box-shadow: 0 0 10px var(--df-gold);
-        }
+        .task-item.active .g-checkbox { background: var(--df-gold); border-color: var(--df-gold); box-shadow: 0 0 8px var(--df-gold); }
 
-        /* Inputs */
         input, select {
-            background: #080808; border: 1px solid #444; color: #fff; padding: 10px;
-            font-family: 'Chakra Petch'; font-size: 1rem; width: 100%; box-sizing: border-box;
+            background: #000; border: 1px solid #444; color: #fff; padding: 8px;
+            font-family: 'Chakra Petch'; font-size: 0.9rem; width: 100%; box-sizing: border-box;
             transition: 0.3s;
         }
-        input:focus { border-color: var(--df-cyan); outline: none; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
+        input:focus { border-color: var(--df-cyan); outline: none; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
 
-        /* Buttons */
         .btn-game {
-            background: #222; color: #fff; border: 1px solid #444; padding: 12px;
+            background: #222; color: #fff; border: 1px solid #444; padding: 10px;
             font-family: 'Chakra Petch'; font-weight: 700; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 1px; transition: 0.2s;
-            position: relative; overflow: hidden;
+            text-transform: uppercase; transition: 0.2s;
         }
-        .btn-game::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            transition: 0.5s;
-        }
-        .btn-game:hover::before { left: 100%; }
         .btn-game:hover { border-color: var(--df-gold); color: var(--df-gold); }
-        
-        .btn-primary { 
-            background: var(--df-gold); color: #000; border: none; width: 100%; 
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-        }
-        .btn-primary:hover { background: #fff; color: #000; box-shadow: 0 0 20px var(--df-gold); }
+        .btn-primary { background: var(--df-gold); color: #000; border: none; width: 100%; font-size: 1.1rem; padding: 15px; margin-top: 10px; }
+        .btn-primary:hover { background: #ffcc00; color: #000; box-shadow: 0 0 20px var(--df-gold); }
+        .btn-delete { border:1px solid var(--df-red); color:var(--df-red); background:transparent; width:auto; padding:5px 10px; font-size:0.7rem; }
 
         /* XP Bar */
-        .xp-bar-container { height: 6px; background: #222; margin-top: 5px; width: 100%; position: relative; overflow: hidden;}
-        .xp-bar-fill { height: 100%; background: var(--df-cyan); width: 0%; transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 10px var(--df-cyan); }
-
-        /* Badges & Tags */
-        .badge { font-size: 0.7rem; padding: 2px 6px; border: 1px solid; border-radius: 2px; }
-        .badge-bonus { color: var(--df-cyan); border-color: var(--df-cyan); }
-        .badge-penalty { color: var(--df-red); border-color: var(--df-red); }
+        .xp-bar-container { height: 8px; background: #222; margin: 10px 0; border: 1px solid #444; }
+        .xp-bar-fill { height: 100%; background: var(--df-gold); width: 0%; transition: width 0.5s; }
 
         /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scanline { 0% { transform: translateY(-100%); } 100% { transform: translateY(100%); } }
-
-        /* Floating Info */
-        .floating-text {
-            position: fixed; color: var(--df-gold); font-weight: bold; pointer-events: none;
-            animation: floatUp 1s forwards; z-index: 9999; font-size: 1.2rem; text-shadow: 0 0 5px #000;
-        }
+        @keyframes pulseRed { 0% { opacity: 0.5; text-shadow: 0 0 10px red; } 100% { opacity: 1; text-shadow: 0 0 20px red; } }
         @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-50px); } }
-
-        .toolbar { display: flex; gap: 5px; margin-bottom: 15px; }
-        .toolbar button { flex: 1; font-size: 0.8rem; }
-
-        /* Mute Button */
-        #muteBtn { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: #000; border: 1px solid #333; color: #666; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0.5; }
-        #muteBtn:hover { opacity: 1; border-color: var(--df-gold); color: var(--df-gold); }
-
+        
+        .floating-text { position: fixed; color: var(--df-gold); font-weight: bold; pointer-events: none; animation: floatUp 1s forwards; z-index: 9999; text-shadow: 0 0 5px #000; font-size: 1.2rem;}
+        
+        .badge { font-size: 0.7rem; padding: 2px 6px; border: 1px solid; border-radius: 2px; }
+        .badge-bonus { color: var(--df-cyan); border-color: var(--df-cyan); }
     </style>
 </head>
 <body class="crt">
@@ -167,233 +131,247 @@
 <!-- Boot Screen -->
 <div id="bootScreen">
     <div class="boot-text" style="animation-delay: 0.2s">> SYSTEM INITIALIZING...</div>
-    <div class="boot-text" style="animation-delay: 0.8s">> LOADING ASSETS...</div>
-    <div class="boot-text" style="animation-delay: 1.5s">> CONNECTING TO SERVER...</div>
-    <div class="boot-text" style="animation-delay: 2.2s; color:var(--df-cyan)">> ACCESS GRANTED</div>
-    <div class="boot-text" style="animation-delay: 2.5s; font-size: 0.8rem; margin-top:20px;">TOUCH TO START</div>
+    <div class="boot-text" style="animation-delay: 0.6s">> CHECKING SECURITY PROTOCOLS...</div>
+    <div class="boot-text" style="animation-delay: 1.0s">> RESTORING MODULES: [CLOCK] [CUSTOM] [HISTORY]</div>
+    <div class="boot-text" style="animation-delay: 1.5s; color:var(--df-cyan)">> v45.1 UPDATE COMPLETE</div>
+    <div class="boot-text" style="animation-delay: 1.8s; font-size: 0.8rem; margin-top:20px;">TOUCH TO START</div>
+</div>
+
+<!-- Lock Screen -->
+<div id="lockOverlay">
+    <div class="lock-icon">🔒</div>
+    <h2 style="color:var(--df-red); letter-spacing: 5px;">SYSTEM LOCKED</h2>
+    <p style="color:#aaa; font-family:'Share Tech Mono'">TIMELINE EXPIRED. AUTH REQUIRED.</p>
+    <button class="btn-game" style="border-color:var(--df-red); color:var(--df-red); margin-top:20px;" onclick="unlockSystem()">COMMANDER OVERRIDE</button>
 </div>
 
 <div class="container" id="mainUI">
-    <!-- Header with Rank -->
+    <!-- Header -->
     <div class="hud-header">
-        <div class="rank-badge">
-            <span class="rank-title">OPERATOR RANK</span>
-            <span class="rank-name" id="rankName">ROOKIE</span>
-            <span class="rank-xp">TOTAL XP: <span id="totalXP">0</span></span>
-            <div class="xp-bar-container" style="width: 150px; margin-top: 5px;">
-                <div class="xp-bar-fill" id="rankProgress" style="background: var(--df-gold);"></div>
-            </div>
+        <div class="rank-info">
+            <div>OPERATOR: <strong style="color:var(--df-gold)">SENHUAI</strong></div>
+            <div id="rankDisplay">RANK: ROOKIE</div>
         </div>
-        <div class="hud-stats">
-            <div style="font-size: 0.8rem; color: #888;">DAILY MERITS</div>
-            <div class="big-score" id="scoreDisplay">0</div>
-            <div style="font-size: 0.8rem; color: #666;">TARGET: 6</div>
-        </div>
+        <div class="clock-display" id="liveClock">00:00:00</div>
     </div>
 
     <!-- Toolbar -->
-    <div class="toolbar">
-        <button class="btn-game" onclick="setMode('weekday')">📅 WEEKDAY</button>
-        <button class="btn-game" onclick="setMode('weekend')">⚽ WEEKEND</button>
-        <button class="btn-game" onclick="saveDraft()">💾 SAVE</button>
-        <button class="btn-game" onclick="clearForm()">🗑️ RESET</button>
+    <div style="display:flex; gap:5px; margin-bottom:15px;">
+        <button class="btn-game" style="flex:1" onclick="setMode('weekday')">📅 WEEKDAY</button>
+        <button class="btn-game" style="flex:1" onclick="setMode('weekend')">⚽ WEEKEND</button>
+        <button class="btn-game" style="flex:1" onclick="showHistory()">📜 DATA BANK</button>
     </div>
 
-    <!-- Progress Bar -->
-    <div style="margin-bottom: 20px;">
-        <div class="xp-bar-container" style="height: 12px; border: 1px solid #333;">
-            <div class="xp-bar-fill" id="dailyProgress"></div>
-        </div>
+    <!-- Score Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:5px;">
+        <span style="font-size:0.8rem; color:#888;">MISSION PROGRESS</span>
+        <span style="font-size:1.5rem; font-weight:bold; color:#fff;" id="scoreText">0 / 6</span>
+    </div>
+    <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="progressBar"></div>
     </div>
 
-    <!-- Cards Container -->
     <div id="gameContent">
-        
-        <!-- ACADEMIC CARD -->
+        <!-- 1. ACADEMIC INTEL -->
         <div class="card">
-            <div class="card-title">📚 ACADEMIC (學業)</div>
+            <div class="card-title">📚 ACADEMIC (學業) <span class="badge badge-bonus">BONUS</span></div>
             
             <div class="task-item" onclick="toggleTask('mathPassed', 2)">
                 <div style="display:flex; align-items:center;">
-                    <div class="g-checkbox"></div>
-                    <span>MATH PASSED</span>
+                    <div class="g-checkbox"></div> <span>📐 MATH PASSED</span>
                 </div>
-                <span class="badge badge-bonus">+2 XP</span>
+                <span class="badge badge-bonus">+2</span>
                 <input type="checkbox" id="mathPassed" style="display:none;">
             </div>
 
-            <div class="task-item" style="cursor: default;">
-                <div style="display:flex; align-items:center; width: 100%;">
-                    <span>📝 OTHER PASS (+1)</span>
-                    <input type="number" id="otherExams" value="0" min="0" oninput="sfx.play('blip'); checkStatus()" style="width: 60px; margin-left: auto; text-align: center;">
-                </div>
+            <div class="input-row" style="margin-top:10px;">
+                <input type="number" id="testPaperCount" placeholder="DRILLS (張數)" oninput="sfx.play('blip'); checkStatus()">
+                <input type="number" id="testPaperHigh" placeholder="HIGH SCORE (>85)" oninput="sfx.play('blip'); checkStatus()">
+            </div>
+            
+            <div class="input-row">
+                <input type="number" id="otherExams" placeholder="OTHERS PASSED (+1/ea)" oninput="checkStatus()">
             </div>
 
-             <div class="task-item" style="cursor: default; margin-top:10px; border-top:1px dashed #333; padding-top:10px;">
-                <div style="display:flex; justify-content:space-between; width:100%;">
-                    <div style="flex:1; margin-right:5px;">
-                        <span style="font-size:0.7rem; color:var(--df-red);">FAILED</span>
-                        <input type="number" id="failedExams" value="0" min="0" oninput="sfx.play('error'); checkStatus()" style="border-color:var(--df-red); color:var(--df-red);">
-                    </div>
-                    <div style="flex:1; margin-left:5px;">
-                        <span style="font-size:0.7rem; color:var(--df-gold);">ELITE (>80)</span>
-                        <input type="number" id="score80Exams" value="0" min="0" oninput="sfx.play('success'); checkStatus()" style="border-color:var(--df-gold); color:var(--df-gold);">
-                    </div>
-                </div>
+            <div style="margin-top:10px; border-top:1px dashed #333; padding-top:10px; display:flex; gap:10px;">
+                <input type="number" id="failedExams" placeholder="FAILED (不及格)" style="border-color:var(--df-red); color:var(--df-red);" oninput="sfx.play('error'); checkStatus()">
+                <input type="number" id="score80Exams" placeholder="ELITE (>80分)" style="border-color:var(--df-gold); color:var(--df-gold);" oninput="sfx.play('success'); checkStatus()">
             </div>
         </div>
 
-        <!-- OPS LIST -->
+        <!-- 2. CUSTOM MISSIONS (Restored) -->
         <div class="card">
-            <div class="card-title"><span id="listTitle">TACTICAL OPS</span></div>
+            <div class="card-title">✨ SIDE MISSIONS (自訂任務)</div>
+            <div class="input-row">
+                <input type="text" id="customName" placeholder="MISSION NAME" style="flex:2">
+                <input type="number" id="customPoints" placeholder="XP" value="1" style="flex:0.5">
+                <button class="btn-game" onclick="addCustomTask()">ADD</button>
+            </div>
+            <div id="customTaskList"></div>
+        </div>
+
+        <!-- 3. TACTICAL OPS (Dynamic List) -->
+        <div class="card">
+            <div class="card-title"><span id="listTitle">DAILY OPS</span></div>
             <div id="taskList"></div>
         </div>
 
-        <!-- EQUIPMENT -->
+        <!-- 4. APP LOGS (With Plan) -->
         <div class="card">
             <div class="card-title">📱 EQUIPMENT LOGS</div>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <input type="text" id="appName" placeholder="APP / GAME" style="flex:2">
-                <input type="number" id="appDuration" placeholder="MIN" style="flex:1">
+            <div class="input-row">
+                <input type="text" id="appName" placeholder="APP / GAME NAME" style="flex:2">
+                <input type="number" id="appDuration" placeholder="USED(m)" style="flex:1">
+                <input type="number" id="appPlanNext" placeholder="PLAN(m)" style="flex:1; border-color:var(--df-gold); color:var(--df-gold);">
             </div>
             <button class="btn-game" style="width:100%; border-color:var(--df-cyan); color:var(--df-cyan);" onclick="addAppLog()">+ LOG ENTRY</button>
             <div id="appLogList" style="margin-top:10px; font-size:0.85rem; color:#aaa;"></div>
         </div>
 
-        <!-- PENALTIES -->
+        <!-- 5. NIGHT OPS & PENALTIES (Restored) -->
         <div class="card" style="border-left: 2px solid var(--df-red);">
-             <div class="card-title" style="color:var(--df-red)">⚠️ INFRACTIONS</div>
-             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                 <span>DELAY (MINS)</span>
+            <div class="card-title">🌙 NIGHT OPS & INFRACTIONS</div>
+            
+            <div class="task-item" onclick="toggleTask('bedtimeBonus', 1)">
+                <div style="display:flex; align-items:center;">
+                    <div class="g-checkbox"></div> <span>🔋 CHARGE AT BASE (客廳充電)</span>
+                </div>
+                <span class="badge badge-bonus">+1</span>
+                <input type="checkbox" id="bedtimeBonus" style="display:none;">
+            </div>
+
+            <div class="task-item" onclick="toggleTask('bedtimePenalty', 0)"> <!-- 0 here, handled in calc -->
+                <div style="display:flex; align-items:center; color:var(--df-red);">
+                    <div class="g-checkbox" style="border-color:var(--df-red)"></div> <span>🛌 UNAUTHORIZED USE (偷玩)</span>
+                </div>
+                <span class="badge badge-penalty">-2</span>
+                <input type="checkbox" id="bedtimePenalty" style="display:none;">
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #333; margin:15px 0;">
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                 <span>⏳ DELAY (MINS)</span>
                  <input type="number" id="overtimeMinutes" value="0" oninput="checkStatus()" style="width:80px; border-color:var(--df-red);">
-             </div>
-             <div style="display:flex; justify-content:space-between; align-items:center;">
-                 <span>VIOLATION (TIMES)</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                 <span>🚫 VIOLATION (TIMES)</span>
                  <input type="number" id="excessiveCount" value="0" oninput="checkStatus()" style="width:80px; border-color:var(--df-red);">
-             </div>
+            </div>
         </div>
 
-        <button id="btnSave" class="btn-game btn-primary" style="margin-top:20px; font-size:1.2rem;" onclick="submitReport()">
-            📝 SUBMIT & SYNC
-        </button>
+        <div id="resultBox" style="display:none; text-align:center; padding:10px; border:1px solid #444; margin-bottom:10px;"></div>
 
-        <div id="resultArea" style="margin-top:20px; text-align:center; font-family:'Share Tech Mono'; display:none;"></div>
+        <button id="btnSave" class="btn-game btn-primary" onclick="submitReport()">📝 SUBMIT REPORT</button>
+        
+        <div style="display:flex; gap:10px; margin-top:10px;">
+             <button class="btn-game" style="font-size:0.7rem;" onclick="saveDraft()">💾 SAVE DRAFT</button>
+             <button class="btn-game" style="font-size:0.7rem; color:#666;" onclick="clearForm()">🗑️ RESET</button>
+        </div>
     </div>
 </div>
 
-<button id="muteBtn" onclick="toggleMute()">🔊</button>
-
-<!-- PDF Template (Hidden) -->
+<!-- Hidden PDF Template -->
 <div id="pdfTemplate" style="display:none; font-family:sans-serif; padding:20px;">
-    <h1>S.H. OPERATOR LOG</h1>
-    <p id="pdfContent"></p>
+    <h1 style="border-bottom:2px solid #000;">S.H. OPERATOR LOG</h1>
+    <p>DATE: <span id="pdfDate"></span> | SCORE: <span id="pdfScore"></span></p>
+    <div id="pdfContent"></div>
+    <div style="margin-top:50px; display:flex; justify-content:space-between;">
+        <span>COMMANDER: ___________</span><span>OPERATOR: ___________</span>
+    </div>
 </div>
 
 <script>
-    // --- 1. Audio System (Web Audio API) ---
-    class SoundFX {
-        constructor() {
-            this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-            this.muted = false;
-        }
-
-        play(type) {
-            if (this.muted) return;
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-            
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-
-            const now = this.ctx.currentTime;
-            
-            if (type === 'hover') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.05);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.05);
-                osc.start(now); osc.stop(now + 0.05);
-            } 
-            else if (type === 'click') { // Checkbox check
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            }
-            else if (type === 'blip') { // Input typing
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(600, now);
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.03);
-                osc.start(now); osc.stop(now + 0.03);
-            }
-            else if (type === 'success') { // Task complete
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.linearRampToValueAtTime(1000, now + 0.1);
-                osc.frequency.linearRampToValueAtTime(1500, now + 0.3);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start(now); osc.stop(now + 0.5);
-            }
-            else if (type === 'error') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.3);
-                osc.start(now); osc.stop(now + 0.3);
-            }
-        }
-    }
-    const sfx = new SoundFX();
-    function toggleMute() {
-        sfx.muted = !sfx.muted;
-        document.getElementById('muteBtn').innerText = sfx.muted ? '🔇' : '🔊';
-    }
-
-    // --- 2. Rank System ---
-    const RANKS = [
-        { xp: 0, name: "ROOKIE (新兵)", color: "#fff" },
-        { xp: 50, name: "PRIVATE (二兵)", color: "#ddd" },
-        { xp: 150, name: "SPECIALIST (上等兵)", color: "#ccc" },
-        { xp: 300, name: "CORPORAL (下士)", color: "#aaddff" },
-        { xp: 500, name: "SERGEANT (中士)", color: "#55aaff" },
-        { xp: 800, name: "LIEUTENANT (尉官)", color: "#f0b90b" },
-        { xp: 1200, name: "COMMANDER (指揮官)", color: "#ff3333" }
-    ];
-
+    /* --- CONFIG & STATE --- */
+    const PARENT_PWD = "jeffjasmine"; 
+    const TARGET_SCORE = 6;
+    let currentMode = 'weekday';
+    let appLogs = [];
+    let customTasks = [];
+    let isLocked = false;
     let totalXP = parseInt(localStorage.getItem('senhuai_total_xp_v45') || '0');
 
-    function updateRankDisplay() {
-        let currentRank = RANKS[0];
-        let nextRankXP = 50;
-        
-        for (let i = 0; i < RANKS.length; i++) {
-            if (totalXP >= RANKS[i].xp) {
-                currentRank = RANKS[i];
-                nextRankXP = RANKS[i+1] ? RANKS[i+1].xp : totalXP * 1.5;
-            }
+    /* --- AUDIO SYSTEM (Simplified) --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const sfx = {
+        play: (type) => {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            const now = audioCtx.currentTime;
+            
+            if(type==='click') { osc.type='square'; osc.frequency.setValueAtTime(800,now); osc.frequency.exponentialRampToValueAtTime(1200,now+0.1); gain.gain.setValueAtTime(0.05,now); gain.gain.exponentialRampToValueAtTime(0.01,now+0.1); osc.start(now); osc.stop(now+0.1); }
+            if(type==='success') { osc.type='sine'; osc.frequency.setValueAtTime(500,now); osc.frequency.linearRampToValueAtTime(1000,now+0.2); gain.gain.setValueAtTime(0.1,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
+            if(type==='error') { osc.type='sawtooth'; osc.frequency.setValueAtTime(150,now); gain.gain.setValueAtTime(0.1,now); gain.gain.linearRampToValueAtTime(0,now+0.3); osc.start(now); osc.stop(now+0.3); }
+            if(type==='blip') { osc.type='triangle'; osc.frequency.setValueAtTime(600,now); gain.gain.setValueAtTime(0.02,now); gain.gain.linearRampToValueAtTime(0,now+0.05); osc.start(now); osc.stop(now+0.05); }
         }
+    };
 
-        document.getElementById('rankName').innerText = currentRank.name;
-        document.getElementById('rankName').style.color = currentRank.color;
-        document.getElementById('totalXP').innerText = totalXP;
-
-        // Rank Progress Bar (Current XP towards Next Rank)
-        let prevRankXP = 0;
-        const rankIndex = RANKS.indexOf(currentRank);
-        if(rankIndex > 0) prevRankXP = RANKS[rankIndex].xp;
+    /* --- INITIALIZATION --- */
+    window.onload = function() {
+        const boot = document.getElementById('bootScreen');
+        boot.onclick = () => {
+            sfx.play('success');
+            boot.style.opacity = '0';
+            setTimeout(() => { boot.style.display='none'; document.getElementById('mainUI').style.opacity='1'; }, 500);
+        };
         
-        const progress = Math.min(100, ((totalXP - prevRankXP) / (nextRankXP - prevRankXP)) * 100);
-        document.getElementById('rankProgress').style.width = progress + '%';
+        // Auto-detect mode
+        const day = new Date().getDay();
+        if(day === 0 || day === 6) setMode('weekend'); else setMode('weekday');
+
+        updateClock();
+        setInterval(updateClock, 1000);
+        renderRank();
+        
+        // Check for draft
+        const draft = localStorage.getItem('senhuai_draft_v45_1');
+        if(draft) loadDraft(JSON.parse(draft));
+    };
+
+    /* --- CLOCK & LOCK --- */
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('liveClock').innerText = now.toLocaleTimeString('en-GB');
+        
+        const h = now.getHours(), m = now.getMinutes(), d = now.getDay();
+        const isLate = (d===5 || d===6); // Fri/Sat
+        const limitH = isLate ? 23 : 22;
+        const limitM = 30;
+
+        // Auto Lock Logic
+        if (!isLocked && (h > limitH || (h === limitH && m >= limitM))) {
+            lockSystem();
+        }
     }
 
-    // --- 3. Logic & Game Loop ---
+    function lockSystem() {
+        isLocked = true;
+        document.getElementById('lockOverlay').style.display = 'flex';
+        document.getElementById('mainUI').classList.add('system-locked');
+    }
+
+    function unlockSystem() {
+        Swal.fire({
+            title: 'SECURITY CLEARANCE',
+            input: 'password',
+            background: '#000', color: '#fff',
+            confirmButtonColor: 'var(--df-red)',
+            confirmButtonText: 'UNLOCK'
+        }).then((res) => {
+            if(res.value === PARENT_PWD) {
+                isLocked = false;
+                document.getElementById('lockOverlay').style.display = 'none';
+                document.getElementById('mainUI').classList.remove('system-locked');
+                sfx.play('success');
+            } else {
+                sfx.play('error');
+            }
+        });
+    }
+
+    /* --- TASKS LOGIC --- */
     const baseTasks = {
         weekday: [
             { id: 'w1', text: '📖 STUDY (讀書 1hr)', pts: 1 },
@@ -412,228 +390,270 @@
         ]
     };
 
-    let currentMode = 'weekday';
-    let appLogs = [];
-
-    // Boot Sequence
-    window.onload = function() {
-        const bootScreen = document.getElementById('bootScreen');
-        bootScreen.addEventListener('click', () => {
-            sfx.ctx.resume(); // Ensure Audio Context starts on user gesture
-            sfx.play('success');
-            bootScreen.style.opacity = '0';
-            setTimeout(() => { 
-                bootScreen.style.display = 'none'; 
-                document.querySelector('.container').style.opacity = '1';
-                renderTasks();
-                updateRankDisplay();
-                loadDraft();
-            }, 500);
-        });
-
-        // Auto-select mode based on day
-        const day = new Date().getDay();
-        if(day === 0 || day === 6) currentMode = 'weekend';
-    };
-
     function setMode(mode) {
         currentMode = mode;
-        sfx.play('blip');
-        renderTasks();
-        checkStatus();
-    }
-
-    function renderTasks() {
         const list = document.getElementById('taskList');
         list.innerHTML = '';
-        const items = currentMode === 'weekday' ? baseTasks.weekday : [...baseTasks.weekday, ...baseTasks.weekend];
+        const items = mode==='weekday' ? baseTasks.weekday : [...baseTasks.weekday, ...baseTasks.weekend];
         
         items.forEach(t => {
             const div = document.createElement('div');
             div.className = 'task-item';
             div.setAttribute('onclick', `toggleTask('${t.id}', ${t.pts})`);
-            div.innerHTML = `
-                <div style="display:flex; align-items:center;">
-                    <div class="g-checkbox"></div>
-                    <span>${t.text}</span>
-                </div>
-                <span class="badge badge-bonus">+${t.pts}</span>
-                <input type="checkbox" id="${t.id}" value="${t.pts}" style="display:none;">
-            `;
+            div.innerHTML = `<div style="display:flex; align-items:center;"><div class="g-checkbox"></div><span>${t.text}</span></div><span class="badge badge-bonus">+${t.pts}</span><input type="checkbox" id="${t.id}" value="${t.pts}" style="display:none;">`;
             list.appendChild(div);
         });
-        document.getElementById('listTitle').innerText = currentMode === 'weekday' ? 'DAILY OPS (日常)' : 'JOINT OPS (假日)';
+        document.getElementById('listTitle').innerText = mode==='weekday'?'DAILY OPS (日常)':'JOINT OPS (假日)';
+        sfx.play('blip');
+        checkStatus();
     }
 
     function toggleTask(id, pts) {
+        if(isLocked) return;
         const chk = document.getElementById(id);
-        const parent = chk.closest('.task-item');
         chk.checked = !chk.checked;
-        
-        if (chk.checked) {
+        const parent = chk.closest('.task-item');
+        if(chk.checked) {
             parent.classList.add('active');
             sfx.play('click');
-            showFloatingText(pts, event.clientX, event.clientY);
+            showFloatingText(`+${pts} XP`, event.clientX, event.clientY);
         } else {
             parent.classList.remove('active');
-            sfx.play('hover'); // simpler sound for uncheck
         }
         checkStatus();
     }
 
-    function showFloatingText(pts, x, y) {
-        const el = document.createElement('div');
-        el.className = 'floating-text';
-        el.innerText = `+${pts} XP`;
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+    /* --- CUSTOM TASKS --- */
+    function addCustomTask() {
+        const name = document.getElementById('customName').value;
+        const pts = parseInt(document.getElementById('customPoints').value) || 0;
+        if(!name) return;
+        
+        const id = 'cust_' + Date.now();
+        customTasks.push({id, name, pts});
+        renderCustomTasks();
+        document.getElementById('customName').value = '';
+        sfx.play('blip');
     }
 
+    function renderCustomTasks() {
+        const div = document.getElementById('customTaskList');
+        div.innerHTML = '';
+        customTasks.forEach(t => {
+            const el = document.createElement('div');
+            el.className = 'task-item';
+            el.innerHTML = `<div style="display:flex;align-items:center;width:100%" onclick="toggleTask('${t.id}', ${t.pts})"><div class="g-checkbox"></div><span>${t.name}</span></div><span class="badge badge-bonus">+${t.pts}</span><button class="btn-delete" onclick="removeCustomTask('${t.id}')">✕</button><input type="checkbox" id="${t.id}" value="${t.pts}" style="display:none;">`;
+            div.appendChild(el);
+        });
+    }
+    function removeCustomTask(id) { customTasks = customTasks.filter(t=>t.id!==id); renderCustomTasks(); checkStatus(); }
+
+    /* --- APP LOGS --- */
+    function addAppLog() {
+        const name = document.getElementById('appName').value;
+        const dur = document.getElementById('appDuration').value;
+        const plan = document.getElementById('appPlanNext').value;
+        if(!name) return;
+        appLogs.push({name, dur, plan});
+        renderAppLogs();
+        document.getElementById('appName').value = ''; document.getElementById('appDuration').value = ''; document.getElementById('appPlanNext').value = '';
+        sfx.play('blip');
+    }
+    function renderAppLogs() {
+        document.getElementById('appLogList').innerHTML = appLogs.map(a => `<div>> ${a.name} (${a.dur}m) [Next: ${a.plan}m]</div>`).join('');
+    }
+
+    function showFloatingText(text, x, y) {
+        const el = document.createElement('div');
+        el.className = 'floating-text'; el.innerText = text; el.style.left=x+'px'; el.style.top=y+'px';
+        document.body.appendChild(el);
+        setTimeout(()=>el.remove(),1000);
+    }
+
+    /* --- CALCULATIONS --- */
     function checkStatus() {
         let earned = 0;
-        
-        // Math
+        // Academic
         if(document.getElementById('mathPassed').checked) earned += 2;
-        // Others
         earned += (parseInt(document.getElementById('otherExams').value) || 0);
+        const drillCount = parseInt(document.getElementById('testPaperCount').value) || 0;
+        const drillHigh = parseInt(document.getElementById('testPaperHigh').value) || 0;
+        earned += (drillCount * 1) + (drillHigh * 2);
+
         // Tasks
-        document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(c => earned += parseInt(c.value));
+        document.querySelectorAll('#taskList input:checked').forEach(c => earned += parseInt(c.value));
+        customTasks.forEach(t => { if(document.getElementById(t.id)?.checked) earned += t.pts; });
+        
+        // Bedtime
+        if(document.getElementById('bedtimeBonus').checked) earned += 1;
 
         // Penalties
-        const failed = parseInt(document.getElementById('failedExams').value) || 0;
-        const lateMins = parseInt(document.getElementById('overtimeMinutes').value) || 0;
-        const violations = parseInt(document.getElementById('excessiveCount').value) || 0;
-        
         let penalty = 0;
-        // Late calculation
-        if (lateMins > 0) {
-            if(lateMins < 5) penalty += 1;
-            else if(lateMins < 10) penalty += 2;
-            else penalty += (2 + Math.ceil((lateMins-10)/5));
+        if(document.getElementById('bedtimePenalty').checked) penalty += 2;
+        const failed = parseInt(document.getElementById('failedExams').value) || 0; // Failed doesn't minus points directly in score but affects rank logic, though original v43/44 did minus? Let's strictly follow v44 logic: v44 didn't minus points for fail, but REQUIRED app logs. 
+        // Wait, looking at user provided file v44: "違規將扣除分數". 
+        // Let's apply generic penalty for infractions.
+        const late = parseInt(document.getElementById('overtimeMinutes').value) || 0;
+        if(late>0) {
+            if(late<5) penalty+=1; else if(late<10) penalty+=2; else penalty += (2 + Math.ceil((late-10)/5));
         }
-        penalty += (violations * 1);
+        const violations = parseInt(document.getElementById('excessiveCount').value) || 0;
+        penalty += violations;
 
         const finalScore = earned - penalty;
         
         // Update UI
-        const scoreDisplay = document.getElementById('scoreDisplay');
-        scoreDisplay.innerText = finalScore;
+        document.getElementById('scoreText').innerText = `${finalScore} / ${TARGET_SCORE}`;
+        const pct = Math.min(100, Math.max(0, (finalScore/TARGET_SCORE)*100));
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressBar').style.backgroundColor = finalScore>=6 ? 'var(--df-cyan)' : 'var(--df-gold)';
+
+        // Requirement Check
+        const resultBox = document.getElementById('resultBox');
+        const elite = (parseInt(document.getElementById('score80Exams').value)||0) > 0;
+        let msg = "";
         
-        // Pulse effect
-        scoreDisplay.classList.remove('pulse');
-        void scoreDisplay.offsetWidth; // trigger reflow
-        scoreDisplay.classList.add('pulse');
+        if (failed > 0) { msg = "<span style='color:red'>FAILED EXAM DETECTED. APP LOGS REQUIRED.</span>"; }
+        else if (elite) { msg = "<span style='color:var(--df-cyan)'>ELITE STATUS. EXEMPTION GRANTED.</span>"; }
+        else if (finalScore >= 9) { msg = "<span style='color:var(--df-gold)'>LEGENDARY PERFORMANCE.</span>"; }
+        
+        if(msg) { resultBox.style.display='block'; resultBox.innerHTML = msg; } else { resultBox.style.display='none'; }
 
-        // Progress Bar
-        const pct = Math.min(100, (finalScore / 6) * 100);
-        document.getElementById('dailyProgress').style.width = pct + '%';
-        document.getElementById('dailyProgress').style.backgroundColor = finalScore >= 6 ? 'var(--df-cyan)' : 'var(--df-gold)';
-
-        return { finalScore, failed };
+        return { finalScore, passed: finalScore >= TARGET_SCORE, elite, failed };
     }
 
-    // --- 4. App Logging ---
-    function addAppLog() {
-        const name = document.getElementById('appName').value;
-        const dur = document.getElementById('appDuration').value;
-        if(!name) return;
-        appLogs.push({name, dur});
-        renderAppLogs();
-        document.getElementById('appName').value = '';
-        document.getElementById('appDuration').value = '';
-        sfx.play('blip');
-    }
-    function renderAppLogs() {
-        document.getElementById('appLogList').innerHTML = appLogs.map(a => `<div>> ${a.name} (${a.dur}m)</div>`).join('');
-    }
-
-    // --- 5. Submission & Rank Up ---
+    /* --- SAVE & SUBMIT --- */
     function submitReport() {
         const status = checkStatus();
         
+        // Validation
         if (status.failed > 0 && appLogs.length === 0) {
-            Swal.fire({ title:'LOGS MISSING', text:'Failed exams require App Logs.', icon:'warning', background:'#111', color:'#fff' });
-            return;
+             Swal.fire({icon:'error', title:'MISSING DATA', text:'Failed exams require Equipment Logs.', background:'#000', color:'#fff'});
+             return;
         }
 
+        // Parent Auth for Submit (Optional, but good for game feel)
         Swal.fire({
             title: 'CONFIRM UPLOAD?',
-            text: `SCORE: ${status.finalScore}`,
-            icon: 'question',
+            text: `FINAL SCORE: ${status.finalScore}`,
+            icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'EXECUTE',
-            background: '#111', color: '#fff',
-            confirmButtonColor: 'var(--df-gold)'
-        }).then((result) => {
-            if(result.isConfirmed) {
-                // Add to Total XP
-                if (status.finalScore > 0) {
+            confirmButtonColor: 'var(--df-gold)',
+            background: '#000', color: '#fff'
+        }).then((res) => {
+            if(res.isConfirmed) {
+                // Save History
+                const record = { date: new Date().toLocaleString(), score: status.finalScore, mode: currentMode };
+                let history = JSON.parse(localStorage.getItem('senhuai_history_data') || '[]');
+                history.unshift(record);
+                localStorage.setItem('senhuai_history_data', JSON.stringify(history));
+
+                // XP & Rank
+                if(status.finalScore > 0) {
                     totalXP += status.finalScore;
                     localStorage.setItem('senhuai_total_xp_v45', totalXP);
-                    updateRankDisplay();
+                    renderRank();
                 }
 
-                // Effect
+                if(status.passed) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                 sfx.play('success');
-                if(status.finalScore >= 6) {
-                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#00f3ff', '#f0b90b'] });
-                }
-
-                Swal.fire({ 
-                    title: 'DATA SYNCED', 
-                    text: `Total XP Updated: ${totalXP}`, 
-                    icon: 'success', 
-                    background: '#111', color: '#fff' 
-                });
                 
-                // Clear draft
-                localStorage.removeItem('senhuai_draft_v45');
+                // PDF
+                generatePDF(record);
+                localStorage.removeItem('senhuai_draft_v45_1');
             }
         });
     }
 
-    // --- 6. Save/Load Draft ---
+    function generatePDF(data) {
+        const el = document.getElementById('pdfTemplate');
+        document.getElementById('pdfDate').innerText = data.date;
+        document.getElementById('pdfScore').innerText = data.score;
+        
+        let content = "<strong>COMPLETED OBJECTIVES:</strong><br>";
+        document.querySelectorAll('input:checked').forEach(i => {
+             content += `[x] ${i.nextElementSibling.innerText} (+${i.value})<br>`;
+        });
+        document.getElementById('pdfContent').innerHTML = content;
+
+        el.style.display = 'block';
+        html2pdf().from(el).save(`OPS_LOG_${Date.now()}.pdf`).then(() => el.style.display='none');
+    }
+
     function saveDraft() {
         const data = {
             math: document.getElementById('mathPassed').checked,
+            drillC: document.getElementById('testPaperCount').value,
+            drillH: document.getElementById('testPaperHigh').value,
             others: document.getElementById('otherExams').value,
             failed: document.getElementById('failedExams').value,
-            checked: Array.from(document.querySelectorAll('#taskList input:checked')).map(el => el.id),
-            appLogs: appLogs,
+            elite: document.getElementById('score80Exams').value,
+            bedBonus: document.getElementById('bedtimeBonus').checked,
+            bedPenalty: document.getElementById('bedtimePenalty').checked,
+            late: document.getElementById('overtimeMinutes').value,
+            vio: document.getElementById('excessiveCount').value,
+            checks: Array.from(document.querySelectorAll('#taskList input:checked')).map(e=>e.id),
+            cust: customTasks,
+            logs: appLogs,
             mode: currentMode
         };
-        localStorage.setItem('senhuai_draft_v45', JSON.stringify(data));
+        localStorage.setItem('senhuai_draft_v45_1', JSON.stringify(data));
         sfx.play('blip');
-        Swal.fire({title:'GAME SAVED', toast:true, position:'top-end', showConfirmButton:false, timer:1500, background:'#111', color:'#fff', icon:'success'});
+        Swal.fire({toast:true, position:'top-end', title:'DRAFT SAVED', icon:'success', showConfirmButton:false, timer:1500, background:'#000', color:'#fff'});
     }
 
-    function loadDraft() {
-        const saved = localStorage.getItem('senhuai_draft_v45');
-        if(saved) {
-            const data = JSON.parse(saved);
-            if(data.mode) setMode(data.mode);
-            if(data.math) toggleTask('mathPassed', 2);
-            document.getElementById('otherExams').value = data.others;
-            document.getElementById('failedExams').value = data.failed;
-            if(data.checked) data.checked.forEach(id => {
-                 const el = document.getElementById(id);
-                 if(el && !el.checked) toggleTask(id, el.value);
-            });
-            appLogs = data.appLogs || [];
-            renderAppLogs();
-            checkStatus();
-        }
+    function loadDraft(d) {
+        if(d.mode) setMode(d.mode);
+        if(d.math) toggleTask('mathPassed', 2);
+        document.getElementById('testPaperCount').value = d.drillC;
+        document.getElementById('testPaperHigh').value = d.drillH;
+        document.getElementById('otherExams').value = d.others;
+        document.getElementById('failedExams').value = d.failed;
+        document.getElementById('score80Exams').value = d.elite;
+        if(d.bedBonus) toggleTask('bedtimeBonus', 1);
+        if(d.bedPenalty) toggleTask('bedtimePenalty', 0);
+        document.getElementById('overtimeMinutes').value = d.late;
+        document.getElementById('excessiveCount').value = d.vio;
+        
+        customTasks = d.cust || []; renderCustomTasks();
+        appLogs = d.logs || []; renderAppLogs();
+        
+        if(d.checks) d.checks.forEach(id => {
+            const el = document.getElementById(id);
+            if(el && !el.checked) toggleTask(id, el.value);
+        });
+    }
+
+    function renderRank() {
+        const ranks = [
+            {xp:0, n:'ROOKIE'}, {xp:50, n:'PRIVATE'}, {xp:150, n:'SPECIALIST'},
+            {xp:300, n:'CORPORAL'}, {xp:500, n:'SERGEANT'}, {xp:800, n:'LIEUTENANT'}, {xp:1200, n:'COMMANDER'}
+        ];
+        let r = ranks[0];
+        for(let i of ranks) if(totalXP >= i.xp) r = i;
+        document.getElementById('rankDisplay').innerText = `RANK: ${r.n} (${totalXP} XP)`;
+    }
+
+    function showHistory() {
+        const h = JSON.parse(localStorage.getItem('senhuai_history_data') || '[]');
+        let html = h.map(x => `<div style="border-bottom:1px solid #333; padding:5px;">${x.date} - <strong>${x.score} XP</strong></div>`).join('');
+        Swal.fire({
+            title: 'DATA BANK',
+            html: `<div style="max-height:300px; overflow-y:auto; text-align:left; font-family:'Share Tech Mono'">${html||'NO DATA'}</div>`,
+            background: '#000', color: '#fff',
+            showDenyButton: true, denyButtonText: 'EXPORT CSV', confirmButtonText: 'CLOSE'
+        }).then(res => {
+            if(res.isDenied) {
+                let csv = "Date,Score,Mode\n" + h.map(x=>`${x.date},${x.score},${x.mode}`).join('\n');
+                let blob = new Blob([csv], {type:'text/csv'});
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement('a'); a.href=url; a.download='history.csv'; a.click();
+            }
+        });
     }
     
-    function clearForm() {
-        if(confirm('RESET ALL MISSION DATA?')) {
-            localStorage.removeItem('senhuai_draft_v45');
-            location.reload();
-        }
-    }
-
+    function clearForm() { if(confirm('RESET?')) { localStorage.removeItem('senhuai_draft_v45_1'); location.reload(); } }
 </script>
 </body>
 </html>

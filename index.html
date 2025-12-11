@@ -2,8 +2,14 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>森淮手機，平板，電視，電腦使用規範 (v42)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>森淮 3C 規範</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="森淮規範">
+    <link rel="apple-touch-icon" href="logo.png">
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -32,10 +38,21 @@
             background-color: var(--bg);
             margin: 0;
             padding: 20px;
+            /* iOS 瀏海屏適配 */
+            padding-top: calc(20px + env(safe-area-inset-top)); 
             color: #333;
             padding-bottom: 80px;
             transition: background-color 0.8s ease;
+            /* iOS 防彈跳捲動優化 */
+            -webkit-overflow-scrolling: touch; 
+            overscroll-behavior-y: none;
+            /* 禁止選取文字 (更像 App) */
+            -webkit-user-select: none;
+            user-select: none;
         }
+
+        /* 輸入框允許選取文字 */
+        input, select { -webkit-user-select: text; user-select: text; }
 
         /* Themes */
         body.theme-level-1 { --primary: #2e7d32; --bg: #e8f5e9; }
@@ -74,6 +91,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
         }
         .accordion.active, .accordion:hover { background-color: #f1f1f1; }
         .accordion:after { content: '\002B'; color: #777; font-weight: bold; float: right; margin-left: 5px; font-size: 1.2rem;}
@@ -124,6 +142,7 @@
         .btn-tool {
             flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem;
             display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            -webkit-tap-highlight-color: transparent;
         }
         .btn-save-draft { background-color: #607d8b; }
         .btn-load-draft { background-color: #ff9800; }
@@ -160,24 +179,24 @@
         .bedtime-penalty { background-color: #fff3e0; border: 1px solid #ffe0b2; }
 
         .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        .input-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-        .input-row select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background-color: white; }
+        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; /* 防止 iOS 輸入時放大 */ }
+        .input-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+        .input-row select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background-color: white; font-size: 16px; }
 
         .custom-input-area { background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px dashed #0d6efd; margin-bottom: 15px; }
         .app-input-area { background: var(--app-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--app-border); margin-bottom: 15px; }
         .violation-input-area { background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px dashed var(--danger); margin-bottom: 15px; }
         
         .btn-add { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-add-app { background: var(--app-border); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width:100%;}
-        .btn-add-violation { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .btn-add-app { background: var(--app-border); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width:100%;}
+        .btn-add-violation { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
         
         .violation-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ffebee; color: var(--danger); }
         .app-item { display: flex; flex-direction: column; gap:5px; padding: 10px; border-bottom: 1px solid #b2dfdb; color: #004d40; }
         .app-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .app-item-details { display: flex; gap: 10px; font-size: 0.85rem; color: #00695c; }
         
-        .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-left: 10px; }
+        .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-left: 10px; padding: 5px; }
 
         .task-group-title { font-size: 0.9rem; color: #666; background: #eee; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
         .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
@@ -195,13 +214,13 @@
         .exam-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; }
         .exam-row.math { background: #e3f2fd; border: 1px solid #bbdefb; }
         .exam-input-group { display: flex; align-items: center; gap: 5px; }
-        .exam-input-group input { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ddd; text-align: center; }
+        .exam-input-group input { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ddd; text-align: center; font-size: 16px;}
 
         .result-box { background: #fafafa; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; display: none; transition: all 0.3s; }
         .result-box.pass { background: #e8f5e9; border: 2px solid var(--success); color: var(--success); display: block;}
         .result-box.fail { background: #ffebee; border: 2px solid var(--danger); color: var(--danger); display: block;}
         
-        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; }
+        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-submit.locked { background-color: #aaa; cursor: not-allowed; }
         .btn-submit:active { transform: scale(0.98); }
         
@@ -212,14 +231,14 @@
         .btn-import input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
         
         /* 歷史紀錄樣式 */
-        .history-log { font-size: 0.9rem; color: #666; margin-top: 10px; max-height: 350px; overflow-y: auto;}
+        .history-log { font-size: 0.9rem; color: #666; margin-top: 10px; max-height: 350px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .history-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 5px;}
         .trophy-icon { font-size: 1.3rem; margin-right: 8px; }
         .history-item.rank-1 { background-color: #fffde7; border: 1px solid #fbc02d; border-left: 5px solid #fbc02d; color: #333; box-shadow: 0 2px 5px rgba(251, 192, 45, 0.2); }
         .history-item.rank-2 { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-left: 5px solid #9e9e9e; color: #333; }
         .history-item.rank-3 { background-color: #ffe0b2; border: 1px solid #ef6c00; border-left: 5px solid #ef6c00; color: #333; }
 
-        /* Certificate Styles (v42 updated) */
+        /* Certificate Styles (v42/v43) */
         .swal-certificate {
             background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
             border: 8px double #D4AF37; padding: 20px; text-align: center;
@@ -229,7 +248,7 @@
         .cert-body { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; }
         .cert-date { font-size: 1.2rem; font-weight: bold; color: #2e7d32; margin-top: 10px; background: #e8f5e9; display: inline-block; padding: 5px 15px; border-radius: 20px; }
         
-        /* 新增：Logo 樣式 */
+        /* Logo 樣式 */
         .cert-logo-img { 
             width: 120px; 
             height: auto; 
@@ -250,7 +269,7 @@
         .auth-label { font-weight: bold; color: var(--danger); display: block; margin-bottom: 10px; }
         .radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
         .radio-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .pwd-input { width: 100%; padding: 10px; border: 1px solid var(--danger); border-radius: 6px; margin-top: 10px; }
+        .pwd-input { width: 100%; padding: 10px; border: 1px solid var(--danger); border-radius: 6px; margin-top: 10px; font-size: 16px; }
     </style>
 </head>
 <body>
@@ -259,7 +278,7 @@
     <div class="header">
         <h1>森淮手機，平板，電視，電腦使用規範</h1>
         <div class="header-info">
-            <span class="version-tag">ver 42.0 (Logo Edition)</span>
+            <span class="version-tag">ver 43.0 (iOS PWA)</span>
             <span>|</span>
             <span id="liveClock" class="time-tag">載入中...</span>
         </div>
@@ -615,7 +634,7 @@
     window.onload = function() {
         const today = new Date();
         const day = today.getDay();
-        const saved = localStorage.getItem('senhuai_history_v41'); // v41/v42 compatible
+        const saved = localStorage.getItem('senhuai_history_v41'); // v41/v42/v43 data is compatible
         if (saved) historyData = JSON.parse(saved);
 
         if (day === 0 || day === 6) setMode('weekend');
@@ -1097,7 +1116,7 @@
         const tomorrowStr = tomorrow.toLocaleDateString('zh-TW');
 
         if(status.passed) {
-            // v42 Update: Using Image Tag for Logo
+            // v42/v43: Use logo.png
             const certHtml = `
                 <div class="swal-certificate">
                     <img src="logo.png" class="cert-logo-img" alt="Senhuai Logo">

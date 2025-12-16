@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範</title>
+    <title>森淮 3C 規範 (v45)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -12,7 +12,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         :root {
@@ -46,12 +45,10 @@
             /* iOS 防彈跳捲動優化 */
             -webkit-overflow-scrolling: touch; 
             overscroll-behavior-y: none;
-            /* 禁止選取文字 (更像 App) */
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* 輸入框允許選取文字 */
         input, select { -webkit-user-select: text; user-select: text; }
 
         /* Themes */
@@ -72,7 +69,7 @@
         .version-tag { font-weight: bold; color: var(--primary); }
         .time-tag { font-family: monospace; font-weight: bold; }
 
-        /* Rule Accordion */
+        /* Accordion */
         .accordion {
             background-color: #fff;
             color: #444;
@@ -91,7 +88,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            -webkit-tap-highlight-color: transparent; /* 移除點擊高亮 */
+            -webkit-tap-highlight-color: transparent;
         }
         .accordion.active, .accordion:hover { background-color: #f1f1f1; }
         .accordion:after { content: '\002B'; color: #777; font-weight: bold; float: right; margin-left: 5px; font-size: 1.2rem;}
@@ -113,57 +110,29 @@
         .rule-list li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: bold; }
         .rule-section-title { font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
 
-        /* Definition Box */
-        .definition-box {
-            background-color: rgba(255,255,255,0.8); color: #0d47a1; padding: 8px 15px;
-            border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; border: 1px solid #bbdefb;
-        }
+        .definition-box { background-color: rgba(255,255,255,0.8); color: #0d47a1; padding: 8px 15px; border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; border: 1px solid #bbdefb; }
 
-        /* Cards */
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            border-top: 4px solid transparent;
-        }
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.3s; border-top: 4px solid transparent; }
         body.theme-level-1 .card { border-top-color: #2e7d32; }
         body.theme-level-2 .card { border-top-color: #0288d1; }
         body.theme-level-3 .card { border-top-color: #7b1fa2; }
         body.theme-level-4 .card { border-top-color: #fbc02d; }
-
         .card.locked { opacity: 0.6; pointer-events: none; background-color: #f5f5f5; }
         .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
 
-        /* Toolbar */
         .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-tool {
-            flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem;
-            display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            -webkit-tap-highlight-color: transparent;
-        }
+        .btn-tool { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); -webkit-tap-highlight-color: transparent; }
         .btn-save-draft { background-color: #607d8b; }
         .btn-load-draft { background-color: #ff9800; }
         .btn-clear-form { background-color: #9e9e9e; }
 
-        /* Lock Banner */
-        #lockBanner {
-            background-color: #ffebee; border: 2px solid var(--danger); color: var(--danger);
-            padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; display: none; 
-        }
-        .btn-unlock {
-            background-color: var(--danger); color: white; border: none; padding: 8px 15px;
-            border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 0.9rem;
-        }
+        #lockBanner { background-color: #ffebee; border: 2px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; display: none; }
+        .btn-unlock { background-color: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 0.9rem; }
 
-        /* Progress Bar */
         .progress-container { background-color: #eee; border-radius: 10px; height: 30px; width: 100%; margin-bottom: 20px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); }
         .progress-bar { background-color: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease, background-color 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.95rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .progress-text { text-align: center; font-size: 1rem; margin-bottom: 5px; font-weight: bold; color: var(--primary); transition: color 0.5s; }
 
-        /* UI Elements */
         .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
         .mode-btn { flex: 1; padding: 12px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
         .mode-btn.active { background: var(--primary); color: white; }
@@ -179,7 +148,7 @@
         .bedtime-penalty { background-color: #fff3e0; border: 1px solid #ffe0b2; }
 
         .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; /* 防止 iOS 輸入時放大 */ }
+        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
         .input-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
         .input-row select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background-color: white; font-size: 16px; }
 
@@ -230,7 +199,6 @@
         .btn-import { background-color: #6c757d; position: relative; overflow: hidden; }
         .btn-import input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
         
-        /* 歷史紀錄樣式 */
         .history-log { font-size: 0.9rem; color: #666; margin-top: 10px; max-height: 350px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .history-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 5px;}
         .trophy-icon { font-size: 1.3rem; margin-right: 8px; }
@@ -238,7 +206,7 @@
         .history-item.rank-2 { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-left: 5px solid #9e9e9e; color: #333; }
         .history-item.rank-3 { background-color: #ffe0b2; border: 1px solid #ef6c00; border-left: 5px solid #ef6c00; color: #333; }
 
-        /* Certificate Styles (v42/v43) */
+        /* Certificate Styles (v44) */
         .swal-certificate {
             background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
             border: 8px double #D4AF37; padding: 20px; text-align: center;
@@ -248,23 +216,29 @@
         .cert-body { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; }
         .cert-date { font-size: 1.2rem; font-weight: bold; color: #2e7d32; margin-top: 10px; background: #e8f5e9; display: inline-block; padding: 5px 15px; border-radius: 20px; }
         
-        /* Logo 樣式 */
+        .cert-selfie-img {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #D4AF37;
+            margin: 0 auto 15px auto;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: bounce 2s infinite;
+        }
+        
         .cert-logo-img { 
-            width: 120px; 
-            height: auto; 
-            margin: 0 auto 10px auto; 
-            display: block; 
-            animation: bounce 2s infinite; 
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));
+            width: 120px; height: auto; margin: 0 auto 10px auto; display: block; 
+            animation: bounce 2s infinite; filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));
         }
         
         .cert-stamp { 
             border: 3px solid #d32f2f; color: #d32f2f; font-weight: bold; padding: 5px 10px; border-radius: 5px; 
             transform: rotate(-10deg); display: inline-block; margin-top: 20px; font-family: sans-serif; letter-spacing: 2px;
         }
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-20px);} 60% {transform: translateY(-10px);} }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
 
-        /* Parent Auth Styles */
         .parent-auth-area { background: #ffebee; border: 1px dashed var(--danger); padding: 15px; border-radius: 8px; margin-top: 10px; }
         .auth-label { font-weight: bold; color: var(--danger); display: block; margin-bottom: 10px; }
         .radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
@@ -278,7 +252,7 @@
     <div class="header">
         <h1>森淮手機，平板，電視，電腦使用規範</h1>
         <div class="header-info">
-            <span class="version-tag">ver 43.0 (iOS PWA)</span>
+            <span class="version-tag">ver 45.0 (Updated Rules)</span>
             <span>|</span>
             <span id="liveClock" class="time-tag">載入中...</span>
         </div>
@@ -301,7 +275,7 @@
             <div class="rule-section-title">🎯 點數與獎勵機制</div>
             <ul class="rule-list">
                 <li><strong>基本門檻：</strong>每日需累積 <strong>6 點</strong> 以上，隔日方可使用 3C。</li>
-                <li><strong>日常任務：</strong>每完成一項可得 1 點 (如：讀書1小時、寫功課、做家事等)。</li>
+                <li><strong>日常任務：</strong>每完成一項可得 1~3 點 (如：讀書、寫功課、做家事等)。</li>
                 <li><strong>學業加分：</strong>
                     <ul style="margin-top:5px;">
                         <li>數學及格：+2 點</li>
@@ -387,7 +361,7 @@
                     <div style="font-weight:bold; color:#d32f2f;">📉 不及格科目</div>
                     <div class="exam-input-group">
                         <input type="number" id="failedExams" value="0" min="0" oninput="checkStatus()" style="border-color:#d32f2f; color:#d32f2f; font-weight:bold;">
-                        <span style="font-size:0.9rem; color:#d32f2f;">科</span>
+                        <span style="font-size:0.9rem;">科</span>
                     </div>
                 </div>
                 <div class="exam-row" style="background:#fffde7; border:1px solid #fff59d;">
@@ -601,7 +575,9 @@
 
     // --- 1. 資料結構 ---
     const baseWeekdayTasks = [
-        { id: 'w2', text: '連續讀書一小時', points: 1 },
+        { id: 'w2', text: '連續讀書一小時', points: 3 }, // Modified: 1 -> 3
+        { id: 'w10', text: '找家長討論數學', points: 1 }, // Added
+        { id: 'w11', text: '幫忙曬衣服', points: 1 },    // Added
         { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
         { id: 'w4', text: '功課寫完', points: 1 },
         { id: 'w5', text: '洗便當', points: 1 },
@@ -634,7 +610,7 @@
     window.onload = function() {
         const today = new Date();
         const day = today.getDay();
-        const saved = localStorage.getItem('senhuai_history_v41'); // v41/v42/v43 data is compatible
+        const saved = localStorage.getItem('senhuai_history_v41'); 
         if (saved) historyData = JSON.parse(saved);
 
         if (day === 0 || day === 6) setMode('weekend');
@@ -645,7 +621,6 @@
         updateClock();
         setInterval(updateClock, 1000);
 
-        // Accordion Logic
         var acc = document.getElementsByClassName("accordion");
         for (var i = 0; i < acc.length; i++) {
             acc[i].addEventListener("click", function() {
@@ -1076,8 +1051,8 @@
         resultArea.innerHTML = html;
     }
 
-    // --- 儲存 ---
-    function saveRecord() {
+    // --- 儲存與自拍邏輯 ---
+    async function saveRecord() {
         if(isFormLocked) { Swal.fire('已鎖定', '無法儲存', 'error'); return; }
         
         // 1. App Log Check
@@ -1106,6 +1081,45 @@
         }
         
         const status = checkStatus();
+        
+        // 3. 核心儲存邏輯
+        if(status.passed) {
+            // == 達標：啟動自拍流程 ==
+            
+            // 彈出相機/檔案選擇
+            const { value: file } = await Swal.fire({
+                title: '📸 請拍攝今日認證照',
+                text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
+                input: 'file',
+                inputAttributes: {
+                    'accept': 'image/*',
+                    'capture': 'user',  // iOS/Android 優先使用前鏡頭
+                    'aria-label': '上傳自拍照'
+                },
+                confirmButtonText: '上傳並產生證書',
+                showCancelButton: true,
+                cancelButtonText: '跳過 (使用預設Logo)'
+            });
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // 有照片，顯示照片版證書
+                    finishSaveProcess(status, e.target.result); 
+                };
+                reader.readAsDataURL(file);
+            } else {
+                // 沒照片(按取消)，顯示 Logo 版證書
+                finishSaveProcess(status, null);
+            }
+
+        } else {
+            // 未達標：直接儲存並顯示結果
+            finishSaveProcess(status, null);
+        }
+    }
+
+    function finishSaveProcess(status, selfieUrl) {
         const dateStr = new Date().toLocaleString('zh-TW', { hour12: false });
         let resultStr = status.passed ? "✅達標" : "❌未達標";
         if(status.missing.length > 0) resultStr = "❌缺必做";
@@ -1116,10 +1130,17 @@
         const tomorrowStr = tomorrow.toLocaleDateString('zh-TW');
 
         if(status.passed) {
-            // v42/v43: Use logo.png
+            // 動態產生圖片 HTML：有自拍就用自拍，沒自拍就用 Logo
+            let imgHtml = '';
+            if (selfieUrl) {
+                imgHtml = `<img src="${selfieUrl}" class="cert-selfie-img" alt="Selfie">`;
+            } else {
+                imgHtml = `<img src="logo.png" class="cert-logo-img" alt="Logo">`;
+            }
+
             const certHtml = `
                 <div class="swal-certificate">
-                    <img src="logo.png" class="cert-logo-img" alt="Senhuai Logo">
+                    ${imgHtml}
                     <div class="cert-title">3C 設備使用授權書</div>
                     <div class="cert-body">
                         茲證明 <strong>森淮</strong> 今日表現優異，<br>
@@ -1137,9 +1158,9 @@
             Swal.fire({ title: '紀錄已儲存', text: `今日得分：${status.score} 分。`, icon: 'info', timer: 1500, showConfirmButton: false });
         }
 
+        // 寫入紀錄
         let doneCustoms = []; customTasks.forEach(t => { if(document.getElementById(t.id).checked) doneCustoms.push(t.text); });
         let violations = majorViolations.map(v => `${v.text}(-${v.points})`);
-        
         let appLogStr = appUsageLogs.map(a => `[${a.device}]${a.name}(${a.duration}m/預${a.planNext||0}m)`).join(' | ');
 
         const record = {
@@ -1157,7 +1178,7 @@
         
         historyData.unshift(record);
         updateStorageAndUI();
-        localStorage.removeItem('senhuai_draft_v41'); // v41
+        localStorage.removeItem('senhuai_draft_v41'); 
         document.getElementById('parentPwd').value = ''; 
     }
 

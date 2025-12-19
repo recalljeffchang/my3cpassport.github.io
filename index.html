@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v46)</title>
+    <title>森淮 3C 規範 (v47)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,6 +13,8 @@
     <link rel="apple-touch-icon" href="logo.png">
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Load Question Bank -->
+    <script src="questions.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -938,7 +940,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 46.0 (Updated Rules)</span>
+                <span class="version-tag">ver 47.0 (Bank & Quiz)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -1110,6 +1112,42 @@
                     </div>
                 </div>
                 <div id="customTaskList"></div>
+            </div>
+
+            <!-- Quiz Card -->
+            <div class="card" style="border-left: 5px solid #9c27b0;">
+                <div class="card-title" style="color: #9c27b0;">🧠 腦力激盪 (答題賺點)</div>
+                <div style="font-size:0.9rem; margin-bottom:10px; color:#666;">
+                    國中學科挑戰！答對一題 +0.25 點。<br>
+                    <span style="color:#d32f2f; font-weight:bold;">每日上限：2 點</span> (目前已獲得：<span id="quizTodayScore"
+                        style="color:#9c27b0; font-weight:bold;">0</span> / 2)
+                </div>
+
+                <div id="quizStartArea">
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-tool" style="background-color:#ab47bc; flex:3;" onclick="startQuiz()">🚀
+                            開始挑戰</button>
+                        <button class="btn-tool" style="background-color:#ef5350; flex:1;" onclick="resetQuiz()">🔄
+                            重置</button>
+                    </div>
+                    <p id="quizCooldownMsg"
+                        style="display:none; color:#d32f2f; font-size:0.9rem; margin-top:5px; text-align:center;">
+                        今日額度已滿，明天再來吧！</p>
+                </div>
+
+                <div id="quizGameArea"
+                    style="display:none; background:#f3e5f5; padding:15px; border-radius:8px; margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <span class="badge-point" id="quizSubject"
+                            style="background:#fff; color:#7b1fa2; border-color:#7b1fa2;">科目</span>
+                        <button onclick="closeQuiz()" style="border:none; background:none; color:#666;">✕</button>
+                    </div>
+                    <div id="quizQuestion" style="font-weight:bold; font-size:1.05rem; margin-bottom:15px;">題目載入中...
+                    </div>
+                    <div id="quizOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
+                    <div id="quizFeedback"
+                        style="margin-top:10px; font-weight:bold; text-align:center; min-height:24px;"></div>
+                </div>
             </div>
 
             <div class="card">
@@ -1349,11 +1387,21 @@
         let isFormLocked = false;
         let isUnlockedByParent = false;
         let lastCelebratedScore = 5;
-        let isAppLogRequired = true;
         let bankBalance = 0; // New Bank Balance Variable
+        let quizScoreToday = 0;
+        const QUIZ_DAILY_LIMIT = 2; // Daily limit for quiz points
+        let questionBank = [];
 
         // --- 2. 初始化 ---
         window.onload = function () {
+            // Load Questions from JS file (works locally)
+            if (typeof QUESTION_BANK_DATA !== 'undefined') {
+                questionBank = QUESTION_BANK_DATA;
+            } else {
+                console.error("Failed to load questions.js");
+                document.getElementById('quizStartArea').innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
+            }
+
             const today = new Date();
             const day = today.getDay();
             const saved = localStorage.getItem('senhuai_history_v41');
@@ -1362,6 +1410,18 @@
             const savedBank = localStorage.getItem('senhuai_bank_v46');
             if (savedBank) bankBalance = parseInt(savedBank);
             document.getElementById('bankDisplay').innerText = bankBalance;
+
+            // Initial Quiz State (Reset daily logic would go here if we tracked date, but for now reset on reload is safer or use localStorage for today?)
+            // Let's check if we have a saved draft to restore valid quiz points? 
+            // Better: Store quiz points in draft or a separate "today_quiz" key with date.
+            const savedQuiz = localStorage.getItem('senhuai_quiz_today');
+            if (savedQuiz) {
+                const p = JSON.parse(savedQuiz);
+                if (p.date === new Date().toLocaleDateString()) {
+                    quizScoreToday = p.score;
+                }
+            }
+            updateQuizUI();
 
             if (day === 0 || day === 6) setMode('weekend');
             else setMode('weekday');
@@ -1680,6 +1740,113 @@
             });
         }
 
+        // --- Quiz Logic ---
+        function updateQuizUI() {
+            document.getElementById('quizTodayScore').innerText = quizScoreToday;
+            if (quizScoreToday >= QUIZ_DAILY_LIMIT) {
+                document.getElementById('quizStartArea').style.display = 'block'; // Keep showing but disable?
+                document.querySelector('#quizStartArea button').disabled = true;
+                document.querySelector('#quizStartArea button').innerText = '✅ 今日已完成';
+                document.querySelector('#quizStartArea button').style.backgroundColor = '#ccc';
+                document.getElementById('quizCooldownMsg').style.display = 'block';
+            }
+        }
+
+        function startQuiz() {
+            if (quizScoreToday >= QUIZ_DAILY_LIMIT) return;
+            if (questionBank.length === 0) { Swal.fire('讀取中', '題庫載入中，請稍後再試...', 'info'); return; }
+
+            document.getElementById('quizStartArea').style.display = 'none';
+            document.getElementById('quizGameArea').style.display = 'block';
+            document.getElementById('quizFeedback').innerText = '';
+
+            const qIdx = Math.floor(Math.random() * questionBank.length);
+            const q = questionBank[qIdx];
+
+            document.getElementById('quizSubject').innerText = q.s;
+            document.getElementById('quizQuestion').innerText = q.q;
+
+            const optsDiv = document.getElementById('quizOptions');
+            optsDiv.innerHTML = '';
+
+            // Shuffle options
+            let indices = [0, 1, 2, 3];
+            indices.sort(() => Math.random() - 0.5);
+
+            indices.forEach(i => {
+                const btn = document.createElement('button');
+                btn.className = 'mode-btn'; // Reuse style
+                btn.style.textAlign = 'left';
+                btn.style.borderColor = '#ab47bc';
+                btn.style.color = '#7b1fa2';
+                btn.innerText = q.o[i];
+                btn.onclick = () => checkQuizAnswer(i === q.a, btn, q.o[q.a]);
+                optsDiv.appendChild(btn);
+            });
+        }
+
+        function checkQuizAnswer(isCorrect, btnElement, correctAnsText) {
+            const feedback = document.getElementById('quizFeedback');
+            const opts = document.getElementById('quizOptions').children;
+            for (let btn of opts) btn.disabled = true;
+
+            if (isCorrect) {
+                btnElement.style.backgroundColor = '#dcedc8';
+                feedback.innerHTML = '<span style="color:#2e7d32">🎉 答對了！ +0.25 點</span>';
+                quizScoreToday += 0.25;
+                // Save quiz state
+                localStorage.setItem('senhuai_quiz_today', JSON.stringify({
+                    date: new Date().toLocaleDateString(),
+                    score: quizScoreToday
+                }));
+                updateQuizUI();
+                checkStatus();
+                setTimeout(() => {
+                    closeQuiz();
+                    // Optional: Auto reopen if not full? No, let user click again.
+                }, 1500);
+            } else {
+                btnElement.style.backgroundColor = '#ffcdd2';
+                feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！<br>正確答案是：${correctAnsText}</span>`;
+                setTimeout(() => {
+                    closeQuiz();
+                }, 2500);
+            }
+        }
+
+        function closeQuiz() {
+            document.getElementById('quizGameArea').style.display = 'none';
+            document.getElementById('quizStartArea').style.display = 'block';
+        }
+
+        function resetQuiz() {
+            Swal.fire({
+                title: '確定重置挑戰？',
+                text: "今日獲得的答題點數將歸零，您可以重新開始。",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: '重置',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    quizScoreToday = 0;
+                    localStorage.removeItem('senhuai_quiz_today');
+                    updateQuizUI();
+
+                    // Reset button state
+                    const startBtn = document.querySelector('#quizStartArea button'); // select the start button
+                    startBtn.disabled = false;
+                    startBtn.innerText = '🚀 開始挑戰';
+                    startBtn.style.backgroundColor = '#ab47bc';
+                    document.getElementById('quizCooldownMsg').style.display = 'none';
+
+                    checkStatus();
+                    Swal.fire('已重置', '您可以重新挑戰了！', 'success');
+                }
+            });
+        }
+
         function calculateTimePenalty() {
             const mins = parseInt(document.getElementById('overtimeMinutes').value) || 0;
             let points = 0;
@@ -1708,6 +1875,7 @@
                 if (chk && chk.checked) { earnedScore += task.points; } else if (task.required) { missingRequired.push(task.text); }
             });
             if (document.getElementById('bedtimeBonus').checked) earnedScore += 1;
+            earnedScore += quizScoreToday; // Add quiz points
             if (document.getElementById('bedtimeEarly').checked) earnedScore += 1;
 
             const timePenalty = calculateTimePenalty();
@@ -2052,10 +2220,10 @@
 
         function exportToCSV() {
             if (historyData.length === 0) { Swal.fire('無資料', '無法匯出', 'info'); return; }
-            let csv = "日期時間,模式,最終分數,結果,原始得分,遲延扣分,3C違規扣,3C違規次,就寢違規扣,就寢獎勵,重大違規扣,重大違規細節,數學,其他科,寫考卷,高分考卷,不及格科,>80分科,自訂任務,App使用紀錄,平日早睡,銀行存取\n";
+            let csv = "日期時間,模式,最終分數,結果,原始得分,遲延扣分,3C違規扣,3C違規次,就寢違規扣,就寢獎勵,重大違規扣,重大違規細節,數學,其他科,寫考卷,高分考卷,不及格科,>80分科,自訂任務,App使用紀錄,平日早睡,銀行存取,腦力挑戰\n";
             historyData.forEach(row => {
                 const c = (t) => (t || "").toString().replace(/,/g, "，");
-                csv += `${row.date},${row.mode},${row.finalScore},${row.result},${row.earnedScore || 0},${row.timePenalty || 0},${row.excessivePenalty || 0},${row.excessiveCount || 0},${row.bedtimePenalty || 0},${row.bedtimeBonus || "-"},${row.violationPenalty || 0},"${c(row.violationDetails)}",${c(row.math)},${c(row.others)},${row.tpCount || 0},${row.tpHigh || 0},${row.failedExams || 0},${row.score80Exams || 0},"${c(row.customs)}","${c(row.appLogStr)}",${row.bedtimeEarly || "-"},${row.bankTx || 0}\n`;
+                csv += `${row.date},${row.mode},${row.finalScore},${row.result},${row.earnedScore || 0},${row.timePenalty || 0},${row.excessivePenalty || 0},${row.excessiveCount || 0},${row.bedtimePenalty || 0},${row.bedtimeBonus || "-"},${row.violationPenalty || 0},"${c(row.violationDetails)}",${c(row.math)},${c(row.others)},${row.tpCount || 0},${row.tpHigh || 0},${row.failedExams || 0},${row.score80Exams || 0},"${c(row.customs)}","${c(row.appLogStr)}",${row.bedtimeEarly || "-"},${row.bankTx || 0},${row.quizScore || 0}\n`;
             });
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
             const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `森淮規範_${new Date().toISOString().split('T')[0]}.csv`; a.click();
@@ -2078,8 +2246,11 @@
                             failedExams: parseFloat(cols[16]) || 0, score80Exams: parseFloat(cols[17]) || 0,
                             customs: cols[18].replace(/"/g, ''),
                             appLogStr: cols[19] ? cols[19].replace(/"/g, '') : "無",
+                            customs: cols[18].replace(/"/g, ''),
+                            appLogStr: cols[19] ? cols[19].replace(/"/g, '') : "無",
                             bedtimeEarly: cols[20] || "-",
-                            bankTx: parseFloat(cols[21]) || 0
+                            bankTx: parseFloat(cols[21]) || 0,
+                            quizScore: parseFloat(cols[22]) || 0
                         });
                     }
                 }

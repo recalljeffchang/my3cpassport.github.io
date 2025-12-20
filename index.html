@@ -940,7 +940,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 47.0 (Bank & Quiz)</span>
+                <span class="version-tag">ver 48.0 (Quiz Bonus)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -1119,8 +1119,12 @@
                 <div class="card-title" style="color: #9c27b0;">🧠 腦力激盪 (答題賺點)</div>
                 <div style="font-size:0.9rem; margin-bottom:10px; color:#666;">
                     國中學科挑戰！答對一題 +0.25 點。<br>
-                    <span style="color:#d32f2f; font-weight:bold;">每日上限：2 點</span> (目前已獲得：<span id="quizTodayScore"
-                        style="color:#9c27b0; font-weight:bold;">0</span> / 2)
+                    <span style="color:#d32f2f; font-weight:bold;">每日一般上限：2 點</span> (目前已獲得：<span id="quizTodayScore"
+                        style="color:#9c27b0; font-weight:bold;">0</span> / 2)<br>
+                    <span style="color:#2e7d32; font-weight:bold;">🔥 連勝 8 題獎勵：直接平反獲得 8 點！</span>
+                    <div id="quizStreakDisplay" style="margin-top:5px; font-weight:bold; color:#f57f17; display:none;">
+                        目前連勝：<span id="quizCurrentStreak">0</span> / 8
+                    </div>
                 </div>
 
                 <div id="quizStartArea">
@@ -1389,7 +1393,9 @@
         let lastCelebratedScore = 5;
         let bankBalance = 0; // New Bank Balance Variable
         let quizScoreToday = 0;
-        const QUIZ_DAILY_LIMIT = 2; // Daily limit for quiz points
+        let quizStreakToday = 0; // Track consecutive correct answers
+        const QUIZ_DAILY_LIMIT = 2; // Normal daily limit for quiz points
+        const QUIZ_STREAK_TARGET = 8; // Target streak for 8-point bonus
         let questionBank = [];
 
         // --- 2. 初始化 ---
@@ -1419,6 +1425,7 @@
                 const p = JSON.parse(savedQuiz);
                 if (p.date === new Date().toLocaleDateString()) {
                     quizScoreToday = p.score;
+                    quizStreakToday = p.streak || 0;
                 }
             }
             updateQuizUI();
@@ -1743,10 +1750,31 @@
         // --- Quiz Logic ---
         function updateQuizUI() {
             document.getElementById('quizTodayScore').innerText = quizScoreToday;
-            if (quizScoreToday >= QUIZ_DAILY_LIMIT) {
-                document.getElementById('quizStartArea').style.display = 'block'; // Keep showing but disable?
+
+            // Update Streak Display
+            const streakArea = document.getElementById('quizStreakDisplay');
+            const streakSpan = document.getElementById('quizCurrentStreak');
+            if (quizStreakToday > 0 && quizScoreToday < 8) {
+                streakArea.style.display = 'block';
+                streakSpan.innerText = quizStreakToday;
+            } else {
+                streakArea.style.display = 'none';
+            }
+
+            if (quizScoreToday >= 8) {
+                // If they got the 8-point bonus
+                document.getElementById('quizStartArea').style.display = 'block';
+                const startBtn = document.querySelector('#quizStartArea button');
+                startBtn.disabled = true;
+                startBtn.innerText = '🔥 完美成就：8 點達成！';
+                startBtn.style.backgroundColor = '#f57f17';
+                document.getElementById('quizCooldownMsg').style.display = 'block';
+                document.getElementById('quizCooldownMsg').innerText = "太強了！達成連續 8 題答對，今日點數已滿！";
+            } else if (quizScoreToday >= QUIZ_DAILY_LIMIT) {
+                // Normal limit reached
+                document.getElementById('quizStartArea').style.display = 'block';
                 document.querySelector('#quizStartArea button').disabled = true;
-                document.querySelector('#quizStartArea button').innerText = '✅ 今日已完成';
+                document.querySelector('#quizStartArea button').innerText = '✅ 今日已完成 (2點)';
                 document.querySelector('#quizStartArea button').style.backgroundColor = '#ccc';
                 document.getElementById('quizCooldownMsg').style.display = 'block';
             }
@@ -1792,12 +1820,30 @@
 
             if (isCorrect) {
                 btnElement.style.backgroundColor = '#dcedc8';
-                feedback.innerHTML = '<span style="color:#2e7d32">🎉 答對了！ +0.25 點</span>';
-                quizScoreToday += 0.25;
+
+                quizStreakToday++;
+                let rewardMsg = "";
+
+                if (quizStreakToday >= QUIZ_STREAK_TARGET) {
+                    quizScoreToday = 8;
+                    rewardMsg = '<span style="color:#f57f17; font-weight:bold;">🔥 達成 8 連勝！直接平反獲得 8 點！</span>';
+                    // Trigger extra confetti code if available or just use existing
+                } else {
+                    if (quizScoreToday < QUIZ_DAILY_LIMIT) {
+                        quizScoreToday += 0.25;
+                        rewardMsg = `<span style="color:#2e7d32">🎉 答對了！ 目前連勝：${quizStreakToday} 題</span>`;
+                    } else {
+                        rewardMsg = `<span style="color:#2e7d32">🎉 答對了！ (一般點數已滿) 目前連勝：${quizStreakToday} 題</span>`;
+                    }
+                }
+
+                feedback.innerHTML = rewardMsg;
+
                 // Save quiz state
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
-                    score: quizScoreToday
+                    score: quizScoreToday,
+                    streak: quizStreakToday
                 }));
                 updateQuizUI();
                 checkStatus();
@@ -1807,7 +1853,16 @@
                 }, 1500);
             } else {
                 btnElement.style.backgroundColor = '#ffcdd2';
-                feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！<br>正確答案是：${correctAnsText}</span>`;
+                quizStreakToday = 0; // Reset streak on error
+                feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！連勝中斷。<br>正確答案是：${correctAnsText}</span>`;
+
+                // Save quiz state even on wrong answer to reset streak in persistence
+                localStorage.setItem('senhuai_quiz_today', JSON.stringify({
+                    date: new Date().toLocaleDateString(),
+                    score: quizScoreToday,
+                    streak: quizStreakToday
+                }));
+                updateQuizUI();
                 setTimeout(() => {
                     closeQuiz();
                 }, 2500);

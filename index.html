@@ -931,6 +931,55 @@
             margin-top: 10px;
             font-size: 16px;
         }
+
+        .unlock-card {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 5px solid #9c27b0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.1);
+        }
+
+        .unlock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
+
+        .unlock-item.completed {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+
+        .unlock-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .unlock-badge.pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .unlock-badge.done {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .bonus-tag {
+            color: #9c27b0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -1211,6 +1260,15 @@
                 </div>
             </div>
 
+            <!-- Unlock Challenge Card -->
+            <div id="unlockCard" class="card unlock-card" style="display:none;">
+                <div class="card-title" style="color: #7b1fa2; margin-bottom: 10px;">
+                    🎯 任務解鎖挑戰 <span style="font-size:0.8rem; color:#666; font-weight:normal;">(全部完成，每項加 1 點，共 +3
+                        點)</span>
+                </div>
+                <div id="unlockTaskList"></div>
+            </div>
+
             <div class="card">
                 <div class="card-title">
                     <span id="listTitle">日常任務清單</span>
@@ -1397,6 +1455,8 @@
         const QUIZ_DAILY_LIMIT = 2; // Normal daily limit for quiz points
         const QUIZ_STREAK_TARGET = 8; // Target streak for 8-point bonus
         let questionBank = [];
+        let unlockTasksToday = []; // v48: Daily Unlock Challenge
+
 
         // --- 2. 初始化 ---
         window.onload = function () {
@@ -1429,6 +1489,21 @@
                 }
             }
             updateQuizUI();
+
+            // Daily Unlock Reset Logic (v48)
+            const savedUnlock = localStorage.getItem('senhuai_unlock_today');
+            const todayStr = new Date().toLocaleDateString();
+            if (savedUnlock) {
+                const p = JSON.parse(savedUnlock);
+                if (p.date === todayStr) {
+                    unlockTasksToday = p.tasks;
+                } else {
+                    pickNewUnlockTasks();
+                }
+            } else {
+                pickNewUnlockTasks();
+            }
+
 
             if (day === 0 || day === 6) setMode('weekend');
             else setMode('weekday');
@@ -1521,7 +1596,54 @@
         }
 
         // --- 3. 核心渲染 ---
+
+        function pickNewUnlockTasks() {
+            const allTasks = [...baseWeekdayTasks, ...baseWeekendTasks];
+            // Filter out duplicate IDs if any
+            const uniqueTasks = [];
+            const map = new Map();
+            for (const item of allTasks) {
+                if (!map.has(item.id)) {
+                    map.set(item.id, true);
+                    uniqueTasks.push(item);
+                }
+            }
+
+            // Shuffle and pick 3
+            const shuffled = uniqueTasks.sort(() => 0.5 - Math.random());
+            unlockTasksToday = shuffled.slice(0, 3).map(t => ({ id: t.id, text: t.text }));
+
+            localStorage.setItem('senhuai_unlock_today', JSON.stringify({
+                date: new Date().toLocaleDateString(),
+                tasks: unlockTasksToday
+            }));
+            renderUnlockCards();
+        }
+
+        function renderUnlockCards() {
+            const container = document.getElementById('unlockTaskList');
+            const card = document.getElementById('unlockCard');
+            if (unlockTasksToday.length === 0) {
+                card.style.display = 'none';
+                return;
+            }
+            card.style.display = 'block';
+            container.innerHTML = '';
+
+            unlockTasksToday.forEach(task => {
+                const isDone = document.getElementById(task.id) && document.getElementById(task.id).checked;
+                const div = document.createElement('div');
+                div.className = `unlock-item ${isDone ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <span>${task.text}</span>
+                    <span class="unlock-badge ${isDone ? 'done' : 'pending'}">${isDone ? '✅ 已解鎖' : '🎯 待解鎖'}</span>
+                `;
+                container.appendChild(div);
+            });
+        }
+
         function setMode(mode) {
+
             currentMode = mode;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             if (mode === 'weekday') {
@@ -1537,6 +1659,16 @@
                 renderTasks([], true);
             }
             checkStatus();
+            
+            // v48: Add visual feedback for mode switch
+            Swal.fire({
+                title: mode === 'weekday' ? '📅 已切換至平日模式' : '⚽ 已切換至假日模式',
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 1000,
+                background: mode === 'weekday' ? '#e8f5e9' : '#e1f5fe'
+            });
         }
 
         function renderTasks(taskList, showGroups) {
@@ -1553,8 +1685,18 @@
         }
 
         function createTaskElement(task) {
-            const div = document.createElement('div'); div.className = 'task-item';
-            div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text}</label><span class="badge-point">+${task.points}點</span>`;
+            const isUnlockTask = unlockTasksToday.some(ut => ut.id === task.id);
+            const div = document.createElement('div');
+            div.className = 'task-item' + (isUnlockTask ? ' unlock-highlight' : '');
+            if (isUnlockTask) {
+                div.style.background = '#f3e5f5';
+                div.style.borderLeft = '4px solid #9c27b0';
+            }
+            div.innerHTML = `
+                <input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()">
+                <label for="${task.id}" class="task-label">${task.text}${isUnlockTask ? ' <span class="bonus-tag">(解鎖挑戰 +1，需全過)</span>' : ''}</label>
+                <span class="badge-point">+${task.points}點</span>
+            `;
             return div;
         }
 
@@ -1573,7 +1715,8 @@
                 bedtimePenalty: document.getElementById('bedtimePenalty').checked,
                 overtimeMinutes: document.getElementById('overtimeMinutes').value,
                 excessiveCount: document.getElementById('excessiveCount').value,
-                customTasks, majorViolations, appUsageLogs, checkedTasks: [], customTasksChecked: []
+                customTasks, majorViolations, appUsageLogs, checkedTasks: [], customTasksChecked: [],
+                unlockTasksToday // v48
             };
             document.querySelectorAll('#taskList input[type="checkbox"]').forEach(chk => { if (chk.checked) draft.checkedTasks.push(chk.id); });
             customTasks.forEach(t => { if (document.getElementById(t.id).checked) draft.customTasksChecked.push(t.id); });
@@ -1600,6 +1743,7 @@
             customTasks = draft.customTasks || [];
             majorViolations = draft.majorViolations || [];
             appUsageLogs = draft.appUsageLogs || [];
+            if (draft.unlockTasksToday) unlockTasksToday = draft.unlockTasksToday;
 
             renderCustomTasks(); renderMajorViolations(); renderAppLogs();
 
@@ -1854,15 +1998,19 @@
             } else {
                 btnElement.style.backgroundColor = '#ffcdd2';
                 quizStreakToday = 0; // Reset streak on error
+                
+                // Explicitly update UI immediately
+                updateQuizUI(); 
+
                 feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！連勝中斷。<br>正確答案是：${correctAnsText}</span>`;
 
                 // Save quiz state even on wrong answer to reset streak in persistence
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
-                    streak: quizStreakToday
+                    streak: 0
                 }));
-                updateQuizUI();
+                
                 setTimeout(() => {
                     closeQuiz();
                 }, 2500);
@@ -1924,10 +2072,25 @@
             const tpHigh = parseInt(document.getElementById('testPaperHigh').value) || 0;
             earnedScore += tpCount * 1; earnedScore += tpHigh * 2;
 
-            document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(chk => { earnedScore += parseInt(chk.value); });
+            let unlockHighlightDoneCount = 0;
+            document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(chk => {
+                earnedScore += parseInt(chk.value);
+                if (unlockTasksToday.some(ut => ut.id === chk.id)) {
+                    unlockHighlightDoneCount++;
+                }
+            });
+            // v48 Mod: All-or-nothing (+1 per task if all done)
+            if (unlockTasksToday.length > 0 && unlockHighlightDoneCount === unlockTasksToday.length) {
+                earnedScore += unlockTasksToday.length;
+            }
             customTasks.forEach(task => {
                 const chk = document.getElementById(task.id);
-                if (chk && chk.checked) { earnedScore += task.points; } else if (task.required) { missingRequired.push(task.text); }
+                if (chk && chk.checked) {
+                    earnedScore += task.points;
+                    // Custom tasks are currently not part of randomization pool, but we could add them if needed.
+                } else if (task.required) {
+                    missingRequired.push(task.text);
+                }
             });
             if (document.getElementById('bedtimeBonus').checked) earnedScore += 1;
             earnedScore += quizScoreToday; // Add quiz points
@@ -2027,6 +2190,7 @@
 
             renderResultBox(earnedScore, finalScore, missingRequired, totalPenalty, bankTx);
             updateTheme(finalScore);
+            renderUnlockCards(); // Update unlock card status
 
             if (finalScore >= TARGET_SCORE && missingRequired.length === 0) {
                 // Celebrate based on final score
@@ -2227,7 +2391,11 @@
                 failedExams: status.failedExams, score80Exams: status.score80Exams,
                 appLogStr: appLogStr || "無",
                 bankTx: status.bankTx, // Record transaction
-                quizScore: quizScoreToday // Save quiz score
+                quizScore: quizScoreToday, // Save quiz score
+                unlockTasks: unlockTasksToday.map(ut => {
+                    const done = document.getElementById(ut.id) && document.getElementById(ut.id).checked;
+                    return `${ut.text}(${done ? '✅' : '❌'})`;
+                }).join(" | ") // v48
             };
 
             historyData.unshift(record);

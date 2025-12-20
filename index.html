@@ -848,7 +848,7 @@
             object-fit: cover;
             border-radius: 50%;
             border: 4px solid #D4AF37;
-            margin: 0 auto 15px auto;
+            margin-bottom: 10px;
             display: block;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
             animation: bounce 2s infinite;
@@ -857,6 +857,7 @@
         .cert-logo-img {
             width: 120px;
             height: auto;
+            margin-bottom: 10px;
             margin: 0 auto 10px auto;
             display: block;
             animation: bounce 2s infinite;
@@ -864,16 +865,59 @@
         }
 
         .cert-stamp {
-            border: 3px solid #d32f2f;
-            color: #d32f2f;
-            font-weight: bold;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transform: rotate(-10deg);
             display: inline-block;
-            margin-top: 20px;
-            font-family: sans-serif;
-            letter-spacing: 2px;
+            border: 4px solid #d32f2f;
+            color: #d32f2f;
+            padding: 5px 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transform: rotate(-15deg);
+            margin: 20px;
+            border-radius: 10px;
+            text-shadow: none;
+        }
+
+        /* v48: Breakdown styles */
+        .cert-breakdown {
+            margin: 15px auto;
+            max-width: 90%;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #555;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed #D4AF37;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .breakdown-item.penalty {
+            color: #d32f2f;
+        }
+
+        .breakdown-item.bonus {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .breakdown-item.bank {
+            color: #00897b;
+        }
+
+        .breakdown-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #333;
+            border-top: 2px solid #D4AF37;
+            padding-top: 5px;
         }
 
         @keyframes bounce {
@@ -1659,7 +1703,7 @@
                 renderTasks([], true);
             }
             checkStatus();
-            
+
             // v48: Add visual feedback for mode switch
             Swal.fire({
                 title: mode === 'weekday' ? '📅 已切換至平日模式' : '⚽ 已切換至假日模式',
@@ -1998,9 +2042,9 @@
             } else {
                 btnElement.style.backgroundColor = '#ffcdd2';
                 quizStreakToday = 0; // Reset streak on error
-                
+
                 // Explicitly update UI immediately
-                updateQuizUI(); 
+                updateQuizUI();
 
                 feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！連勝中斷。<br>正確答案是：${correctAnsText}</span>`;
 
@@ -2010,7 +2054,7 @@
                     score: quizScoreToday,
                     streak: 0
                 }));
-                
+
                 setTimeout(() => {
                     closeQuiz();
                 }, 2500);
@@ -2061,47 +2105,89 @@
         function checkStatus() {
             let earnedScore = 0;
             let missingRequired = [];
+            let breakdown = [];
 
             const failedExams = parseInt(document.getElementById('failedExams').value) || 0;
             const score80Exams = parseInt(document.getElementById('score80Exams').value) || 0;
 
-            if (document.getElementById('mathPassed').checked) earnedScore += 2;
-            earnedScore += (parseInt(document.getElementById('otherExams').value) || 0);
+            if (document.getElementById('mathPassed').checked) {
+                earnedScore += 2;
+                breakdown.push({ label: '🧮 數學及格', points: 2, type: 'academic' });
+            }
+            const otherCount = (parseInt(document.getElementById('otherExams').value) || 0);
+            if (otherCount > 0) {
+                earnedScore += otherCount;
+                breakdown.push({ label: `📝 其他科目及格(${otherCount}科)`, points: otherCount, type: 'academic' });
+            }
 
-            const tpCount = parseInt(document.getElementById('testPaperCount').value) || 0;
-            const tpHigh = parseInt(document.getElementById('testPaperHigh').value) || 0;
-            earnedScore += tpCount * 1; earnedScore += tpHigh * 2;
+            const tpCount = (parseInt(document.getElementById('testPaperCount').value) || 0);
+            const tpHigh = (parseInt(document.getElementById('testPaperHigh').value) || 0);
+            if (tpCount > 0) {
+                earnedScore += tpCount;
+                breakdown.push({ label: `📄 寫完測驗卷(${tpCount}張)`, points: tpCount, type: 'academic' });
+            }
+            if (tpHigh > 0) {
+                earnedScore += (tpHigh * 2);
+                breakdown.push({ label: `💯 測驗卷達標(${tpHigh}張)`, points: (tpHigh * 2), type: 'academic' });
+            }
 
+            let routinePoints = 0;
             let unlockHighlightDoneCount = 0;
             document.querySelectorAll('#taskList input[type="checkbox"]:checked').forEach(chk => {
-                earnedScore += parseInt(chk.value);
+                const p = parseInt(chk.value);
+                earnedScore += p;
+                routinePoints += p;
                 if (unlockTasksToday.some(ut => ut.id === chk.id)) {
                     unlockHighlightDoneCount++;
                 }
             });
+            if (routinePoints > 0) {
+                breakdown.push({ label: '🏃 日常任務完成', points: routinePoints, type: 'task' });
+            }
+
             // v48 Mod: All-or-nothing (+1 per task if all done)
             if (unlockTasksToday.length > 0 && unlockHighlightDoneCount === unlockTasksToday.length) {
                 earnedScore += unlockTasksToday.length;
+                breakdown.push({ label: '🌟 驚喜任務全勤', points: unlockTasksToday.length, type: 'bonus' });
             }
             customTasks.forEach(task => {
                 const chk = document.getElementById(task.id);
                 if (chk && chk.checked) {
                     earnedScore += task.points;
-                    // Custom tasks are currently not part of randomization pool, but we could add them if needed.
+                    breakdown.push({ label: `✨ ${task.text}`, points: task.points, type: 'task' });
                 } else if (task.required) {
                     missingRequired.push(task.text);
                 }
             });
-            if (document.getElementById('bedtimeBonus').checked) earnedScore += 1;
-            earnedScore += quizScoreToday; // Add quiz points
-            if (document.getElementById('bedtimeEarly').checked) earnedScore += 1;
+            if (document.getElementById('bedtimeBonus').checked) {
+                earnedScore += 1;
+                breakdown.push({ label: '🌙 準時上床獎勵', points: 1, type: 'bonus' });
+            }
+            if (quizScoreToday > 0) {
+                earnedScore += quizScoreToday;
+                breakdown.push({ label: '🧠 腦筋挑戰得分', points: quizScoreToday, type: 'bonus' });
+            }
+            if (document.getElementById('bedtimeEarly').checked) {
+                earnedScore += 1;
+                breakdown.push({ label: '⚡ 額外早睡獎勵', points: 1, type: 'bonus' });
+            }
 
             const timePenalty = calculateTimePenalty();
+            if (timePenalty > 0) breakdown.push({ label: '⏰ 3C 超時扣分', points: -timePenalty, type: 'penalty' });
+
             const excessiveCount = parseInt(document.getElementById('excessiveCount').value) || 0;
             const excessivePenalty = excessiveCount * 1;
             document.getElementById('excessivePenalty').innerText = excessivePenalty;
+            if (excessivePenalty > 0) breakdown.push({ label: `📱 行動裝置超標(${excessiveCount}次)`, points: -excessivePenalty, type: 'penalty' });
+
             let violationPenalty = 0; majorViolations.forEach(v => violationPenalty += v.points);
-            let bedtimePenalty = 0; if (document.getElementById('bedtimePenalty').checked) bedtimePenalty = 2;
+            if (violationPenalty > 0) breakdown.push({ label: '🚫 重大違規扣分', points: -violationPenalty, type: 'penalty' });
+
+            let bedtimePenalty = 0;
+            if (document.getElementById('bedtimePenalty').checked) {
+                bedtimePenalty = 2;
+                breakdown.push({ label: '⌛ 晚睡/未刷牙扣分', points: -2, type: 'penalty' });
+            }
 
             const totalPenalty = timePenalty + excessivePenalty + violationPenalty + bedtimePenalty;
             const rawScore = earnedScore - totalPenalty; // Score before bank operations
@@ -2126,7 +2212,6 @@
                         bankMsg.innerHTML = `⚠️ 超過可存上限 (為保留6點及格，最多存 <strong>${maxDeposit}</strong> 點)`;
                         bankMsg.style.background = "#fff3e0"; bankMsg.style.color = "#ef6c00";
                         // Don't force 0, just warn. But for calculation, we might need to be strict?
-                        // Let's penalize or just un-count it?  Better to clamp for calculation or show invalid?
                         // Let's clamp for the final score but show warning.
                     } else {
                         bankMsg.innerHTML = `✅ 可存入 (保留後剩 ${rawScore - bankAmount} 點)`;
@@ -2140,11 +2225,15 @@
                     bankMsg.style.background = "#ffebee"; bankMsg.style.color = "#d32f2f";
                     // bankTx = bankBalance; // Clamp? No, if user inputs error, show error
                 } else {
-                    bankMsg.innerText = `✅ 將提領 ${bankAmount} 點至今日分數`;
+                    bankMsg.innerHTML = `✅ 將提領 ${bankAmount} 點至今日分數`;
                     bankMsg.style.background = "#e8f5e9"; bankMsg.style.color = "#2e7d32";
                     bankTx = bankAmount;
                 }
-            } else {
+            }
+            if (bankTx !== 0) {
+                breakdown.push({ label: bankTx < 0 ? '🏦 存入點數銀行' : '🏦 從銀行提領', points: bankTx, type: 'bank' });
+            }
+            else {
                 bankMsg.style.display = 'none';
             }
 
@@ -2204,7 +2293,7 @@
                 if (finalScore < TARGET_SCORE) lastCelebratedScore = TARGET_SCORE - 1;
             }
 
-            return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, bankTx };
+            return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, bankTx, breakdown };
         }
 
         function updateTheme(score) {
@@ -2341,6 +2430,23 @@
                     imgHtml = `<img src="logo.png" class="cert-logo-img" alt="Logo">`;
                 }
 
+                // Generate Breakdown HTML
+                let breakdownHtml = '<div class="cert-breakdown">';
+                status.breakdown.forEach(item => {
+                    const cls = item.type === 'penalty' ? 'penalty' : (item.type === 'bonus' ? 'bonus' : (item.type === 'bank' ? 'bank' : ''));
+                    breakdownHtml += `
+                        <div class="breakdown-item ${cls}">
+                            <span>${item.label}</span>
+                            <span>${item.points > 0 ? '+' : ''}${item.points} 點</span>
+                        </div>`;
+                });
+                breakdownHtml += `
+                    <div class="breakdown-total">
+                        <span>最終核定分數</span>
+                        <span>${status.score} 點</span>
+                    </div>
+                </div>`;
+
                 const certHtml = `
                 <div class="swal-certificate">
                     ${imgHtml}
@@ -2350,6 +2456,7 @@
                         累積點數達標 (${status.score}分)，<br>
                         特此授予明日 3C 設備使用權限。
                     </div>
+                    ${breakdownHtml}
                     <div class="cert-date">授權日期：${tomorrowStr}</div>
                     <div><div class="cert-stamp">VERIFIED ✅</div></div>
                     <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>

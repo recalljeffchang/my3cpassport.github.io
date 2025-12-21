@@ -1455,6 +1455,7 @@
                 <div class="inventory-item" title="換題券">🎟️ <span id="inv_skip">0</span>/2</div>
                 <div class="inventory-item" title="提示燈泡">💡 <span id="inv_hint">0</span>/2</div>
                 <div class="inventory-item" title="應急鑰匙">🔓 <span id="inv_key">0</span>/1</div>
+                <div class="inventory-item" title="連勝保險">🛡️ <span id="inv_shield">0</span></div>
             </div>
 
             <div class="card">
@@ -1627,6 +1628,15 @@
                         </div>
                         <button class="btn-buy" id="buy_key" onclick="buyItem('key')">購買</button>
                     </div>
+                    <div class="shop-item">
+                        <div>
+                            <div class="shop-icon">🛡️</div>
+                            <div class="shop-name">連勝保險</div>
+                            <div class="shop-price">2 點</div>
+                            <div class="shop-limit">不限次數</div>
+                        </div>
+                        <button class="btn-buy" id="buy_shield" onclick="buyItem('shield')">購買</button>
+                    </div>
                 </div>
             </div>
 
@@ -1693,12 +1703,14 @@
 
         // v48 Shop State
         let shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
-        let inventory = JSON.parse(localStorage.getItem('senhuai_inventory_v48')) || { skip: 0, hint: 0, key: 0 };
+        let inventory = JSON.parse(localStorage.getItem('senhuai_inventory_v48')) || { skip: 0, hint: 0, key: 0, shield: 0 };
+        if (inventory && !inventory.hasOwnProperty('shield')) inventory.shield = 0;
         let keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
         const SHOP_ITEMS = {
             skip: { name: '換題券', price: 5, limit: 2, icon: '🎟️' },
             hint: { name: '提示燈泡', price: 3, limit: 2, icon: '💡' },
-            key: { name: '應急解鎖鑰匙', price: 15, limit: 1, icon: '🔓', cooldown: 7 * 24 * 60 * 60 * 1000 }
+            key: { name: '應急解鎖鑰匙', price: 15, limit: 1, icon: '🔓', cooldown: 7 * 24 * 60 * 60 * 1000 },
+            shield: { name: '連勝保險', price: 2, limit: 99, icon: '🛡️' }
         };
 
 
@@ -2262,18 +2274,25 @@
                 }, 1500);
             } else {
                 btnElement.style.backgroundColor = '#ffcdd2';
-                quizStreakToday = 0; // Reset streak on error
+
+                if (inventory.shield > 0) {
+                    inventory.shield--;
+                    saveInventory();
+                    feedback.innerHTML = `<span style="color:#f57f17">🛡️ 已使用連勝保險！正確答案是：${correctAnsText}<br>連勝紀錄維持在 ${quizStreakToday} 題。</span>`;
+                    updateShopUI();
+                } else {
+                    quizStreakToday = 0; // Reset streak on error
+                    feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！連勝中斷。<br>正確答案是：${correctAnsText}</span>`;
+                }
 
                 // Explicitly update UI immediately
                 updateQuizUI();
-
-                feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！連勝中斷。<br>正確答案是：${correctAnsText}</span>`;
 
                 // Save quiz state even on wrong answer to reset streak in persistence
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
-                    streak: 0
+                    streak: quizStreakToday
                 }));
 
                 setTimeout(() => {
@@ -2330,6 +2349,7 @@
             document.getElementById('inv_skip').innerText = inventory.skip;
             document.getElementById('inv_hint').innerText = inventory.hint;
             document.getElementById('inv_key').innerText = inventory.key;
+            document.getElementById('inv_shield').innerText = inventory.shield;
 
             // Buy buttons
             for (let id in SHOP_ITEMS) {

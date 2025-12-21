@@ -877,6 +877,117 @@
             text-shadow: none;
         }
 
+        /* v48: Shop & Inventory Styles */
+        .inventory-bar {
+            background: #fff;
+            border-bottom: 2px solid #ddd;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .shop-item {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .shop-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .shop-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .shop-price {
+            color: #e65100;
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .shop-limit {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .btn-buy {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .btn-buy:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Quiz Item Buttons */
+        .quiz-tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-use-item {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #9c27b0;
+            background: #fff;
+            color: #7b1fa2;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-use-item:disabled {
+            opacity: 0.5;
+            border-color: #ccc;
+            color: #888;
+        }
+
         /* v48: Breakdown styles */
         .cert-breakdown {
             margin: 15px auto;
@@ -1241,6 +1352,12 @@
                     </div>
                     <div id="quizQuestion" style="font-weight:bold; font-size:1.05rem; margin-bottom:15px;">題目載入中...
                     </div>
+
+                    <div class="quiz-tools" id="quizTools" style="display:none;">
+                        <button class="btn-use-item" id="useSkipBtn" onclick="useItem('skip')">🎟️ 使用換題券</button>
+                        <button class="btn-use-item" id="useHintBtn" onclick="useItem('hint')">💡 使用燈泡</button>
+                    </div>
+
                     <div id="quizOptions" style="display:flex; flex-direction:column; gap:8px;"></div>
                     <div id="quizFeedback"
                         style="margin-top:10px; font-weight:bold; text-align:center; min-height:24px;"></div>
@@ -1311,6 +1428,13 @@
                         點)</span>
                 </div>
                 <div id="unlockTaskList"></div>
+            </div>
+
+            <div class="inventory-bar" id="inventoryBar" style="display:none;">
+                <span style="color:#666;">🎒 背包：</span>
+                <div class="inventory-item" title="換題券">🎟️ <span id="inv_skip">0</span>/2</div>
+                <div class="inventory-item" title="提示燈泡">💡 <span id="inv_hint">0</span>/2</div>
+                <div class="inventory-item" title="應急鑰匙">🔓 <span id="inv_key">0</span>/1</div>
             </div>
 
             <div class="card">
@@ -1410,6 +1534,14 @@
                             <label style="font-size:0.9rem; color:#666;">🔐 家長密碼確認 (儲存前必填)：</label>
                             <input type="password" id="parentPwd" class="pwd-input" placeholder="輸入家長密碼">
                         </div>
+
+                        <div style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+                            <label style="font-size:0.9rem; display:flex; align-items:center; gap:5px;">
+                                <input type="checkbox" id="shopEnabledToggle" onchange="toggleShop(this.checked)"
+                                    checked style="width:18px; height:18px;">
+                                🛒 啟用點數商店 (允許使用銀行點數購買)
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1438,6 +1570,40 @@
 
                 <div id="bankInfoMsg"
                     style="margin-top:10px; font-size:0.9rem; padding:8px; border-radius:6px; display:none;"></div>
+            </div>
+
+            <!-- Shop Card (v48) -->
+            <div class="card" id="shopCard" style="border-left: 5px solid var(--primary); display:none;">
+                <div class="card-title">🛒 點數商店 (僅限銀行存款支付)</div>
+                <div class="shop-grid">
+                    <div class="shop-item">
+                        <div>
+                            <div class="shop-icon">🎟️</div>
+                            <div class="shop-name">換題券</div>
+                            <div class="shop-price">5 點</div>
+                            <div class="shop-limit">上限: 2 張</div>
+                        </div>
+                        <button class="btn-buy" id="buy_skip" onclick="buyItem('skip')">購買</button>
+                    </div>
+                    <div class="shop-item">
+                        <div>
+                            <div class="shop-icon">💡</div>
+                            <div class="shop-name">提示燈泡</div>
+                            <div class="shop-price">3 點</div>
+                            <div class="shop-limit">上限: 2 個</div>
+                        </div>
+                        <button class="btn-buy" id="buy_hint" onclick="buyItem('hint')">購買</button>
+                    </div>
+                    <div class="shop-item">
+                        <div>
+                            <div class="shop-icon">🔓</div>
+                            <div class="shop-name">應急鑰匙</div>
+                            <div class="shop-price">15 點</div>
+                            <div class="shop-limit">上限: 1 把 | 7天冷卻</div>
+                        </div>
+                        <button class="btn-buy" id="buy_key" onclick="buyItem('key')">購買</button>
+                    </div>
+                </div>
             </div>
 
             <div id="resultArea" class="result-box"></div>
@@ -1500,6 +1666,16 @@
         const QUIZ_STREAK_TARGET = 8; // Target streak for 8-point bonus
         let questionBank = [];
         let unlockTasksToday = []; // v48: Daily Unlock Challenge
+
+        // v48 Shop State
+        let shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
+        let inventory = JSON.parse(localStorage.getItem('senhuai_inventory_v48')) || { skip: 0, hint: 0, key: 0 };
+        let keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
+        const SHOP_ITEMS = {
+            skip: { name: '換題券', price: 5, limit: 2, icon: '🎟️' },
+            hint: { name: '提示燈泡', price: 3, limit: 2, icon: '💡' },
+            key: { name: '應急解鎖鑰匙', price: 15, limit: 1, icon: '🔓', cooldown: 7 * 24 * 60 * 60 * 1000 }
+        };
 
 
         // --- 2. 初始化 ---
@@ -1576,6 +1752,8 @@
                     showCancelButton: true, confirmButtonText: '載入'
                 }).then((result) => { if (result.isConfirmed) loadDraft(); });
             }
+            document.getElementById('shopEnabledToggle').checked = shopEnabled;
+            updateShopUI();
         };
 
         function updateClock() {
@@ -1602,41 +1780,44 @@
 
         function lockForm(isLateNight) {
             isFormLocked = true;
-            document.getElementById('lockBanner').style.display = 'block';
-            const deadlineTime = isLateNight ? "23:30" : "22:30";
-            document.getElementById('lockMessage').innerHTML = `今日截止時間為 <strong>${deadlineTime}</strong>。<br>目前表單已鎖定，無法進行操作。`;
-            document.querySelectorAll('#mainForm .card').forEach(card => card.classList.add('locked'));
-            document.getElementById('btnSave').disabled = true;
-            document.getElementById('btnSave').classList.add('locked');
-            document.getElementById('btnSave').innerText = '⛔ 已鎖定 (無法儲存)';
+            const overlay = document.createElement('div');
+            overlay.id = 'lockOverlay';
+            overlay.classList.add('lock-overlay');
+
+            let keyBtn = '';
+            if (inventory.key > 0) {
+                keyBtn = `<button class="btn-unlock" id="useKeyBtn" style="background:#00897b; margin-top:20px;">🔓 使用應急鑰匙自行解鎖</button>`;
+            }
+
+            overlay.innerHTML = `
+                <div class="lock-card">
+                    <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
+                    <h2>時間已截止</h2>
+                    <p>本日紀錄填寫時間已過 (${isLateNight ? '23:30' : '22:30'} 為限)。</p>
+                    <p>請在此鎖定畫面請家長輸入密碼解鎖：</p>
+                    <input type="password" id="unlockPwd" class="pwd-input" placeholder="家長密碼" style="margin-top:10px;">
+                    <button class="btn-unlock" onclick="unlockFormByParent()">家長密碼解鎖</button>
+                    ${keyBtn}
+                    <div style="font-size:0.8rem; color:#888; margin-top:15px;">※ 鎖定是為了確保準時完成紀錄。</div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            if (inventory.key > 0) {
+                document.getElementById('useKeyBtn').onclick = useEmergencyKey;
+            }
         }
 
-        function unlockForm() {
-            Swal.fire({
-                title: '家長解鎖',
-                text: '請輸入家長密碼以解除時間鎖定',
-                input: 'password',
-                inputPlaceholder: '輸入密碼',
-                showCancelButton: true,
-                confirmButtonText: '解鎖',
-                cancelButtonText: '取消',
-                preConfirm: (password) => {
-                    if (password !== PARENT_PWD) {
-                        Swal.showValidationMessage('密碼錯誤！');
-                    }
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    isFormLocked = false;
-                    isUnlockedByParent = true;
-                    document.getElementById('lockBanner').style.display = 'none';
-                    document.querySelectorAll('#mainForm .card').forEach(card => card.classList.remove('locked'));
-                    document.getElementById('btnSave').disabled = false;
-                    document.getElementById('btnSave').classList.remove('locked');
-                    document.getElementById('btnSave').innerText = '📝 完成並儲存紀錄';
-                    Swal.fire('已解鎖', '表單已暫時開放填寫', 'success');
-                }
-            });
+        function unlockFormByParent() {
+            const password = document.getElementById('unlockPwd').value;
+            if (password === PARENT_PWD) {
+                isFormLocked = false;
+                isUnlockedByParent = true;
+                document.getElementById('lockOverlay').remove();
+                Swal.fire('已解鎖', '表單已暫時開放填寫', 'success');
+            } else {
+                Swal.fire('密碼錯誤', '請輸入正確的家長密碼', 'error');
+            }
         }
 
         // --- 3. 核心渲染 ---
@@ -1966,6 +2147,20 @@
                 document.querySelector('#quizStartArea button').style.backgroundColor = '#ccc';
                 document.getElementById('quizCooldownMsg').style.display = 'block';
             }
+
+            // v48 Tools Update
+            updateQuizTools();
+        }
+
+        function updateQuizTools() {
+            const tools = document.getElementById('quizTools');
+            if (document.getElementById('quizGameArea').style.display === 'block') {
+                tools.style.display = 'flex';
+                document.getElementById('useSkipBtn').disabled = inventory.skip <= 0;
+                document.getElementById('useHintBtn').disabled = inventory.hint <= 0;
+            } else {
+                tools.style.display = 'none';
+            }
         }
 
         function startQuiz() {
@@ -1975,6 +2170,7 @@
             document.getElementById('quizStartArea').style.display = 'none';
             document.getElementById('quizGameArea').style.display = 'block';
             document.getElementById('quizFeedback').innerText = '';
+            updateQuizTools();
 
             const qIdx = Math.floor(Math.random() * questionBank.length);
             const q = questionBank[qIdx];
@@ -1986,7 +2182,7 @@
             optsDiv.innerHTML = '';
 
             // Shuffle options
-            let indices = [0, 1, 2, 3];
+            let indices = Array.from({ length: q.o.length }, (_, i) => i);
             indices.sort(() => Math.random() - 0.5);
 
             indices.forEach(i => {
@@ -1996,6 +2192,7 @@
                 btn.style.borderColor = '#ab47bc';
                 btn.style.color = '#7b1fa2';
                 btn.innerText = q.o[i];
+                btn.dataset.isCorrect = (i === q.a);
                 btn.onclick = () => checkQuizAnswer(i === q.a, btn, q.o[q.a]);
                 optsDiv.appendChild(btn);
             });
@@ -2062,8 +2259,9 @@
         }
 
         function closeQuiz() {
-            document.getElementById('quizGameArea').style.display = 'none';
             document.getElementById('quizStartArea').style.display = 'block';
+            document.getElementById('quizGameArea').style.display = 'none';
+            updateQuizTools();
         }
 
         function resetQuiz() {
@@ -2090,6 +2288,131 @@
 
                     checkStatus();
                     Swal.fire('已重置', '您可以重新挑戰了！', 'success');
+                }
+            });
+        }
+
+        // v48 Point Shop Logic
+        function toggleShop(enabled) {
+            shopEnabled = enabled;
+            localStorage.setItem('senhuai_shop_enabled', shopEnabled);
+            updateShopUI();
+        }
+
+        function updateShopUI() {
+            document.getElementById('shopCard').style.display = shopEnabled ? 'block' : 'none';
+            document.getElementById('inventoryBar').style.display = (inventory.skip > 0 || inventory.hint > 0 || inventory.key > 0) ? 'flex' : 'none';
+
+            document.getElementById('inv_skip').innerText = inventory.skip;
+            document.getElementById('inv_hint').innerText = inventory.hint;
+            document.getElementById('inv_key').innerText = inventory.key;
+
+            // Buy buttons
+            for (let id in SHOP_ITEMS) {
+                const item = SHOP_ITEMS[id];
+                const btn = document.getElementById(`buy_${id}`);
+                const affordable = bankBalance >= item.price;
+                const underLimit = inventory[id] < item.limit;
+
+                let cdOk = true;
+                if (id === 'key' && keyLastPurchaseDate > 0) {
+                    const elapsed = Date.now() - parseInt(keyLastPurchaseDate);
+                    if (elapsed < item.cooldown) cdOk = false;
+                }
+
+                btn.disabled = !affordable || !underLimit || !cdOk;
+                if (!underLimit) btn.innerText = '已達上限';
+                else if (!cdOk) {
+                    const remainDays = Math.ceil((item.cooldown - (Date.now() - parseInt(keyLastPurchaseDate))) / (1000 * 60 * 60 * 24));
+                    btn.innerText = `CD (${remainDays}天)`;
+                }
+                else btn.innerText = '購買';
+            }
+        }
+
+        async function buyItem(id) {
+            const item = SHOP_ITEMS[id];
+            if (bankBalance < item.price) return;
+            if (inventory[id] >= item.limit) return;
+
+            const result = await Swal.fire({
+                title: `確認購買？`,
+                text: `確定要花費 ${item.price} 點銀行存款購買「${item.name}」嗎？`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '確定購買'
+            });
+
+            if (result.isConfirmed) {
+                bankBalance -= item.price;
+                inventory[id]++;
+                localStorage.setItem('senhuai_bank_v46', bankBalance);
+                localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
+                if (id === 'key') {
+                    keyLastPurchaseDate = Date.now();
+                    localStorage.setItem('senhuai_key_last_buy', keyLastPurchaseDate);
+                }
+
+                document.getElementById('bankDisplay').innerText = bankBalance;
+
+                Swal.fire({ title: '購買成功！', icon: 'success', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
+                updateShopUI();
+                updateQuizTools();
+            }
+        }
+
+        function useItem(id) {
+            if (inventory[id] <= 0) return;
+
+            if (id === 'skip') {
+                inventory.skip--;
+                saveInventory();
+                Swal.fire({ title: '🎟️ 已使用換題券', toast: true, position: 'top', timer: 1000, showConfirmButton: false });
+                startQuiz(); // Fetch new question
+            } else if (id === 'hint') {
+                inventory.hint--;
+                saveInventory();
+
+                // Hint logic: Remove one wrong option
+                const opts = Array.from(document.getElementById('quizOptions').children);
+                const wrongIndices = [];
+                opts.forEach((btn, idx) => {
+                    if (btn.dataset.isCorrect === 'false' && btn.style.visibility !== 'hidden') {
+                        wrongIndices.push(idx);
+                    }
+                });
+
+                if (wrongIndices.length > 0) {
+                    const target = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+                    opts[target].style.visibility = 'hidden';
+                    Swal.fire({ title: '💡 已排除一個錯誤選項', toast: true, position: 'top', timer: 1000, showConfirmButton: false });
+                }
+            }
+            updateShopUI();
+            updateQuizTools();
+        }
+
+        function saveInventory() {
+            localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
+        }
+
+        function useEmergencyKey() {
+            Swal.fire({
+                title: '使用應急鑰匙？',
+                text: '這將消耗一把鑰匙並立刻解除鎖定。',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: '確定',
+                confirmButtonColor: '#00897b'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    inventory.key--;
+                    saveInventory();
+                    isFormLocked = false;
+                    isUnlockedByParent = true;
+                    document.getElementById('lockOverlay').remove();
+                    Swal.fire('鑰匙已使用', '表單已解鎖', 'success');
+                    updateShopUI();
                 }
             });
         }

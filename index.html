@@ -1549,8 +1549,12 @@
             <!-- Bank Card -->
             <div class="card" style="border-left: 5px solid #ff9800;">
                 <div class="card-title" style="color: #ff9800;">🏦 點數銀行 (儲蓄與提領)</div>
-                <div style="font-size:1.1rem; margin-bottom:15px; background:#fff3e0; padding:10px; border-radius:8px;">
-                    💰 目前存款：<span id="bankDisplay" style="font-weight:bold; font-size:1.3rem; color:#e65100;">0</span> 點
+                <div
+                    style="font-size:1.1rem; margin-bottom:15px; background:#fff3e0; padding:10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>💰 目前存款：<span id="bankDisplay"
+                            style="font-weight:bold; font-size:1.3rem; color:#e65100;">0</span> 點</div>
+                    <button onclick="openAdminBankMode()"
+                        style="background:none; border:none; cursor:pointer; font-size:1rem; opacity:0.3;">🛠️</button>
                 </div>
 
                 <div class="input-row" style="align-items:center; flex-wrap:wrap;">
@@ -2412,7 +2416,47 @@
                     isUnlockedByParent = true;
                     document.getElementById('lockOverlay').remove();
                     Swal.fire('鑰匙已使用', '表單已解鎖', 'success');
-                    updateShopUI();
+                    updateQuizTools();
+                }
+            });
+        }
+
+        // v48 Admin Bank Mode
+        function openAdminBankMode() {
+            Swal.fire({
+                title: '🛠️ 管理員模式',
+                text: '請輸入管理員金鑰以修改銀行餘額：',
+                input: 'password',
+                inputPlaceholder: '管理員密碼',
+                showCancelButton: true,
+                confirmButtonText: '驗證',
+                cancelButtonText: '取消'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    if (result.value === 'bankjeffjasmine') {
+                        Swal.fire({
+                            title: '修改餘額',
+                            text: `目前餘額：${bankBalance} 點。請輸入新的總額：`,
+                            input: 'number',
+                            inputAttributes: { min: 0 },
+                            inputValue: bankBalance,
+                            showCancelButton: true,
+                            confirmButtonText: '確認修改',
+                            cancelButtonText: '取消'
+                        }).then((newVal) => {
+                            if (newVal.isConfirmed) {
+                                const finalVal = parseInt(newVal.value) || 0;
+                                bankBalance = finalVal;
+                                localStorage.setItem('senhuai_bank_v46', bankBalance);
+                                document.getElementById('bankDisplay').innerText = bankBalance;
+                                updateShopUI();
+                                checkStatus();
+                                Swal.fire('修改成功', `銀行餘額已更新為 ${bankBalance} 點。`, 'success');
+                            }
+                        });
+                    } else {
+                        Swal.fire('驗證失敗', '密碼不正確', 'error');
+                    }
                 }
             });
         }

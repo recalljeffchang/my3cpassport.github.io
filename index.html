@@ -854,6 +854,42 @@
             animation: bounce 2s infinite;
         }
 
+        /* --- v48 Avatar Frame --- */
+        .swal-certificate.frame-gold {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            border: 4px solid transparent;
+        }
+
+        .swal-certificate.frame-gold::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, #ffd700, transparent, #ffd700, transparent);
+            animation: rotate-frame 4s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate-frame {
+            100% {
+                transform: rotate(1turn);
+            }
+        }
+
+        .swal-certificate.frame-gold::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            /* Leave some space for the border */
+            background: white;
+            z-index: -1;
+            border-radius: 8px;
+        }
+
         .cert-logo-img {
             width: 120px;
             height: auto;
@@ -1456,6 +1492,7 @@
                 <div class="inventory-item" title="提示燈泡">💡 <span id="inv_hint">0</span>/2</div>
                 <div class="inventory-item" title="應急鑰匙">🔓 <span id="inv_key">0</span>/1</div>
                 <div class="inventory-item" title="連勝保險">🛡️ <span id="inv_shield">0</span></div>
+                <div class="inventory-item" title="頭像框">🖼️ <span id="inv_frame_gold">0</span></div>
             </div>
 
             <div class="card">
@@ -1637,6 +1674,15 @@
                         </div>
                         <button class="btn-buy" id="buy_shield" onclick="buyItem('shield')">購買</button>
                     </div>
+                    <div class="shop-item">
+                        <div>
+                            <div class="shop-icon">🖼️</div>
+                            <div class="shop-name">傳奇金框</div>
+                            <div class="shop-price">6 點</div>
+                            <div class="shop-limit">永久持有</div>
+                        </div>
+                        <button class="btn-buy" id="buy_frame_gold" onclick="buyItem('frame_gold')">購買</button>
+                    </div>
                 </div>
             </div>
 
@@ -1705,12 +1751,14 @@
         let shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
         let inventory = JSON.parse(localStorage.getItem('senhuai_inventory_v48')) || { skip: 0, hint: 0, key: 0, shield: 0 };
         if (inventory && !inventory.hasOwnProperty('shield')) inventory.shield = 0;
+        if (inventory && !inventory.hasOwnProperty('frame_gold')) inventory.frame_gold = 0;
         let keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
         const SHOP_ITEMS = {
             skip: { name: '換題券', price: 5, limit: 2, icon: '🎟️' },
             hint: { name: '提示燈泡', price: 3, limit: 2, icon: '💡' },
             key: { name: '應急解鎖鑰匙', price: 15, limit: 1, icon: '🔓', cooldown: 7 * 24 * 60 * 60 * 1000 },
-            shield: { name: '連勝保險', price: 2, limit: 99, icon: '🛡️' }
+            shield: { name: '連勝保險', price: 2, limit: 99, icon: '🛡️' },
+            frame_gold: { name: '傳奇金框', price: 6, limit: 1, icon: '🖼️' }
         };
 
 
@@ -2350,6 +2398,7 @@
             document.getElementById('inv_hint').innerText = inventory.hint;
             document.getElementById('inv_key').innerText = inventory.key;
             document.getElementById('inv_shield').innerText = inventory.shield;
+            document.getElementById('inv_frame_gold').innerText = inventory.frame_gold;
 
             // Buy buttons
             for (let id in SHOP_ITEMS) {
@@ -2854,8 +2903,9 @@
                     </div>
                 </div>`;
 
+                const frameClass = inventory.frame_gold > 0 ? 'frame-gold' : '';
                 const certHtml = `
-                <div class="swal-certificate">
+                <div class="swal-certificate ${frameClass}">
                     ${imgHtml}
                     <div class="cert-title">3C 設備使用授權書</div>
                     <div class="cert-body">

@@ -2799,26 +2799,44 @@
             resultArea.innerHTML = html;
         }
 
-        // --- 儲存與自拍邏輯 ---
+        // --- v49 修正版 saveRecord ---
         async function saveRecord() {
-            if (isFormLocked) { Swal.fire('已鎖定', '無法儲存', 'error'); return; }
-
-            // 1. App Log Check
-            if (isAppLogRequired && appUsageLogs.length === 0) {
-                Swal.fire({ icon: 'warning', title: '資料不完整', text: '依照今日考試狀況，您必須填寫「App 使用紀錄」！', confirmButtonColor: '#d33' });
+            if (isFormLocked) {
+                Swal.fire('已鎖定', '無法儲存', 'error');
                 return;
             }
 
-            // 2. Parent Auth Check
+            // 1. App Log Check (與原版邏輯相同)
+            if (isAppLogRequired && appUsageLogs.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: '資料不完整',
+                    text: '依照今日考試狀況，您必須填寫「App 使用紀錄」！',
+                    confirmButtonColor: '#d33'
+                });
+                return;
+            }
+
+            // 2. Parent Auth Check (確認違規狀態與密碼)
             const violationStatus = document.querySelector('input[name="violationStatus"]:checked');
             if (!violationStatus) {
-                Swal.fire({ icon: 'warning', title: '家長簽核未完成', text: '請在「家長簽核區」選擇今日是否有違規！', confirmButtonColor: '#d33' });
+                Swal.fire({
+                    icon: 'warning',
+                    title: '家長簽核未完成',
+                    text: '請在「家長簽核區」選擇今日是否有違規！',
+                    confirmButtonColor: '#d33'
+                });
                 document.querySelector('.parent-auth-area').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
 
             if (violationStatus.value === 'exist' && majorViolations.length === 0) {
-                Swal.fire({ icon: 'error', title: '資料不符', text: '您勾選了「有發生違規」，但沒有新增任何違規項目！', confirmButtonColor: '#d33' });
+                Swal.fire({
+                    icon: 'error',
+                    title: '資料不符',
+                    text: '您勾選了「有發生違規」，但沒有新增任何違規項目！',
+                    confirmButtonColor: '#d33'
+                });
                 return;
             }
 
@@ -2830,10 +2848,8 @@
 
             const status = checkStatus();
 
-            // 3. 核心儲存邏輯
+            // 3. 核心儲存與證書產生邏輯 (修正非同步問題)
             if (status.passed) {
-                // == 達標：啟動自拍流程 ==
-
                 // 彈出相機/檔案選擇
                 const { value: file } = await Swal.fire({
                     title: '📸 請拍攝今日認證照',
@@ -2841,28 +2857,42 @@
                     input: 'file',
                     inputAttributes: {
                         'accept': 'image/*',
-                        'capture': 'user',  // iOS/Android 優先使用前鏡頭
-                        'aria-label': '上傳自拍照'
+                        'capture': 'user'
                     },
-                    confirmButtonText: '上傳並產生證書',
+                    confirmButtonText: '產生證書',
                     showCancelButton: true,
-                    cancelButtonText: '跳過 (使用預設Logo)'
+                    cancelButtonText: '跳過'
                 });
 
                 if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        // 有照片，顯示照片版證書
-                        finishSaveProcess(status, e.target.result);
+                    // 使用 Promise 封裝 FileReader，確保讀取完成後才執行下一步
+                    const readImageData = (file) => {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.onerror = (err) => reject(err);
+                            reader.readAsDataURL(file);
+                        });
                     };
-                    reader.readAsDataURL(file);
+
+                    try {
+                        Swal.showLoading(); // 顯示讀取中，避免畫面卡死
+                        const imageData = await readImageData(file);
+                        
+                        // 延遲 100ms 確保前一個彈窗完全消失，iOS 渲染更穩定
+                        setTimeout(() => {
+                            finishSaveProcess(status, imageData);
+                        }, 100);
+                    } catch (error) {
+                        console.error("圖片讀取失敗:", error);
+                        finishSaveProcess(status, null);
+                    }
                 } else {
-                    // 沒照片(按取消)，顯示 Logo 版證書
+                    // 用戶取消拍照或點選跳過
                     finishSaveProcess(status, null);
                 }
-
             } else {
-                // 未達標：直接儲存並顯示結果
+                // 未達標情況直接存擋
                 finishSaveProcess(status, null);
             }
         }

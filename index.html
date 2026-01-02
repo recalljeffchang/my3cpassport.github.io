@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v50.5)</title>
+    <title>森淮 3C 規範 (v50.6)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,19 +14,13 @@
 
     <script>
         window.onerror = function (msg, url, lineNo, columnNo, error) {
-            var string = msg.toLowerCase();
-            var substring = "script error";
-            if (string.indexOf(substring) > -1) {
-                alert('Script Error: 請檢查 questions.js 是否已上傳，或網路是否正常。');
+            if (msg.toLowerCase().indexOf("script error") > -1) {
+                alert('Script Error: 請檢查 questions.js 是否存在');
             } else {
-                var message = [
-                    '系統發生錯誤，請截圖給開發者：',
-                    'Message: ' + msg,
-                    'Line: ' + lineNo,
-                    'Column: ' + columnNo
-                ].join('\n');
-                // 延遲顯示避免阻塞
-                setTimeout(function(){ alert(message); }, 1000);
+                // Delay alert to ensure UI renders
+                setTimeout(function(){ 
+                    alert('系統錯誤: ' + msg); 
+                }, 500);
             }
             return false;
         };
@@ -71,11 +65,7 @@
             user-select: none;
         }
 
-        input,
-        select {
-            -webkit-user-select: text;
-            user-select: text;
-        }
+        input, select { -webkit-user-select: text; user-select: text; }
 
         /* Themes */
         body.theme-level-1 { --primary: #2e7d32; --bg: #e8f5e9; }
@@ -83,300 +73,61 @@
         body.theme-level-3 { --primary: #7b1fa2; --bg: #f3e5f5; }
         body.theme-level-4 { --primary: #fbc02d; --bg: #fffde7; }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
+        .container { max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
 
         /* Header */
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header h1 {
-            color: var(--primary);
-            margin: 0;
-            font-size: 1.5rem;
-            line-height: 1.4;
-            transition: color 0.5s;
-        }
-
-        .header-info {
-            display: inline-flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 8px;
-            font-size: 0.9rem;
-            color: #555;
-            background: rgba(255, 255, 255, 0.6);
-            padding: 5px 10px;
-            border-radius: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { color: var(--primary); margin: 0; font-size: 1.5rem; line-height: 1.4; transition: color 0.5s; }
+        .header-info { display: inline-flex; justify-content: center; gap: 15px; margin-top: 8px; font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.6); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.1); }
         .version-tag { font-weight: bold; color: var(--primary); }
         .time-tag { font-family: monospace; font-weight: bold; }
 
-        /* Level Bar */
-        .level-card {
-            background: linear-gradient(135deg, #673ab7, #512da8);
-            color: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .level-card::after {
-            content: "RPG";
-            position: absolute;
-            right: -10px;
-            bottom: -15px;
-            font-size: 4rem;
-            font-weight: 900;
-            opacity: 0.1;
-            transform: rotate(-15deg);
-        }
-
-        .level-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            margin-bottom: 5px;
-        }
-
+        /* Level Card */
+        .level-card { background: linear-gradient(135deg, #673ab7, #512da8); color: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3); position: relative; overflow: hidden; }
+        .level-card::after { content: "RPG"; position: absolute; right: -10px; bottom: -15px; font-size: 4rem; font-weight: 900; opacity: 0.1; transform: rotate(-15deg); }
+        .level-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
         .level-title { font-size: 1.2rem; font-weight: bold; }
-        .level-badge { 
-            background: rgba(255,255,255,0.2); 
-            padding: 2px 8px; 
-            border-radius: 10px; 
-            font-size: 0.8rem; 
-        }
+        .level-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
+        .xp-bar-container { background: rgba(0,0,0,0.3); height: 10px; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .xp-bar { background: #ffeb3b; height: 100%; width: 0%; transition: width 1s ease; box-shadow: 0 0 5px #ffeb3b; }
+        .xp-text { font-size: 0.8rem; text-align: right; margin-top: 3px; opacity: 0.9; }
 
-        .xp-bar-container {
-            background: rgba(0,0,0,0.3);
-            height: 10px;
-            border-radius: 5px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        .xp-bar {
-            background: #ffeb3b;
-            height: 100%;
-            width: 0%;
-            transition: width 1s ease;
-            box-shadow: 0 0 5px #ffeb3b;
-        }
-
-        .xp-text {
-            font-size: 0.8rem;
-            text-align: right;
-            margin-top: 3px;
-            opacity: 0.9;
-        }
-
-        /* Accordion */
-        .accordion {
-            background-color: #fff;
-            color: #444;
-            cursor: pointer;
-            padding: 15px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 1rem;
-            font-weight: bold;
-            transition: 0.4s;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .accordion.active,
-        .accordion:hover { background-color: #f1f1f1; }
-        .accordion:after {
-            content: '\002B';
-            color: #777;
-            font-weight: bold;
-            float: right;
-            margin-left: 5px;
-            font-size: 1.2rem;
-        }
+        /* General UI */
+        .accordion { background-color: #fff; color: #444; cursor: pointer; padding: 15px; width: 100%; border: none; text-align: left; outline: none; font-size: 1rem; font-weight: bold; transition: 0.4s; border-radius: 12px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; -webkit-tap-highlight-color: transparent; }
+        .accordion.active, .accordion:hover { background-color: #f1f1f1; }
+        .accordion:after { content: '\002B'; color: #777; font-weight: bold; float: right; margin-left: 5px; font-size: 1.2rem; }
         .accordion.active:after { content: "\2212"; }
-
-        .panel {
-            padding: 0 18px;
-            background-color: white;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.2s ease-out;
-            border-radius: 0 0 12px 12px;
-            margin-top: -10px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
+        .panel { padding: 0 18px; background-color: white; max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; border-radius: 0 0 12px 12px; margin-top: -10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
+        
         .rule-list { list-style-type: none; padding: 0; }
-        .rule-list li {
-            margin-bottom: 8px;
-            padding-left: 20px;
-            position: relative;
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-        .rule-list li::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--primary);
-            font-weight: bold;
-        }
+        .rule-list li { margin-bottom: 8px; padding-left: 20px; position: relative; font-size: 0.9rem; line-height: 1.5; }
+        .rule-list li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: bold; }
+        .rule-section-title { font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+        .definition-box { background-color: rgba(255, 255, 255, 0.8); color: #0d47a1; padding: 8px 15px; border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; border: 1px solid #bbdefb; }
 
-        .rule-section-title {
-            font-weight: bold;
-            color: var(--primary);
-            margin-top: 15px;
-            margin-bottom: 5px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 3px;
-        }
-
-        .definition-box {
-            background-color: rgba(255, 255, 255, 0.8);
-            color: #0d47a1;
-            padding: 8px 15px;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 0.95rem;
-            display: inline-block;
-            border: 1px solid #bbdefb;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s;
-            border-top: 4px solid transparent;
-        }
-
+        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); transition: all 0.3s; border-top: 4px solid transparent; }
+        .card.locked { opacity: 0.6; pointer-events: none; background-color: #f5f5f5; }
         body.theme-level-1 .card { border-top-color: #2e7d32; }
         body.theme-level-2 .card { border-top-color: #0288d1; }
         body.theme-level-3 .card { border-top-color: #7b1fa2; }
         body.theme-level-4 .card { border-top-color: #fbc02d; }
-
-        .card.locked { opacity: 0.6; pointer-events: none; background-color: #f5f5f5; }
-        .card-title {
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #eee;
-            padding-bottom: 8px;
-        }
+        .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
 
         .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-tool {
-            flex: 1;
-            padding: 10px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            -webkit-tap-highlight-color: transparent;
-        }
+        .btn-tool { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
         .btn-save-draft { background-color: #607d8b; }
         .btn-load-draft { background-color: #ff9800; }
         .btn-clear-form { background-color: #9e9e9e; }
 
-        #lockBanner {
-            background-color: #ffebee;
-            border: 2px solid var(--danger);
-            color: var(--danger);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            text-align: center;
-            display: none;
-        }
+        #lockBanner { background-color: #ffebee; border: 2px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; display: none; }
+        .btn-unlock { background-color: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 0.9rem; }
 
-        .btn-unlock {
-            background-color: var(--danger);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        .progress-container {
-            background-color: #eee;
-            border-radius: 10px;
-            height: 30px;
-            width: 100%;
-            margin-bottom: 20px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .progress-bar {
-            background-color: var(--primary);
-            height: 100%;
-            width: 0%;
-            transition: width 0.5s ease, background-color 0.5s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: bold;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-        }
-
-        .progress-text {
-            text-align: center;
-            font-size: 1rem;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: var(--primary);
-            transition: color 0.5s;
-        }
+        .progress-container { background-color: #eee; border-radius: 10px; height: 30px; width: 100%; margin-bottom: 20px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); }
+        .progress-bar { background-color: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease, background-color 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.95rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+        .progress-text { text-align: center; font-size: 1rem; margin-bottom: 5px; font-weight: bold; color: var(--primary); transition: color 0.5s; }
 
         .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .mode-btn {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid var(--primary);
-            background: transparent;
-            color: var(--primary);
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+        .mode-btn { flex: 1; padding: 12px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
         .mode-btn.active { background: var(--primary); color: white; }
 
         .badge-bonus { background: #bbdefb; color: var(--math-color); border: 1px solid var(--math-color); font-weight: bold; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
@@ -417,7 +168,6 @@
         .rule-desc.warning { background: #fff3e0; border-left: 4px solid var(--warning); }
         .rule-desc.info { background: var(--info-bg); border-left: 4px solid var(--info-border); }
 
-        .penalty-calc-list { margin: 5px 0 0 20px; padding: 0; font-size: 0.85rem; color: #666; }
         .penalty-input-group { display: flex; gap: 10px; align-items: center; margin-top: 15px; }
         .penalty-input-group input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 8px; width: 60px; font-size: 1rem; text-align: center; }
 
@@ -447,7 +197,7 @@
         .history-item.rank-2 { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-left: 5px solid #9e9e9e; color: #333; }
         .history-item.rank-3 { background-color: #ffe0b2; border: 1px solid #ef6c00; border-left: 5px solid #ef6c00; color: #333; }
 
-        /* Certificate Styles */
+        /* Certificate & Shop */
         .swal-certificate { background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%); border: 8px double #D4AF37; padding: 20px; text-align: center; font-family: "Times New Roman", serif; color: #333; position: relative; }
         .cert-title { font-size: 1.8rem; font-weight: bold; color: #D4AF37; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
         .cert-body { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; }
@@ -460,7 +210,6 @@
         .cert-logo-img { width: 120px; height: auto; margin-bottom: 10px; margin: 0 auto 10px auto; display: block; animation: bounce 2s infinite; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.1)); }
         .cert-stamp { display: inline-block; border: 4px solid #d32f2f; color: #d32f2f; padding: 5px 15px; font-size: 1.2rem; font-weight: bold; transform: rotate(-15deg); margin: 20px; border-radius: 10px; text-shadow: none; }
 
-        /* Shop & Inventory Styles */
         .inventory-bar { background: #fff; border-bottom: 2px solid #ddd; padding: 8px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
         .inventory-item { display: flex; align-items: center; gap: 5px; font-weight: bold; }
         .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
@@ -473,12 +222,10 @@
         .btn-buy { background: var(--primary); color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
         .btn-buy:disabled { background: #ccc; cursor: not-allowed; }
 
-        /* Quiz Item Buttons */
         .quiz-tools { display: flex; gap: 10px; margin-bottom: 15px; }
         .btn-use-item { flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #9c27b0; background: #fff; color: #7b1fa2; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
         .btn-use-item:disabled { opacity: 0.5; border-color: #ccc; color: #888; }
 
-        /* Breakdown styles */
         .cert-breakdown { margin: 15px auto; max-width: 90%; text-align: left; font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.6); padding: 10px; border-radius: 8px; border: 1px dashed #D4AF37; }
         .breakdown-item { display: flex; justify-content: space-between; margin-bottom: 3px; border-bottom: 1px dotted #eee; }
         .breakdown-item.penalty { color: #d32f2f; }
@@ -510,7 +257,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 50.5 (Bulletproof)</span>
+                <span class="version-tag">ver 50.6 (Reordered)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -1050,127 +797,7 @@
             check: { name: '課金兌換支票', price: 10, limit: 99, icon: '💵' }
         };
 
-        // --- Safe Window Onload ---
-        window.onload = function () {
-            try {
-                // 1. Question Bank Check
-                if (typeof QUESTION_BANK_DATA !== 'undefined') {
-                    questionBank = QUESTION_BANK_DATA;
-                } else {
-                    console.error("Failed to load questions.js");
-                    const quizArea = document.getElementById('quizStartArea');
-                    if(quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
-                }
-
-                // 2. Load Data Safely
-                safeLoadData();
-
-                // 3. Initialize UI
-                const day = new Date().getDay();
-                if (day === 0 || day === 6) setMode('weekend');
-                else setMode('weekday');
-
-                renderHistory();
-                updateLevelUI();
-                checkDeadline();
-                updateClock();
-                setInterval(updateClock, 1000);
-
-                // 4. Accordion Logic
-                var acc = document.getElementsByClassName("accordion");
-                for (var i = 0; i < acc.length; i++) {
-                    acc[i].addEventListener("click", function () {
-                        this.classList.toggle("active");
-                        var panel = this.nextElementSibling;
-                        if (panel.style.maxHeight) {
-                            panel.style.maxHeight = null;
-                        } else {
-                            panel.style.maxHeight = panel.scrollHeight + "px";
-                        }
-                    });
-                }
-
-                // 5. Draft Load
-                if (localStorage.getItem('senhuai_draft_v41')) {
-                    myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
-                        if(isConfirmed) loadDraft();
-                    });
-                }
-                
-                const shopToggle = document.getElementById('shopEnabledToggle');
-                if(shopToggle) shopToggle.checked = shopEnabled;
-                updateShopUI();
-                
-            } catch (e) {
-                console.error(e);
-                alert('初始化嚴重錯誤，請截圖回報: ' + e.message);
-            }
-        };
-
-        function safeLoadData() {
-            try {
-                // History
-                const saved = localStorage.getItem('senhuai_history_v41');
-                if (saved) historyData = JSON.parse(saved);
-            } catch(e) { console.warn("History Corrupt"); historyData = []; }
-
-            try {
-                // Bank
-                const savedBank = localStorage.getItem('senhuai_bank_v46');
-                if (savedBank) bankBalance = parseInt(savedBank);
-                const bankDisp = document.getElementById('bankDisplay');
-                if(bankDisp) bankDisp.innerText = bankBalance;
-            } catch(e) { bankBalance = 0; }
-
-            try {
-                // Quiz
-                const savedQuiz = localStorage.getItem('senhuai_quiz_today');
-                if (savedQuiz) {
-                    const p = JSON.parse(savedQuiz);
-                    if (p.date === new Date().toLocaleDateString()) {
-                        quizScoreToday = p.score;
-                        quizCorrectCountToday = p.correctCount || 0;
-                    }
-                }
-                updateQuizUI();
-            } catch(e) { quizScoreToday = 0; }
-
-            try {
-                // Unlock
-                const savedUnlock = localStorage.getItem('senhuai_unlock_today');
-                const todayStr = new Date().toLocaleDateString();
-                if (savedUnlock) {
-                    const p = JSON.parse(savedUnlock);
-                    if (p.date === todayStr) {
-                        unlockTasksToday = p.tasks;
-                        renderUnlockCards();
-                    } else {
-                        pickNewUnlockTasks();
-                    }
-                } else {
-                    pickNewUnlockTasks();
-                }
-            } catch(e) { pickNewUnlockTasks(); }
-            
-            try {
-                // Inventory
-                let invData = localStorage.getItem('senhuai_inventory_v48');
-                if(invData) inventory = JSON.parse(invData);
-                // Ensure defaults
-                if(!inventory.skip) inventory.skip = 0;
-                if(!inventory.hint) inventory.hint = 0;
-                if(!inventory.key) inventory.key = 0;
-                if(!inventory.shield) inventory.shield = 0;
-            } catch(e) { 
-                console.warn("Inventory Reset"); 
-                inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 }; 
-            }
-            
-            shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
-            keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
-        }
-
-        // Helper wrapper for alerts to handle missing Swal
+        // --- Helpers Defined BEFORE usage ---
         function myAlert(title, text, icon) {
             if(window.Swal) {
                 Swal.fire({ title, text, icon });
@@ -1190,6 +817,165 @@
             } else {
                 callback(confirm(`${title}\n${text}`));
             }
+        }
+
+        function updateTheme(score) {
+            document.body.className = '';
+            if (score >= 9) document.body.classList.add('theme-level-4');
+            else if (score >= 8) document.body.classList.add('theme-level-3');
+            else if (score >= 7) document.body.classList.add('theme-level-2');
+            else if (score >= 6) document.body.classList.add('theme-level-1');
+        }
+
+        function renderResultBox(earned, final, missing, totalPenalty, bankTx) {
+            const resultArea = document.getElementById('resultArea');
+            if(!resultArea) return;
+            resultArea.className = 'result-box';
+            let html = '';
+
+            let explanation = `(原始 ${earned} - 總罰則 ${totalPenalty}`;
+            if (bankTx < 0) explanation += ` <span style="color:#d32f2f">存入銀行 ${Math.abs(bankTx)}</span>)`;
+            else if (bankTx > 0) explanation += ` <span style="color:#2e7d32">銀行提領 ${bankTx}</span>)`;
+            else explanation += `)`;
+
+            if (final >= TARGET_SCORE && missing.length === 0) {
+                resultArea.classList.remove('fail'); resultArea.classList.add('pass');
+                html = `<h3>🎉 恭喜達標！</h3><p>最終有效分數：<strong>${final} 點</strong></p><p style="font-size:0.9rem; color:#666;">${explanation}</p>`;
+            } else {
+                resultArea.classList.remove('pass'); resultArea.classList.add('fail');
+                if (missing.length > 0) html = `<h3>❌ 未完成低標</h3><p>缺必做：<br><strong>${missing.join('、')}</strong></p>`;
+                else html = `<h3>❌ 分數不足</h3><p>最終有效分數：<strong>${final} 點</strong> (目標 ${TARGET_SCORE})</p><p style="font-size:0.9rem; color:#666;">${explanation}</p>`;
+            }
+            if (totalPenalty > 0) html += `<div style="border-top:1px solid #eee; margin-top:10px; padding-top:5px; text-align:left; font-size:0.9rem; color:var(--danger);">⚠️ 包含違規扣分共 -${totalPenalty} 點</div>`;
+            resultArea.innerHTML = html;
+        }
+
+        function triggerCelebration(score) {
+            let title = "", icon = "success";
+            if (score === 6) { title = "太棒了！點數已達標 (6分)！"; if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+            else if (score === 7) { title = "太強了！超越極限 (7分)！"; icon = "info"; if(window.confetti) confetti({ shapes: ['star'], particleCount: 150, spread: 80, colors: ['#00BFFF', '#1E90FF'] }); }
+            else if (score === 8) {
+                title = "不可思議！你是超人嗎 (8分)？"; icon = "warning";
+                var end = Date.now() + 1000, colors = ['#bb0000', '#ffffff'];
+                (function frame() { if(window.confetti) confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors }); if(window.confetti) confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors }); if (Date.now() < end) requestAnimationFrame(frame); }());
+            }
+            else if (score >= 9) {
+                title = "傳說級表現！已登峰造極 (9分+)！"; icon = "question";
+                var duration = 3000, end = Date.now() + duration;
+                var interval = setInterval(function () { if (Date.now() > end) return clearInterval(interval); if(window.confetti) confetti({ particleCount: 50 * ((end - Date.now()) / duration), startVelocity: 30, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } }); }, 250);
+            }
+            if(window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
+        }
+
+        // --- Safe Window Onload ---
+        window.onload = function () {
+            try {
+                if (typeof QUESTION_BANK_DATA !== 'undefined') {
+                    questionBank = QUESTION_BANK_DATA;
+                } else {
+                    console.error("Failed to load questions.js");
+                    const quizArea = document.getElementById('quizStartArea');
+                    if(quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
+                }
+
+                const today = new Date();
+                const day = today.getDay();
+                
+                safeLoadData();
+
+                if (day === 0 || day === 6) setMode('weekend');
+                else setMode('weekday');
+
+                renderHistory();
+                updateLevelUI();
+                checkDeadline();
+                updateClock();
+                setInterval(updateClock, 1000);
+
+                var acc = document.getElementsByClassName("accordion");
+                for (var i = 0; i < acc.length; i++) {
+                    acc[i].addEventListener("click", function () {
+                        this.classList.toggle("active");
+                        var panel = this.nextElementSibling;
+                        if (panel.style.maxHeight) {
+                            panel.style.maxHeight = null;
+                        } else {
+                            panel.style.maxHeight = panel.scrollHeight + "px";
+                        }
+                    });
+                }
+
+                if (localStorage.getItem('senhuai_draft_v41')) {
+                    myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
+                        if(isConfirmed) loadDraft();
+                    });
+                }
+                
+                const shopToggle = document.getElementById('shopEnabledToggle');
+                if(shopToggle) shopToggle.checked = shopEnabled;
+                updateShopUI();
+                
+            } catch (e) {
+                console.error(e);
+                alert('初始化嚴重錯誤，請截圖回報: ' + e.message);
+            }
+        };
+
+        function safeLoadData() {
+            try {
+                const saved = localStorage.getItem('senhuai_history_v41');
+                if (saved) historyData = JSON.parse(saved);
+            } catch(e) { console.warn("History Corrupt"); historyData = []; }
+
+            try {
+                const savedBank = localStorage.getItem('senhuai_bank_v46');
+                if (savedBank) bankBalance = parseInt(savedBank);
+                const bankDisp = document.getElementById('bankDisplay');
+                if(bankDisp) bankDisp.innerText = bankBalance;
+            } catch(e) { bankBalance = 0; }
+
+            try {
+                const savedQuiz = localStorage.getItem('senhuai_quiz_today');
+                if (savedQuiz) {
+                    const p = JSON.parse(savedQuiz);
+                    if (p.date === new Date().toLocaleDateString()) {
+                        quizScoreToday = p.score;
+                        quizCorrectCountToday = p.correctCount || 0;
+                    }
+                }
+                updateQuizUI();
+            } catch(e) { quizScoreToday = 0; }
+
+            try {
+                const savedUnlock = localStorage.getItem('senhuai_unlock_today');
+                const todayStr = new Date().toLocaleDateString();
+                if (savedUnlock) {
+                    const p = JSON.parse(savedUnlock);
+                    if (p.date === todayStr) {
+                        unlockTasksToday = p.tasks;
+                        renderUnlockCards();
+                    } else {
+                        pickNewUnlockTasks();
+                    }
+                } else {
+                    pickNewUnlockTasks();
+                }
+            } catch(e) { pickNewUnlockTasks(); }
+            
+            try {
+                let invData = localStorage.getItem('senhuai_inventory_v48');
+                if(invData) inventory = JSON.parse(invData);
+                if(!inventory.skip) inventory.skip = 0;
+                if(!inventory.hint) inventory.hint = 0;
+                if(!inventory.key) inventory.key = 0;
+                if(!inventory.shield) inventory.shield = 0;
+            } catch(e) { 
+                console.warn("Inventory Reset"); 
+                inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 }; 
+            }
+            
+            shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
+            keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
         }
 
         function updateClock() {
@@ -1974,6 +1760,7 @@
                 document.getElementById('progressText').innerHTML = `有效得分：${finalScore} / ${TARGET_SCORE} <span style="color:var(--warning)">(差 ${Math.max(0, TARGET_SCORE - finalScore)})</span>`;
             }
 
+            // Using the newly hoisted function safely
             renderResultBox(earnedScore, finalScore, missingRequired, totalPenalty, bankTx);
             updateTheme(finalScore);
             renderUnlockCards();
@@ -1990,7 +1777,7 @@
             return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, bankTx, breakdown, isAppLogRequired };
         }
 
-        // --- Important Fix for Save Record ---
+        // --- Save Record ---
         async function saveRecord() {
             if (isFormLocked) {
                 myAlert('已鎖定', '無法儲存', 'error');
@@ -2023,7 +1810,6 @@
                 return;
             }
 
-            // Check pass status from the calculation we did earlier
             if (status.passed) {
                 if(window.Swal) {
                     const { value: file } = await Swal.fire({
@@ -2165,6 +1951,7 @@
             checkStatus();
         }
 
+        // --- Other Utilities ---
         function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
 
         function renderHistory() {

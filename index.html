@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v50.2 修復版)</title>
+    <title>森淮 3C 規範 (v50.4 特訓版)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -41,12 +41,10 @@
             background-color: var(--bg);
             margin: 0;
             padding: 20px;
-            /* iOS 瀏海屏適配 */
             padding-top: calc(20px + env(safe-area-inset-top));
             color: #333;
             padding-bottom: 80px;
             transition: background-color 0.8s ease;
-            /* iOS 防彈跳捲動優化 */
             -webkit-overflow-scrolling: touch;
             overscroll-behavior-y: none;
             -webkit-user-select: none;
@@ -133,11 +131,11 @@
         }
 
         .level-title { font-size: 1.2rem; font-weight: bold; }
-        .level-badge {
-            background: rgba(255,255,255,0.2);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.8rem;
+        .level-badge { 
+            background: rgba(255,255,255,0.2); 
+            padding: 2px 8px; 
+            border-radius: 10px; 
+            font-size: 0.8rem; 
         }
 
         .xp-bar-container {
@@ -492,7 +490,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 50.2 (Fix)</span>
+                <span class="version-tag">ver 50.4 (Sprint Final)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -1328,7 +1326,7 @@
             if (reqText) {
                 if (isHardMode) {
                      reqText.innerHTML = `最低要求：30 題 <span style='font-size:0.8rem'>(特訓期間)</span>`;
-                     reqText.style.color = '#d32f2f';
+                     reqText.style.color = '#d32f2f'; 
                 } else {
                      reqText.innerText = "最低要求：2 點 (8題)。";
                      reqText.style.color = '#d32f2f';
@@ -1368,7 +1366,7 @@
                     if(startBtn) {
                         startBtn.disabled = false;
                         startBtn.innerText = isHardMode ? `⚠️ 尚未達標 (${quizCorrectCountToday}/30)` : '✅ 基礎已滿，繼續挑戰？';
-                        startBtn.style.backgroundColor = isHardMode ? '#ef5350' : '#66bb6a';
+                        startBtn.style.backgroundColor = isHardMode ? '#ef5350' : '#66bb6a'; 
                     }
                     cooldownMsg.style.display = 'block';
                     cooldownMsg.innerHTML = `距離大獎還差 <strong>${30 - quizCorrectCountToday}</strong> 題！`;
@@ -1384,8 +1382,6 @@
             updateQuizTools();
         }
 
-        // ... [Rest of the functions remain the same: updateQuizTools, startQuiz, checkQuizAnswer, closeQuiz, resetQuiz, toggleShop, updateShopUI, buyItem, buyGacha, useItem, saveInventory, useEmergencyKey, openAdminBankMode, calculateTimePenalty, checkStatus, updateTheme, triggerCelebration, renderResultBox, saveRecord, finishSaveProcess, updateStorageAndUI, renderHistory, clearHistory, exportToCSV, importFromCSV, saveDraft, loadDraft, clearForm, quickFillApp, toggleAppHelp, addAppLog, addNoUsageLog, removeAppLog, renderAppLogs, toggleViolationInput, addMajorViolation, removeMajorViolation, renderMajorViolations, addCustomTask, removeCustomTask, renderCustomTasks] ...
-        
         function updateQuizTools() {
             const tools = document.getElementById('quizTools');
             const gameArea = document.getElementById('quizGameArea');
@@ -1452,7 +1448,7 @@
                 if (quizCorrectCountToday >= QUIZ_TARGET_HIGH) {
                     quizScoreToday = 30;
                     rewardMsg = '<span style="color:#f57f17; font-weight:bold;">🔥 毅力驚人！累積 30 題正確，獲得 30 點！</span>';
-                    confetti({ particleCount: 200, spread: 100 });
+                    if(window.confetti) confetti({ particleCount: 200, spread: 100 });
                 } else {
                     rewardMsg = `<span style="color:#2e7d32">🎉 答對了！ 目前累積：${quizCorrectCountToday}/30</span>`;
                 }
@@ -1930,249 +1926,181 @@
             return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, bankTx, breakdown, isAppLogRequired };
         }
 
-        // ... [Remaining functions: updateTheme, triggerCelebration, renderResultBox, saveRecord, finishSaveProcess, updateStorageAndUI, renderHistory, clearHistory, exportToCSV, importFromCSV, saveDraft, loadDraft, clearForm, quickFillApp, toggleAppHelp, addAppLog, addNoUsageLog, removeAppLog, renderAppLogs, toggleViolationInput, addMajorViolation, removeMajorViolation, renderMajorViolations, addCustomTask, removeCustomTask, renderCustomTasks]
-        
-        // These utility functions are standard and assumed unchanged.
-        // Adding saveDraft/loadDraft/etc here to ensure completeness for copy-paste.
-        
-        function saveDraft() {
-            if (isFormLocked) { Swal.fire('已鎖定', '無法暫存', 'error'); return; }
-            const draft = {
-                mathPassed: document.getElementById('mathPassed').checked,
-                otherExams: document.getElementById('otherExams').value,
-                failedExams: document.getElementById('failedExams').value,
-                score80Exams: document.getElementById('score80Exams').value,
-                testPaperCount: document.getElementById('testPaperCount').value,
-                testPaperHigh: document.getElementById('testPaperHigh').value,
-                bedtimeBonus: document.getElementById('bedtimeBonus').checked,
-                bedtimeEarly: document.getElementById('bedtimeEarly').checked,
-                bedtimePenalty: document.getElementById('bedtimePenalty').checked,
-                overtimeMinutes: document.getElementById('overtimeMinutes').value,
-                excessiveCount: document.getElementById('excessiveCount').value,
-                customTasks, majorViolations, appUsageLogs, checkedTasks: [], customTasksChecked: [],
-                unlockTasksToday
-            };
-            document.querySelectorAll('#taskList input[type="checkbox"]').forEach(chk => { if (chk.checked) draft.checkedTasks.push(chk.id); });
-            customTasks.forEach(t => { if (document.getElementById(t.id).checked) draft.customTasksChecked.push(t.id); });
-            localStorage.setItem('senhuai_draft_v41', JSON.stringify(draft));
-            Swal.fire({ icon: 'success', title: '暫存成功', timer: 1500, showConfirmButton: false });
+        // --- Important Fix for Save Record ---
+        async function saveRecord() {
+            if (isFormLocked) {
+                Swal.fire('已鎖定', '無法儲存', 'error');
+                return;
+            }
+
+            // Fix: Calculate status first to get isAppLogRequired
+            const status = checkStatus();
+
+            if (status.isAppLogRequired && appUsageLogs.length === 0) {
+                Swal.fire({ icon: 'warning', title: '資料不完整', text: '依照今日考試狀況，您必須填寫「App 使用紀錄」！', confirmButtonColor: '#d33' });
+                return;
+            }
+
+            const violationStatus = document.querySelector('input[name="violationStatus"]:checked');
+            if (!violationStatus) {
+                Swal.fire({ icon: 'warning', title: '家長簽核未完成', text: '請在「家長簽核區」選擇今日是否有違規！', confirmButtonColor: '#d33' });
+                document.querySelector('.parent-auth-area').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+
+            if (violationStatus.value === 'exist' && majorViolations.length === 0) {
+                Swal.fire({ icon: 'error', title: '資料不符', text: '您勾選了「有發生違規」，但沒有新增任何違規項目！', confirmButtonColor: '#d33' });
+                return;
+            }
+
+            const pwd = document.getElementById('parentPwd').value;
+            if (pwd !== PARENT_PWD) {
+                Swal.fire({ icon: 'error', title: '密碼錯誤', text: '家長簽核密碼不正確！', confirmButtonColor: '#d33' });
+                return;
+            }
+
+            // Check pass status from the calculation we did earlier
+            if (status.passed) {
+                const { value: file } = await Swal.fire({
+                    title: '📸 請拍攝今日認證照',
+                    text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
+                    input: 'file',
+                    inputAttributes: { 'accept': 'image/*', 'capture': 'user' },
+                    confirmButtonText: '產生證書',
+                    showCancelButton: true,
+                    cancelButtonText: '跳過'
+                });
+
+                if (file) {
+                    const readImageData = (file) => {
+                        return new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.onerror = (err) => reject(err);
+                            reader.readAsDataURL(file);
+                        });
+                    };
+                    try {
+                        Swal.showLoading();
+                        const imageData = await readImageData(file);
+                        setTimeout(() => { finishSaveProcess(status, imageData); }, 100);
+                    } catch (error) {
+                        finishSaveProcess(status, null);
+                    }
+                } else {
+                    finishSaveProcess(status, null);
+                }
+            } else {
+                finishSaveProcess(status, null);
+            }
         }
 
-        function loadDraft(showMsg) {
-            const saved = localStorage.getItem('senhuai_draft_v41');
-            if (!saved) { if (showMsg) Swal.fire('無暫存檔', '', 'info'); return; }
-            const draft = JSON.parse(saved);
-            document.getElementById('mathPassed').checked = draft.mathPassed;
-            document.getElementById('otherExams').value = draft.otherExams;
-            document.getElementById('failedExams').value = draft.failedExams || 0;
-            document.getElementById('score80Exams').value = draft.score80Exams || 0;
-            document.getElementById('testPaperCount').value = draft.testPaperCount;
-            document.getElementById('testPaperHigh').value = draft.testPaperHigh;
-            document.getElementById('bedtimeBonus').checked = draft.bedtimeBonus;
-            document.getElementById('bedtimeEarly').checked = draft.bedtimeEarly || false;
-            document.getElementById('bedtimePenalty').checked = draft.bedtimePenalty;
-            document.getElementById('overtimeMinutes').value = draft.overtimeMinutes;
-            document.getElementById('excessiveCount').value = draft.excessiveCount;
+        function finishSaveProcess(status, selfieUrl) {
+            const dateStr = new Date().toLocaleString('zh-TW', { hour12: false });
+            let resultStr = status.passed ? "✅達標" : "❌未達標";
+            if (status.missing.length > 0) resultStr = "❌缺必做";
 
-            customTasks = draft.customTasks || [];
-            majorViolations = draft.majorViolations || [];
-            appUsageLogs = draft.appUsageLogs || [];
-            if (draft.unlockTasksToday) unlockTasksToday = draft.unlockTasksToday;
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toLocaleDateString('zh-TW');
 
-            renderCustomTasks(); renderMajorViolations(); renderAppLogs();
+            if (status.passed) {
+                let imgHtml = '';
+                if (selfieUrl) {
+                    imgHtml = `<img src="${selfieUrl}" class="cert-selfie-img" alt="Selfie">`;
+                } else {
+                    imgHtml = `<img src="logo.png" class="cert-logo-img" alt="Logo">`;
+                }
 
-            setTimeout(() => {
-                if (draft.checkedTasks) draft.checkedTasks.forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; });
-                if (draft.customTasksChecked) draft.customTasksChecked.forEach(id => { const el = document.getElementById(id); if (el) el.checked = true; });
-                checkStatus();
-            }, 50);
-            if (showMsg) Swal.fire({ icon: 'success', title: '讀取成功', timer: 1000, showConfirmButton: false });
-        }
+                let breakdownHtml = '<div class="cert-breakdown">';
+                status.breakdown.forEach(item => {
+                    const cls = item.type === 'penalty' ? 'penalty' : (item.type === 'bonus' ? 'bonus' : (item.type === 'bank' ? 'bank' : ''));
+                    breakdownHtml += `
+                        <div class="breakdown-item ${cls}">
+                            <span>${item.label}</span>
+                            <span>${item.points > 0 ? '+' : ''}${item.points} 點</span>
+                        </div>`;
+                });
+                breakdownHtml += `
+                    <div class="breakdown-total">
+                        <span>最終核定分數</span>
+                        <span>${status.score} 點</span>
+                    </div>
+                </div>`;
 
-        function clearForm() {
-            Swal.fire({ title: '確定清空？', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: '清空' }).then((result) => {
-                if (result.isConfirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
-            });
-        }
-
-        function quickFillApp(appName) {
-            document.getElementById('appName').value = appName;
-            document.getElementById('appDuration').focus();
-        }
-        function toggleAppHelp() {
-            const help = document.getElementById('appHelp');
-            help.style.display = help.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function addAppLog() {
-            if (isFormLocked) return;
-            const device = document.getElementById('appDevice').value;
-            const name = document.getElementById('appName').value.trim();
-            const duration = parseInt(document.getElementById('appDuration').value) || 0;
-            const planNext = parseInt(document.getElementById('appPlanNext').value) || 0;
-
-            if (!name) { Swal.fire('請輸入 App', '', 'warning'); return; }
-            if (duration < 0 || planNext < 0) { Swal.fire('時間不能為負', '', 'warning'); return; }
-
-            appUsageLogs.push({ id: 'app_' + Date.now(), device, name, duration, planNext });
-
-            document.getElementById('appName').value = '';
-            document.getElementById('appDuration').value = '';
-            document.getElementById('appPlanNext').value = '';
-            renderAppLogs();
-        }
-
-        function addNoUsageLog() {
-            if (isFormLocked) return;
-            appUsageLogs.push({ id: 'app_' + Date.now(), device: '全裝置', name: '無使用', duration: 0, planNext: 0 });
-            renderAppLogs();
-        }
-
-        function removeAppLog(id) {
-            if (isFormLocked) return;
-            appUsageLogs = appUsageLogs.filter(app => app.id !== id);
-            renderAppLogs();
-        }
-
-        function renderAppLogs() {
-            const container = document.getElementById('appLogList');
-            const totalSpan = document.getElementById('totalAppTime');
-            const totalPlanSpan = document.getElementById('totalPlanTime');
-            container.innerHTML = '';
-
-            let total = 0;
-            let totalPlan = 0;
-
-            appUsageLogs.forEach(app => {
-                total += app.duration;
-                totalPlan += app.planNext || 0;
-
-                const div = document.createElement('div'); div.className = 'app-item';
-                div.innerHTML = `
-                <div class="app-item-header">
-                    <span><small style="color:#666; font-weight:normal; margin-right:5px;">[${app.device}]</small> ${app.name}</span>
-                    <button class="btn-delete" onclick="removeAppLog('${app.id}')">✕</button>
-                </div>
-                <div class="app-item-details">
-                    <span>今日：${app.duration}分</span>
-                    <span style="color:#f57f17;">📅 預估：${app.planNext || 0}分</span>
+                const frameClass = inventory.frame_gold > 0 ? 'frame-gold' : '';
+                const certHtml = `
+                <div class="swal-certificate ${frameClass}">
+                    ${imgHtml}
+                    <div class="cert-title">3C 設備使用授權書</div>
+                    <div class="cert-body">
+                        茲證明 <strong>森淮</strong> 今日表現優異，<br>
+                        累積點數達標 (${status.score}分)，<br>
+                        特此授予明日 3C 設備使用權限。
+                    </div>
+                    ${breakdownHtml}
+                    <div class="cert-date">授權日期：${tomorrowStr}</div>
+                    <div><div class="cert-stamp">VERIFIED ✅</div></div>
+                    <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>
                 </div>
             `;
-                container.appendChild(div);
-            });
-            totalSpan.innerText = total;
-            totalPlanSpan.innerText = totalPlan;
-        }
-
-        function toggleViolationInput(show) {
-            const zone = document.getElementById('violationInputZone');
-            if (show) {
-                zone.style.display = 'block';
+                Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
+                if(window.confetti) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
             } else {
-                zone.style.display = 'none';
-                majorViolations = [];
-                renderMajorViolations();
-                checkStatus();
+                Swal.fire({ title: '紀錄已儲存', text: `今日得分：${status.score} 分。`, icon: 'info', timer: 1500, showConfirmButton: false });
             }
-        }
 
-        function addMajorViolation() {
-            if (isFormLocked) return;
-            const name = document.getElementById('violationName').value.trim();
-            const points = parseInt(document.getElementById('violationPoints').value) || 0;
-            if (!name) { Swal.fire('請輸入違規', '', 'warning'); return; }
-            majorViolations.push({ id: 'violation_' + Date.now(), text: name, points });
-            document.getElementById('violationName').value = ''; document.getElementById('violationPoints').value = 1;
-            renderMajorViolations(); checkStatus();
-        }
+            let doneCustoms = []; customTasks.forEach(t => { if (document.getElementById(t.id).checked) doneCustoms.push(t.text); });
+            let violations = majorViolations.map(v => `${v.text}(-${v.points})`);
+            let appLogStr = appUsageLogs.map(a => `[${a.device}]${a.name}(${a.duration}m/預${a.planNext || 0}m)`).join(' | ');
 
-        function removeMajorViolation(id) {
-            if (isFormLocked) return;
-            majorViolations = majorViolations.filter(v => v.id !== id);
-            renderMajorViolations();
+            if (status.bankTx !== 0) {
+                bankBalance -= status.bankTx;
+                localStorage.setItem('senhuai_bank_v46', bankBalance);
+                document.getElementById('bankDisplay').innerText = bankBalance;
+                Swal.fire({
+                    title: '銀行交易成功',
+                    text: status.bankTx < 0 ? `已存入 ${Math.abs(status.bankTx)} 點！` : `已提領 ${status.bankTx} 點！`,
+                    icon: 'success', timer: 2000
+                });
+            }
+
+            const record = {
+                date: dateStr, mode: currentMode === 'weekday' ? '平日' : '假日',
+                finalScore: status.score, result: resultStr,
+                earnedScore: status.earned, timePenalty: status.timePenalty, excessivePenalty: status.excessivePenalty,
+                violationPenalty: status.violationPenalty, bedtimePenalty: status.bedtimePenalty,
+                bedtimeBonus: document.getElementById('bedtimeBonus').checked ? "是" : "否",
+                bedtimeEarly: document.getElementById('bedtimeEarly').checked ? "是" : "否",
+                violationDetails: violations.join(" | ") || "無", math: document.getElementById('mathPassed').checked ? "是" : "否",
+                others: document.getElementById('otherExams').value, customs: doneCustoms.join(" | ") || "無", excessiveCount: status.excessiveCount,
+                tpCount: status.tpCount, tpHigh: status.tpHigh,
+                failedExams: status.failedExams, score80Exams: status.score80Exams,
+                appLogStr: appLogStr || "無",
+                bankTx: status.bankTx,
+                quizScore: quizScoreToday,
+                unlockTasks: unlockTasksToday.map(ut => {
+                    const done = document.getElementById(ut.id) && document.getElementById(ut.id).checked;
+                    return `${ut.text}(${done ? '✅' : '❌'})`;
+                }).join(" | ")
+            };
+
+            historyData.unshift(record);
+            updateStorageAndUI();
+            updateLevelUI(); // Update level after saving
+            localStorage.removeItem('senhuai_draft_v41');
+            document.getElementById('parentPwd').value = '';
+
+            document.getElementById('bankAction').value = 'none';
+            document.getElementById('bankAmount').value = 0;
             checkStatus();
-        }
-
-        function renderMajorViolations() {
-            const container = document.getElementById('violationList'); container.innerHTML = '';
-            majorViolations.forEach(v => {
-                const div = document.createElement('div'); div.className = 'violation-item';
-                div.innerHTML = `<span>⚠️ ${v.text}</span><div style="display:flex; align-items:center;"><span class="badge-penalty">-${v.points}點</span><button class="btn-delete" style="color:#d32f2f;" onclick="removeMajorViolation('${v.id}')">🗑️</button></div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function addCustomTask() {
-            if (isFormLocked) return;
-            const name = document.getElementById('customName').value.trim();
-            const points = parseInt(document.getElementById('customPoints').value) || 0;
-            const required = document.getElementById('customRequired').checked;
-            if (!name) { Swal.fire('請輸入名稱', '', 'warning'); return; }
-            customTasks.push({ id: 'custom_' + Date.now(), text: name, points, required });
-            document.getElementById('customName').value = ''; document.getElementById('customPoints').value = 1; document.getElementById('customRequired').checked = false;
-            renderCustomTasks(); checkStatus();
-        }
-        function removeCustomTask(id) { if (isFormLocked) return; customTasks = customTasks.filter(t => t.id !== id); renderCustomTasks(); checkStatus(); }
-        function renderCustomTasks() {
-            const container = document.getElementById('customTaskList'); container.innerHTML = '';
-            customTasks.forEach(task => {
-                const div = document.createElement('div'); div.className = 'task-item';
-                div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text} ${task.required ? '<span class="badge-required">低標</span>' : ''}</label><span class="badge-point" style="background:#e3f2fd; color:#1565c0; border-color:#1565c0;">+${task.points}點</span><button class="btn-delete" onclick="removeCustomTask('${task.id}')">🗑️</button>`;
-                container.appendChild(div);
-            });
-        }
-
-        function updateTheme(score) {
-            document.body.className = '';
-            if (score >= 9) document.body.classList.add('theme-level-4');
-            else if (score >= 8) document.body.classList.add('theme-level-3');
-            else if (score >= 7) document.body.classList.add('theme-level-2');
-            else if (score >= 6) document.body.classList.add('theme-level-1');
-        }
-
-        function triggerCelebration(score) {
-            let title = "", icon = "success";
-            if (score === 6) { title = "太棒了！點數已達標 (6分)！"; if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
-            else if (score === 7) { title = "太強了！超越極限 (7分)！"; icon = "info"; if(window.confetti) confetti({ shapes: ['star'], particleCount: 150, spread: 80, colors: ['#00BFFF', '#1E90FF'] }); }
-            else if (score === 8) {
-                title = "不可思議！你是超人嗎 (8分)？"; icon = "warning";
-                var end = Date.now() + 1000, colors = ['#bb0000', '#ffffff'];
-                (function frame() { if(window.confetti) confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors }); if(window.confetti) confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors }); if (Date.now() < end) requestAnimationFrame(frame); }());
-            }
-            else if (score >= 9) {
-                title = "傳說級表現！已登峰造極 (9分+)！"; icon = "question";
-                var duration = 3000, end = Date.now() + duration;
-                var interval = setInterval(function () { if (Date.now() > end) return clearInterval(interval); if(window.confetti) confetti({ particleCount: 50 * ((end - Date.now()) / duration), startVelocity: 30, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } }); }, 250);
-            }
-            Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
-        }
-
-        function renderResultBox(earned, final, missing, totalPenalty, bankTx) {
-            const resultArea = document.getElementById('resultArea');
-            resultArea.className = 'result-box';
-            let html = '';
-
-            let explanation = `(原始 ${earned} - 總罰則 ${totalPenalty}`;
-            if (bankTx < 0) explanation += ` <span style="color:#d32f2f">存入銀行 ${Math.abs(bankTx)}</span>)`;
-            else if (bankTx > 0) explanation += ` <span style="color:#2e7d32">銀行提領 ${bankTx}</span>)`;
-            else explanation += `)`;
-
-            if (final >= TARGET_SCORE && missing.length === 0) {
-                resultArea.classList.remove('fail'); resultArea.classList.add('pass');
-                html = `<h3>🎉 恭喜達標！</h3><p>最終有效分數：<strong>${final} 點</strong></p><p style="font-size:0.9rem; color:#666;">${explanation}</p>`;
-            } else {
-                resultArea.classList.remove('pass'); resultArea.classList.add('fail');
-                if (missing.length > 0) html = `<h3>❌ 未完成低標</h3><p>缺必做：<br><strong>${missing.join('、')}</strong></p>`;
-                else html = `<h3>❌ 分數不足</h3><p>最終有效分數：<strong>${final} 點</strong> (目標 ${TARGET_SCORE})</p><p style="font-size:0.9rem; color:#666;">${explanation}</p>`;
-            }
-            if (totalPenalty > 0) html += `<div style="border-top:1px solid #eee; margin-top:10px; padding-top:5px; text-align:left; font-size:0.9rem; color:var(--danger);">⚠️ 包含違規扣分共 -${totalPenalty} 點</div>`;
-            resultArea.innerHTML = html;
         }
 
         function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
 
         function renderHistory() {
-            const list = document.getElementById('historyList');
+            const list = document.getElementById('historyList'); 
             if(!list) return;
             list.innerHTML = '';
             if (historyData.length === 0) { list.innerHTML = '<p style="text-align:center; padding:10px; color:#999;">目前尚無紀錄</p>'; return; }

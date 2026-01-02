@@ -5,12 +5,32 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v50.4 特訓版)</title>
+    <title>森淮 3C 規範 (v50.5)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="森淮規範">
     <link rel="apple-touch-icon" href="logo.png">
+
+    <script>
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            var string = msg.toLowerCase();
+            var substring = "script error";
+            if (string.indexOf(substring) > -1) {
+                alert('Script Error: 請檢查 questions.js 是否已上傳，或網路是否正常。');
+            } else {
+                var message = [
+                    '系統發生錯誤，請截圖給開發者：',
+                    'Message: ' + msg,
+                    'Line: ' + lineNo,
+                    'Column: ' + columnNo
+                ].join('\n');
+                // 延遲顯示避免阻塞
+                setTimeout(function(){ alert(message); }, 1000);
+            }
+            return false;
+        };
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="questions.js"></script>
@@ -490,7 +510,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 50.4 (Sprint Final)</span>
+                <span class="version-tag">ver 50.5 (Bulletproof)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -997,6 +1017,9 @@
 
         const tasks = { weekday: baseWeekdayTasks, weekend: [...baseWeekendTasks, ...baseWeekendTasks] };
         const TARGET_SCORE = 6;
+        const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 750, 1050, 1400, 1800, 2500];
+        const LEVEL_TITLES = ["初心者", "見習生", "冒險者", "精英", "3C 達人", "時間管理者", "學霸", "大師", "宗師", "傳說"];
+        
         let currentMode = 'weekday';
         let historyData = [];
         let customTasks = [];
@@ -1012,13 +1035,12 @@
         const QUIZ_TARGET_HIGH = 30;
         let questionBank = [];
         let unlockTasksToday = [];
-
-        let shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
-        let inventory = JSON.parse(localStorage.getItem('senhuai_inventory_v48')) || { skip: 0, hint: 0, key: 0, shield: 0 };
-        if (inventory && !inventory.hasOwnProperty('shield')) inventory.shield = 0;
-        if (inventory && !inventory.hasOwnProperty('frame_gold')) inventory.frame_gold = 0;
-        if (inventory && !inventory.hasOwnProperty('check')) inventory.check = 0;
-        let keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
+        
+        // Globals - Safe Init
+        let shopEnabled = true;
+        let inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 };
+        let keyLastPurchaseDate = 0;
+        
         const SHOP_ITEMS = {
             skip: { name: '換題券', price: 5, limit: 2, icon: '🎟️' },
             hint: { name: '提示燈泡', price: 3, limit: 2, icon: '💡' },
@@ -1028,11 +1050,10 @@
             check: { name: '課金兌換支票', price: 10, limit: 99, icon: '💵' }
         };
 
-        const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 750, 1050, 1400, 1800, 2500];
-        const LEVEL_TITLES = ["初心者", "見習生", "冒險者", "精英", "3C 達人", "時間管理者", "學霸", "大師", "宗師", "傳說"];
-
+        // --- Safe Window Onload ---
         window.onload = function () {
             try {
+                // 1. Question Bank Check
                 if (typeof QUESTION_BANK_DATA !== 'undefined') {
                     questionBank = QUESTION_BANK_DATA;
                 } else {
@@ -1041,39 +1062,11 @@
                     if(quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
                 }
 
-                const today = new Date();
-                const day = today.getDay();
-                const saved = localStorage.getItem('senhuai_history_v41');
-                if (saved) historyData = JSON.parse(saved);
+                // 2. Load Data Safely
+                safeLoadData();
 
-                const savedBank = localStorage.getItem('senhuai_bank_v46');
-                if (savedBank) bankBalance = parseInt(savedBank);
-                const bankDisp = document.getElementById('bankDisplay');
-                if(bankDisp) bankDisp.innerText = bankBalance;
-
-                const savedQuiz = localStorage.getItem('senhuai_quiz_today');
-                if (savedQuiz) {
-                    const p = JSON.parse(savedQuiz);
-                    if (p.date === new Date().toLocaleDateString()) {
-                        quizScoreToday = p.score;
-                        quizCorrectCountToday = p.correctCount || 0;
-                    }
-                }
-                updateQuizUI(); // Updated with safety checks below
-
-                const savedUnlock = localStorage.getItem('senhuai_unlock_today');
-                const todayStr = new Date().toLocaleDateString();
-                if (savedUnlock) {
-                    const p = JSON.parse(savedUnlock);
-                    if (p.date === todayStr) {
-                        unlockTasksToday = p.tasks;
-                    } else {
-                        pickNewUnlockTasks();
-                    }
-                } else {
-                    pickNewUnlockTasks();
-                }
-
+                // 3. Initialize UI
+                const day = new Date().getDay();
                 if (day === 0 || day === 6) setMode('weekend');
                 else setMode('weekday');
 
@@ -1083,6 +1076,7 @@
                 updateClock();
                 setInterval(updateClock, 1000);
 
+                // 4. Accordion Logic
                 var acc = document.getElementsByClassName("accordion");
                 for (var i = 0; i < acc.length; i++) {
                     acc[i].addEventListener("click", function () {
@@ -1096,20 +1090,107 @@
                     });
                 }
 
+                // 5. Draft Load
                 if (localStorage.getItem('senhuai_draft_v41')) {
-                    Swal.fire({
-                        title: '發現暫存檔', text: "載入上次進度？", icon: 'question',
-                        showCancelButton: true, confirmButtonText: '載入'
-                    }).then((result) => { if (result.isConfirmed) loadDraft(); });
+                    myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
+                        if(isConfirmed) loadDraft();
+                    });
                 }
+                
                 const shopToggle = document.getElementById('shopEnabledToggle');
                 if(shopToggle) shopToggle.checked = shopEnabled;
                 updateShopUI();
+                
             } catch (e) {
                 console.error(e);
-                Swal.fire('系統錯誤', '初始化失敗，請檢查程式碼或回報錯誤: ' + e.message, 'error');
+                alert('初始化嚴重錯誤，請截圖回報: ' + e.message);
             }
         };
+
+        function safeLoadData() {
+            try {
+                // History
+                const saved = localStorage.getItem('senhuai_history_v41');
+                if (saved) historyData = JSON.parse(saved);
+            } catch(e) { console.warn("History Corrupt"); historyData = []; }
+
+            try {
+                // Bank
+                const savedBank = localStorage.getItem('senhuai_bank_v46');
+                if (savedBank) bankBalance = parseInt(savedBank);
+                const bankDisp = document.getElementById('bankDisplay');
+                if(bankDisp) bankDisp.innerText = bankBalance;
+            } catch(e) { bankBalance = 0; }
+
+            try {
+                // Quiz
+                const savedQuiz = localStorage.getItem('senhuai_quiz_today');
+                if (savedQuiz) {
+                    const p = JSON.parse(savedQuiz);
+                    if (p.date === new Date().toLocaleDateString()) {
+                        quizScoreToday = p.score;
+                        quizCorrectCountToday = p.correctCount || 0;
+                    }
+                }
+                updateQuizUI();
+            } catch(e) { quizScoreToday = 0; }
+
+            try {
+                // Unlock
+                const savedUnlock = localStorage.getItem('senhuai_unlock_today');
+                const todayStr = new Date().toLocaleDateString();
+                if (savedUnlock) {
+                    const p = JSON.parse(savedUnlock);
+                    if (p.date === todayStr) {
+                        unlockTasksToday = p.tasks;
+                        renderUnlockCards();
+                    } else {
+                        pickNewUnlockTasks();
+                    }
+                } else {
+                    pickNewUnlockTasks();
+                }
+            } catch(e) { pickNewUnlockTasks(); }
+            
+            try {
+                // Inventory
+                let invData = localStorage.getItem('senhuai_inventory_v48');
+                if(invData) inventory = JSON.parse(invData);
+                // Ensure defaults
+                if(!inventory.skip) inventory.skip = 0;
+                if(!inventory.hint) inventory.hint = 0;
+                if(!inventory.key) inventory.key = 0;
+                if(!inventory.shield) inventory.shield = 0;
+            } catch(e) { 
+                console.warn("Inventory Reset"); 
+                inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 }; 
+            }
+            
+            shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
+            keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
+        }
+
+        // Helper wrapper for alerts to handle missing Swal
+        function myAlert(title, text, icon) {
+            if(window.Swal) {
+                Swal.fire({ title, text, icon });
+            } else {
+                alert(`${title}\n${text}`);
+            }
+        }
+        
+        function myAlertConfirm(title, text, callback) {
+            if(window.Swal) {
+                Swal.fire({
+                    title: title, text: text, icon: 'question',
+                    showCancelButton: true, confirmButtonText: '確定'
+                }).then((result) => {
+                    callback(result.isConfirmed);
+                });
+            } else {
+                callback(confirm(`${title}\n${text}`));
+            }
+        }
 
         function updateClock() {
             const now = new Date();
@@ -1170,10 +1251,11 @@
             if (password === PARENT_PWD) {
                 isFormLocked = false;
                 isUnlockedByParent = true;
-                document.getElementById('lockOverlay').remove();
-                Swal.fire('已解鎖', '表單已暫時開放填寫', 'success');
+                const ol = document.getElementById('lockOverlay');
+                if(ol) ol.remove();
+                myAlert('已解鎖', '表單已暫時開放填寫', 'success');
             } else {
-                Swal.fire('密碼錯誤', '請輸入正確的家長密碼', 'error');
+                myAlert('密碼錯誤', '請輸入正確的家長密碼', 'error');
             }
         }
 
@@ -1317,7 +1399,6 @@
             const startArea = document.getElementById('quizStartArea');
             const cooldownMsg = document.getElementById('quizCooldownMsg');
             
-            // v50.2 Safety Check: Ensure elements exist before modifying
             const reqText = document.getElementById('quizRequirementText');
             const ruleText = document.getElementById('ruleQuizRequirement');
             
@@ -1398,7 +1479,7 @@
 
         function startQuiz() {
             if (quizScoreToday >= 30) return;
-            if (questionBank.length === 0) { Swal.fire('讀取中', '題庫載入中，請稍後再試...', 'info'); return; }
+            if (questionBank.length === 0) { myAlert('讀取中', '題庫載入中，請稍後再試...', 'info'); return; }
 
             document.getElementById('quizStartArea').style.display = 'none';
             document.getElementById('quizGameArea').style.display = 'block';
@@ -1489,22 +1570,14 @@
         }
 
         function resetQuiz() {
-            Swal.fire({
-                title: '確定重置挑戰？',
-                text: "今日獲得的答題點數將歸零，您可以重新開始。",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#d33',
-                confirmButtonText: '重置',
-                cancelButtonText: '取消'
-            }).then((result) => {
-                if (result.isConfirmed) {
+            myAlertConfirm('確定重置挑戰？', "今日獲得的答題點數將歸零，您可以重新開始。", (confirmed) => {
+                if (confirmed) {
                     quizScoreToday = 0;
                     quizCorrectCountToday = 0;
                     localStorage.removeItem('senhuai_quiz_today');
                     updateQuizUI();
                     checkStatus();
-                    Swal.fire('已重置', '您可以重新挑戰了！', 'success');
+                    myAlert('已重置', '您可以重新挑戰了！', 'success');
                 }
             });
         }
@@ -1564,75 +1637,59 @@
             if (bankBalance < item.price) return;
             if (inventory[id] >= item.limit) return;
 
-            const result = await Swal.fire({
-                title: `確認購買？`,
-                text: `確定要花費 ${item.price} 點銀行存款購買「${item.name}」嗎？`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '確定購買'
-            });
+            myAlertConfirm(`確認購買？`, `確定要花費 ${item.price} 點銀行存款購買「${item.name}」嗎？`, (confirmed) => {
+                if (confirmed) {
+                    bankBalance -= item.price;
+                    inventory[id]++;
+                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
+                    if (id === 'key') {
+                        keyLastPurchaseDate = Date.now();
+                        localStorage.setItem('senhuai_key_last_buy', keyLastPurchaseDate);
+                    }
 
-            if (result.isConfirmed) {
-                bankBalance -= item.price;
-                inventory[id]++;
-                localStorage.setItem('senhuai_bank_v46', bankBalance);
-                localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
-                if (id === 'key') {
-                    keyLastPurchaseDate = Date.now();
-                    localStorage.setItem('senhuai_key_last_buy', keyLastPurchaseDate);
+                    document.getElementById('bankDisplay').innerText = bankBalance;
+                    myAlert('購買成功！', '', 'success');
+                    updateShopUI();
+                    updateQuizTools();
                 }
-
-                document.getElementById('bankDisplay').innerText = bankBalance;
-                Swal.fire({ title: '購買成功！', icon: 'success', toast: true, position: 'top', timer: 1500, showConfirmButton: false });
-                updateShopUI();
-                updateQuizTools();
-            }
+            });
         }
         
         async function buyGacha() {
             if (bankBalance < 3) return;
-            const result = await Swal.fire({
-                title: '📦 購買驚喜盲盒',
-                text: '花費 3 點，可能獲得高價值道具，也可能...什麼都沒有！',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '賭一把 (3點)'
-            });
-            
-            if (result.isConfirmed) {
-                bankBalance -= 3;
-                localStorage.setItem('senhuai_bank_v46', bankBalance);
-                document.getElementById('bankDisplay').innerText = bankBalance;
-                
-                const roll = Math.random() * 100;
-                let prize = null;
-                let prizeName = "";
-                
-                if (roll > 98) { prize = 'key'; prizeName = "🔓 應急鑰匙 (大獎!)"; }
-                else if (roll > 90) { prize = 'shield'; prizeName = "🛡️ 連勝保險"; }
-                else if (roll > 70) { prize = 'hint'; prizeName = "💡 提示燈泡"; }
-                else if (roll > 40) { prize = 'skip'; prizeName = "🎟️ 換題券"; }
-                
-                if (prize) {
-                    if (inventory[prize] < SHOP_ITEMS[prize].limit) {
-                        inventory[prize]++;
-                        saveInventory();
-                        Swal.fire({
-                            title: '🎉 中獎啦！',
-                            html: `你獲得了：<strong>${prizeName}</strong>`,
-                            icon: 'success'
-                        });
-                        if(window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            myAlertConfirm('📦 購買驚喜盲盒', '花費 3 點，可能獲得高價值道具，也可能...什麼都沒有！', (confirmed) => {
+                if (confirmed) {
+                    bankBalance -= 3;
+                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    document.getElementById('bankDisplay').innerText = bankBalance;
+                    
+                    const roll = Math.random() * 100;
+                    let prize = null;
+                    let prizeName = "";
+                    
+                    if (roll > 98) { prize = 'key'; prizeName = "🔓 應急鑰匙 (大獎!)"; }
+                    else if (roll > 90) { prize = 'shield'; prizeName = "🛡️ 連勝保險"; }
+                    else if (roll > 70) { prize = 'hint'; prizeName = "💡 提示燈泡"; }
+                    else if (roll > 40) { prize = 'skip'; prizeName = "🎟️ 換題券"; }
+                    
+                    if (prize) {
+                        if (inventory[prize] < SHOP_ITEMS[prize].limit) {
+                            inventory[prize]++;
+                            saveInventory();
+                            myAlert('🎉 中獎啦！', `你獲得了：${prizeName}`, 'success');
+                            if(window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                        } else {
+                            bankBalance += 2;
+                            localStorage.setItem('senhuai_bank_v46', bankBalance);
+                            myAlert('背包已滿', `你抽到了 ${prizeName}，但背包滿了。退還 2 點安慰獎。`, 'info');
+                        }
                     } else {
-                        bankBalance += 2;
-                        localStorage.setItem('senhuai_bank_v46', bankBalance);
-                        Swal.fire('背包已滿', `你抽到了 ${prizeName}，但背包滿了。退還 2 點安慰獎。`, 'info');
+                        myAlert('😅 銘謝惠顧', '箱子裡是空的...再接再厲！', 'error');
                     }
-                } else {
-                    Swal.fire('😅 銘謝惠顧', '箱子裡是空的...再接再厲！', 'error');
+                    updateShopUI();
                 }
-                updateShopUI();
-            }
+            });
         }
 
         function useItem(id) {
@@ -1641,7 +1698,7 @@
             if (id === 'skip') {
                 inventory.skip--;
                 saveInventory();
-                Swal.fire({ title: '🎟️ 已使用換題券', toast: true, position: 'top', timer: 1000, showConfirmButton: false });
+                myAlert('🎟️ 已使用換題券', '', 'success');
                 startQuiz();
             } else if (id === 'hint') {
                 inventory.hint--;
@@ -1657,7 +1714,7 @@
                 if (wrongIndices.length > 0) {
                     const target = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
                     opts[target].style.visibility = 'hidden';
-                    Swal.fire({ title: '💡 已排除一個錯誤選項', toast: true, position: 'top', timer: 1000, showConfirmButton: false });
+                    myAlert('💡 已排除一個錯誤選項', '', 'success');
                 }
             }
             updateShopUI();
@@ -1669,27 +1726,34 @@
         }
 
         function useEmergencyKey() {
-            Swal.fire({
-                title: '使用應急鑰匙？',
-                text: '這將消耗一把鑰匙並立刻解除鎖定。',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: '確定',
-                confirmButtonColor: '#00897b'
-            }).then((res) => {
-                if (res.isConfirmed) {
+            myAlertConfirm('使用應急鑰匙？', '這將消耗一把鑰匙並立刻解除鎖定。', (confirmed) => {
+                if (confirmed) {
                     inventory.key--;
                     saveInventory();
                     isFormLocked = false;
                     isUnlockedByParent = true;
-                    document.getElementById('lockOverlay').remove();
-                    Swal.fire('鑰匙已使用', '表單已解鎖', 'success');
+                    const ol = document.getElementById('lockOverlay');
+                    if(ol) ol.remove();
+                    myAlert('鑰匙已使用', '表單已解鎖', 'success');
                     updateQuizTools();
                 }
             });
         }
 
         function openAdminBankMode() {
+            if(!window.Swal) {
+                var p = prompt('請輸入管理員金鑰：');
+                if(p === 'bankjeffjasmine') {
+                    var n = prompt('目前餘額：' + bankBalance + '\n請輸入新餘額：');
+                    bankBalance = parseInt(n) || bankBalance;
+                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    document.getElementById('bankDisplay').innerText = bankBalance;
+                    updateShopUI();
+                    checkStatus();
+                }
+                return;
+            }
+            
             Swal.fire({
                 title: '🛠️ 管理員模式',
                 text: '請輸入管理員金鑰以修改銀行餘額：',
@@ -1929,7 +1993,7 @@
         // --- Important Fix for Save Record ---
         async function saveRecord() {
             if (isFormLocked) {
-                Swal.fire('已鎖定', '無法儲存', 'error');
+                myAlert('已鎖定', '無法儲存', 'error');
                 return;
             }
 
@@ -1937,54 +2001,58 @@
             const status = checkStatus();
 
             if (status.isAppLogRequired && appUsageLogs.length === 0) {
-                Swal.fire({ icon: 'warning', title: '資料不完整', text: '依照今日考試狀況，您必須填寫「App 使用紀錄」！', confirmButtonColor: '#d33' });
+                myAlert('資料不完整', '依照今日考試狀況，您必須填寫「App 使用紀錄」！', 'warning');
                 return;
             }
 
             const violationStatus = document.querySelector('input[name="violationStatus"]:checked');
             if (!violationStatus) {
-                Swal.fire({ icon: 'warning', title: '家長簽核未完成', text: '請在「家長簽核區」選擇今日是否有違規！', confirmButtonColor: '#d33' });
+                myAlert('家長簽核未完成', '請在「家長簽核區」選擇今日是否有違規！', 'warning');
                 document.querySelector('.parent-auth-area').scrollIntoView({ behavior: 'smooth' });
                 return;
             }
 
             if (violationStatus.value === 'exist' && majorViolations.length === 0) {
-                Swal.fire({ icon: 'error', title: '資料不符', text: '您勾選了「有發生違規」，但沒有新增任何違規項目！', confirmButtonColor: '#d33' });
+                myAlert('資料不符', '您勾選了「有發生違規」，但沒有新增任何違規項目！', 'error');
                 return;
             }
 
             const pwd = document.getElementById('parentPwd').value;
             if (pwd !== PARENT_PWD) {
-                Swal.fire({ icon: 'error', title: '密碼錯誤', text: '家長簽核密碼不正確！', confirmButtonColor: '#d33' });
+                myAlert('密碼錯誤', '家長簽核密碼不正確！', 'error');
                 return;
             }
 
             // Check pass status from the calculation we did earlier
             if (status.passed) {
-                const { value: file } = await Swal.fire({
-                    title: '📸 請拍攝今日認證照',
-                    text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
-                    input: 'file',
-                    inputAttributes: { 'accept': 'image/*', 'capture': 'user' },
-                    confirmButtonText: '產生證書',
-                    showCancelButton: true,
-                    cancelButtonText: '跳過'
-                });
+                if(window.Swal) {
+                    const { value: file } = await Swal.fire({
+                        title: '📸 請拍攝今日認證照',
+                        text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
+                        input: 'file',
+                        inputAttributes: { 'accept': 'image/*', 'capture': 'user' },
+                        confirmButtonText: '產生證書',
+                        showCancelButton: true,
+                        cancelButtonText: '跳過'
+                    });
 
-                if (file) {
-                    const readImageData = (file) => {
-                        return new Promise((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = (e) => resolve(e.target.result);
-                            reader.onerror = (err) => reject(err);
-                            reader.readAsDataURL(file);
-                        });
-                    };
-                    try {
-                        Swal.showLoading();
-                        const imageData = await readImageData(file);
-                        setTimeout(() => { finishSaveProcess(status, imageData); }, 100);
-                    } catch (error) {
+                    if (file) {
+                        const readImageData = (file) => {
+                            return new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = (e) => resolve(e.target.result);
+                                reader.onerror = (err) => reject(err);
+                                reader.readAsDataURL(file);
+                            });
+                        };
+                        try {
+                            Swal.showLoading();
+                            const imageData = await readImageData(file);
+                            setTimeout(() => { finishSaveProcess(status, imageData); }, 100);
+                        } catch (error) {
+                            finishSaveProcess(status, null);
+                        }
+                    } else {
                         finishSaveProcess(status, null);
                     }
                 } else {
@@ -2045,10 +2113,14 @@
                     <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>
                 </div>
             `;
-                Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
+                if(window.Swal) {
+                    Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
+                } else {
+                    alert('恭喜達標！請截圖保存！');
+                }
                 if(window.confetti) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
             } else {
-                Swal.fire({ title: '紀錄已儲存', text: `今日得分：${status.score} 分。`, icon: 'info', timer: 1500, showConfirmButton: false });
+                myAlert('紀錄已儲存', `今日得分：${status.score} 分。`, 'info');
             }
 
             let doneCustoms = []; customTasks.forEach(t => { if (document.getElementById(t.id).checked) doneCustoms.push(t.text); });
@@ -2059,11 +2131,7 @@
                 bankBalance -= status.bankTx;
                 localStorage.setItem('senhuai_bank_v46', bankBalance);
                 document.getElementById('bankDisplay').innerText = bankBalance;
-                Swal.fire({
-                    title: '銀行交易成功',
-                    text: status.bankTx < 0 ? `已存入 ${Math.abs(status.bankTx)} 點！` : `已提領 ${status.bankTx} 點！`,
-                    icon: 'success', timer: 2000
-                });
+                myAlert('銀行交易成功', status.bankTx < 0 ? `已存入 ${Math.abs(status.bankTx)} 點！` : `已提領 ${status.bankTx} 點！`, 'success');
             }
 
             const record = {
@@ -2127,13 +2195,13 @@
         }
 
         function clearHistory() {
-            Swal.fire({ title: '確定清空？', icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: '清空' }).then((result) => {
-                if (result.isConfirmed) { historyData = []; updateStorageAndUI(); updateLevelUI(); Swal.fire('已刪除', '', 'success'); }
+            myAlertConfirm('確定清空？', '', (confirmed) => {
+                if (confirmed) { historyData = []; updateStorageAndUI(); updateLevelUI(); myAlert('已刪除', '', 'success'); }
             });
         }
 
         function exportToCSV() {
-            if (historyData.length === 0) { Swal.fire('無資料', '無法匯出', 'info'); return; }
+            if (historyData.length === 0) { myAlert('無資料', '無法匯出', 'info'); return; }
             let csv = "日期時間,模式,最終分數,結果,原始得分,遲延扣分,3C違規扣,3C違規次,就寢違規扣,就寢獎勵,重大違規扣,重大違規細節,數學,其他科,寫考卷,高分考卷,不及格科,>80分科,自訂任務,App使用紀錄,平日早睡,銀行存取,腦力挑戰\n";
             historyData.forEach(row => {
                 const c = (t) => (t || "").toString().replace(/,/g, "，");
@@ -2167,13 +2235,155 @@
                     }
                 }
                 if (newHistory.length > 0) {
-                    Swal.fire({ title: `讀取到 ${newHistory.length} 筆資料`, text: "要覆蓋還是合併？", icon: 'question', showDenyButton: true, showCancelButton: true, confirmButtonText: '覆蓋', denyButtonText: '合併' }).then((result) => {
-                        if (result.isConfirmed) { historyData = newHistory; updateStorageAndUI(); updateLevelUI(); Swal.fire('已覆蓋', '', 'success'); }
-                        else if (result.isDenied) { historyData = [...newHistory, ...historyData]; updateStorageAndUI(); updateLevelUI(); Swal.fire('已合併', '', 'success'); }
+                    myAlertConfirm(`讀取到 ${newHistory.length} 筆資料`, "是否覆蓋現有資料？(取消則為合併)", (confirmed) => {
+                        if (confirmed) { 
+                            historyData = newHistory; 
+                            updateStorageAndUI(); 
+                            updateLevelUI(); 
+                            myAlert('已覆蓋', '', 'success'); 
+                        } else { 
+                            historyData = [...newHistory, ...historyData]; 
+                            updateStorageAndUI(); 
+                            updateLevelUI(); 
+                            myAlert('已合併', '', 'success'); 
+                        }
                     });
                 }
             };
             reader.readAsText(file); input.value = '';
+        }
+        
+        function clearForm() {
+            myAlertConfirm('確定清空？', '', (confirmed) => {
+                if (confirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
+            });
+        }
+        
+        function quickFillApp(appName) {
+            document.getElementById('appName').value = appName;
+            document.getElementById('appDuration').focus();
+        }
+        function toggleAppHelp() {
+            const help = document.getElementById('appHelp');
+            help.style.display = help.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function addAppLog() {
+            if (isFormLocked) return;
+            const device = document.getElementById('appDevice').value;
+            const name = document.getElementById('appName').value.trim();
+            const duration = parseInt(document.getElementById('appDuration').value) || 0;
+            const planNext = parseInt(document.getElementById('appPlanNext').value) || 0;
+
+            if (!name) { myAlert('請輸入 App', '', 'warning'); return; }
+            if (duration < 0 || planNext < 0) { myAlert('時間不能為負', '', 'warning'); return; }
+
+            appUsageLogs.push({ id: 'app_' + Date.now(), device, name, duration, planNext });
+
+            document.getElementById('appName').value = '';
+            document.getElementById('appDuration').value = '';
+            document.getElementById('appPlanNext').value = '';
+            renderAppLogs();
+        }
+
+        function addNoUsageLog() {
+            if (isFormLocked) return;
+            appUsageLogs.push({ id: 'app_' + Date.now(), device: '全裝置', name: '無使用', duration: 0, planNext: 0 });
+            renderAppLogs();
+        }
+
+        function removeAppLog(id) {
+            if (isFormLocked) return;
+            appUsageLogs = appUsageLogs.filter(app => app.id !== id);
+            renderAppLogs();
+        }
+
+        function renderAppLogs() {
+            const container = document.getElementById('appLogList');
+            const totalSpan = document.getElementById('totalAppTime');
+            const totalPlanSpan = document.getElementById('totalPlanTime');
+            container.innerHTML = '';
+
+            let total = 0;
+            let totalPlan = 0;
+
+            appUsageLogs.forEach(app => {
+                total += app.duration;
+                totalPlan += app.planNext || 0;
+
+                const div = document.createElement('div'); div.className = 'app-item';
+                div.innerHTML = `
+                <div class="app-item-header">
+                    <span><small style="color:#666; font-weight:normal; margin-right:5px;">[${app.device}]</small> ${app.name}</span>
+                    <button class="btn-delete" onclick="removeAppLog('${app.id}')">✕</button>
+                </div>
+                <div class="app-item-details">
+                    <span>今日：${app.duration}分</span>
+                    <span style="color:#f57f17;">📅 預估：${app.planNext || 0}分</span>
+                </div>
+            `;
+                container.appendChild(div);
+            });
+            totalSpan.innerText = total;
+            totalPlanSpan.innerText = totalPlan;
+        }
+
+        function toggleViolationInput(show) {
+            const zone = document.getElementById('violationInputZone');
+            if (show) {
+                zone.style.display = 'block';
+            } else {
+                zone.style.display = 'none';
+                majorViolations = [];
+                renderMajorViolations();
+                checkStatus();
+            }
+        }
+
+        function addMajorViolation() {
+            if (isFormLocked) return;
+            const name = document.getElementById('violationName').value.trim();
+            const points = parseInt(document.getElementById('violationPoints').value) || 0;
+            if (!name) { myAlert('請輸入違規', '', 'warning'); return; }
+            majorViolations.push({ id: 'violation_' + Date.now(), text: name, points });
+            document.getElementById('violationName').value = ''; document.getElementById('violationPoints').value = 1;
+            renderMajorViolations(); checkStatus();
+        }
+
+        function removeMajorViolation(id) {
+            if (isFormLocked) return;
+            majorViolations = majorViolations.filter(v => v.id !== id);
+            renderMajorViolations();
+            checkStatus();
+        }
+
+        function renderMajorViolations() {
+            const container = document.getElementById('violationList'); container.innerHTML = '';
+            majorViolations.forEach(v => {
+                const div = document.createElement('div'); div.className = 'violation-item';
+                div.innerHTML = `<span>⚠️ ${v.text}</span><div style="display:flex; align-items:center;"><span class="badge-penalty">-${v.points}點</span><button class="btn-delete" style="color:#d32f2f;" onclick="removeMajorViolation('${v.id}')">🗑️</button></div>`;
+                container.appendChild(div);
+            });
+        }
+
+        function addCustomTask() {
+            if (isFormLocked) return;
+            const name = document.getElementById('customName').value.trim();
+            const points = parseInt(document.getElementById('customPoints').value) || 0;
+            const required = document.getElementById('customRequired').checked;
+            if (!name) { myAlert('請輸入名稱', '', 'warning'); return; }
+            customTasks.push({ id: 'custom_' + Date.now(), text: name, points, required });
+            document.getElementById('customName').value = ''; document.getElementById('customPoints').value = 1; document.getElementById('customRequired').checked = false;
+            renderCustomTasks(); checkStatus();
+        }
+        function removeCustomTask(id) { if (isFormLocked) return; customTasks = customTasks.filter(t => t.id !== id); renderCustomTasks(); checkStatus(); }
+        function renderCustomTasks() {
+            const container = document.getElementById('customTaskList'); container.innerHTML = '';
+            customTasks.forEach(task => {
+                const div = document.createElement('div'); div.className = 'task-item';
+                div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text} ${task.required ? '<span class="badge-required">低標</span>' : ''}</label><span class="badge-point" style="background:#e3f2fd; color:#1565c0; border-color:#1565c0;">+${task.points}點</span><button class="btn-delete" onclick="removeCustomTask('${task.id}')">🗑️</button>`;
+                container.appendChild(div);
+            });
         }
     </script>
 </body>

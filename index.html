@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v50.6)</title>
+    <title>森淮 3C 規範 (v50.7 Math)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,7 +17,6 @@
             if (msg.toLowerCase().indexOf("script error") > -1) {
                 alert('Script Error: 請檢查 questions.js 是否存在');
             } else {
-                // Delay alert to ensure UI renders
                 setTimeout(function(){ 
                     alert('系統錯誤: ' + msg); 
                 }, 500);
@@ -257,7 +256,7 @@
         <div class="header">
             <h1>森淮手機，平板，電視，電腦使用規範</h1>
             <div class="header-info">
-                <span class="version-tag">ver 50.6 (Reordered)</span>
+                <span class="version-tag">ver 50.7 (Math Balance)</span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -293,7 +292,12 @@
                 <ul class="rule-list">
                     <li><strong>基本門檻：</strong>每日需累積 <strong>6 點</strong> 以上，隔日方可使用 3C。</li>
                     <li><strong>日常任務：</strong>每完成一項可得 1~3 點。</li>
-                    <li><strong>🧠 腦力激盪 (必做)：</strong>每日必須參與，<span id="ruleQuizRequirement" style="color:var(--danger)">未達標將視為未完成。</span></li>
+                    <li><strong>🧠 腦力激盪 (必做)：</strong>
+                        <ul style="margin-top:5px;">
+                            <li>每日必須參與，<span id="ruleQuizRequirement" style="color:var(--danger)">未達標將視為未完成。</span></li>
+                            <li><span style="color:var(--math-color)">新增規則：</span>數學題必須佔當日答對題數的 <strong>50%</strong> 以上。</li>
+                        </ul>
+                    </li>
                     <li><strong>🔥 答題神人獎勵：</strong>單日累積答對 <strong>30 題</strong>，直接獲得 <strong>30 點</strong> (神級獎勵)。</li>
                     <li><strong>學業加分：</strong>
                         <ul style="margin-top:5px;">
@@ -418,7 +422,8 @@
                     <span id="quizRequirementText" style="color:#d32f2f; font-weight:bold;">最低要求：2 點 (8題)。</span><br>
                     <span style="color:#2e7d32; font-weight:bold;">🔥 毅力挑戰：當日累積答對 30 題，直接獲得 30 點！</span>
                     <div id="quizStreakDisplay" style="margin-top:5px; font-weight:bold; color:#f57f17; display:none;">
-                        今日累積答對：<span id="quizCurrentCount">0</span> / 30
+                        累積答對：<span id="quizCurrentCount">0</span> / 30<br>
+                        <span id="mathCountDisplay" style="font-size:0.85rem; color:#1565c0;">數學：0 (0%)</span>
                     </div>
                 </div>
 
@@ -778,6 +783,9 @@
         let bankBalance = 0;
         let quizScoreToday = 0;
         let quizCorrectCountToday = 0;
+        let quizMathCountToday = 0; // New v50.7
+        let currentQuestionSubject = ''; // New v50.7
+        
         const QUIZ_DAILY_LIMIT = 2;
         const QUIZ_TARGET_HIGH = 30;
         let questionBank = [];
@@ -941,6 +949,7 @@
                     if (p.date === new Date().toLocaleDateString()) {
                         quizScoreToday = p.score;
                         quizCorrectCountToday = p.correctCount || 0;
+                        quizMathCountToday = p.mathCount || 0; // New v50.7
                     }
                 }
                 updateQuizUI();
@@ -1182,6 +1191,7 @@
             
             const streakArea = document.getElementById('quizStreakDisplay');
             const streakSpan = document.getElementById('quizCurrentCount');
+            const mathSpan = document.getElementById('mathCountDisplay');
             const startArea = document.getElementById('quizStartArea');
             const cooldownMsg = document.getElementById('quizCooldownMsg');
             
@@ -1212,6 +1222,14 @@
                 if (quizCorrectCountToday > 0 && quizScoreToday < 30) {
                     streakArea.style.display = 'block';
                     streakSpan.innerText = quizCorrectCountToday;
+                    
+                    // Update Math Status
+                    let mathPct = quizCorrectCountToday > 0 ? Math.round((quizMathCountToday / quizCorrectCountToday) * 100) : 0;
+                    let warning = mathPct < 50 ? "⚠️" : "✅";
+                    if(mathSpan) {
+                        mathSpan.innerText = `數學：${quizMathCountToday} (${mathPct}%) ${warning}`;
+                        mathSpan.style.color = mathPct < 50 ? '#d32f2f' : '#2e7d32';
+                    }
                 } else {
                     streakArea.style.display = 'none';
                 }
@@ -1274,6 +1292,9 @@
 
             const qIdx = Math.floor(Math.random() * questionBank.length);
             const q = questionBank[qIdx];
+            
+            // v50.7: Capture Subject
+            currentQuestionSubject = q.s;
 
             document.getElementById('quizSubject').innerText = q.s;
             document.getElementById('quizQuestion').innerText = q.q;
@@ -1306,6 +1327,11 @@
                 btnElement.style.backgroundColor = '#dcedc8';
                 quizCorrectCountToday++;
                 
+                // v50.7: Math Count
+                if(currentQuestionSubject === '數學') {
+                    quizMathCountToday++;
+                }
+                
                 if (quizScoreToday < QUIZ_DAILY_LIMIT) {
                     quizScoreToday += 0.25;
                 }
@@ -1324,7 +1350,8 @@
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
-                    correctCount: quizCorrectCountToday
+                    correctCount: quizCorrectCountToday,
+                    mathCount: quizMathCountToday
                 }));
                 updateQuizUI();
                 checkStatus();
@@ -1343,7 +1370,8 @@
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
-                    correctCount: quizCorrectCountToday
+                    correctCount: quizCorrectCountToday,
+                    mathCount: quizMathCountToday
                 }));
                 setTimeout(() => { closeQuiz(); }, 2500);
             }
@@ -1360,6 +1388,7 @@
                 if (confirmed) {
                     quizScoreToday = 0;
                     quizCorrectCountToday = 0;
+                    quizMathCountToday = 0; // Reset Math
                     localStorage.removeItem('senhuai_quiz_today');
                     updateQuizUI();
                     checkStatus();
@@ -1660,6 +1689,8 @@
 
             if (quizCorrectCountToday < requiredCount) {
                 missingRequired.push(`🧠 腦力激盪 (需滿${requiredCount}題)`);
+            } else if ((quizMathCountToday / quizCorrectCountToday) < 0.5) {
+                missingRequired.push(`🧠 腦力激盪 (數學佔比不足50%)`);
             }
 
             const timePenalty = calculateTimePenalty();
@@ -1760,7 +1791,6 @@
                 document.getElementById('progressText').innerHTML = `有效得分：${finalScore} / ${TARGET_SCORE} <span style="color:var(--warning)">(差 ${Math.max(0, TARGET_SCORE - finalScore)})</span>`;
             }
 
-            // Using the newly hoisted function safely
             renderResultBox(earnedScore, finalScore, missingRequired, totalPenalty, bankTx);
             updateTheme(finalScore);
             renderUnlockCards();
@@ -1775,402 +1805,6 @@
             }
 
             return { score: finalScore, earned: earnedScore, passed: (finalScore >= TARGET_SCORE && missingRequired.length === 0), missing: missingRequired, timePenalty, excessivePenalty, violationPenalty, bedtimePenalty, excessiveCount, tpCount, tpHigh, failedExams, score80Exams, bankTx, breakdown, isAppLogRequired };
-        }
-
-        // --- Save Record ---
-        async function saveRecord() {
-            if (isFormLocked) {
-                myAlert('已鎖定', '無法儲存', 'error');
-                return;
-            }
-
-            // Fix: Calculate status first to get isAppLogRequired
-            const status = checkStatus();
-
-            if (status.isAppLogRequired && appUsageLogs.length === 0) {
-                myAlert('資料不完整', '依照今日考試狀況，您必須填寫「App 使用紀錄」！', 'warning');
-                return;
-            }
-
-            const violationStatus = document.querySelector('input[name="violationStatus"]:checked');
-            if (!violationStatus) {
-                myAlert('家長簽核未完成', '請在「家長簽核區」選擇今日是否有違規！', 'warning');
-                document.querySelector('.parent-auth-area').scrollIntoView({ behavior: 'smooth' });
-                return;
-            }
-
-            if (violationStatus.value === 'exist' && majorViolations.length === 0) {
-                myAlert('資料不符', '您勾選了「有發生違規」，但沒有新增任何違規項目！', 'error');
-                return;
-            }
-
-            const pwd = document.getElementById('parentPwd').value;
-            if (pwd !== PARENT_PWD) {
-                myAlert('密碼錯誤', '家長簽核密碼不正確！', 'error');
-                return;
-            }
-
-            if (status.passed) {
-                if(window.Swal) {
-                    const { value: file } = await Swal.fire({
-                        title: '📸 請拍攝今日認證照',
-                        text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
-                        input: 'file',
-                        inputAttributes: { 'accept': 'image/*', 'capture': 'user' },
-                        confirmButtonText: '產生證書',
-                        showCancelButton: true,
-                        cancelButtonText: '跳過'
-                    });
-
-                    if (file) {
-                        const readImageData = (file) => {
-                            return new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = (e) => resolve(e.target.result);
-                                reader.onerror = (err) => reject(err);
-                                reader.readAsDataURL(file);
-                            });
-                        };
-                        try {
-                            Swal.showLoading();
-                            const imageData = await readImageData(file);
-                            setTimeout(() => { finishSaveProcess(status, imageData); }, 100);
-                        } catch (error) {
-                            finishSaveProcess(status, null);
-                        }
-                    } else {
-                        finishSaveProcess(status, null);
-                    }
-                } else {
-                    finishSaveProcess(status, null);
-                }
-            } else {
-                finishSaveProcess(status, null);
-            }
-        }
-
-        function finishSaveProcess(status, selfieUrl) {
-            const dateStr = new Date().toLocaleString('zh-TW', { hour12: false });
-            let resultStr = status.passed ? "✅達標" : "❌未達標";
-            if (status.missing.length > 0) resultStr = "❌缺必做";
-
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const tomorrowStr = tomorrow.toLocaleDateString('zh-TW');
-
-            if (status.passed) {
-                let imgHtml = '';
-                if (selfieUrl) {
-                    imgHtml = `<img src="${selfieUrl}" class="cert-selfie-img" alt="Selfie">`;
-                } else {
-                    imgHtml = `<img src="logo.png" class="cert-logo-img" alt="Logo">`;
-                }
-
-                let breakdownHtml = '<div class="cert-breakdown">';
-                status.breakdown.forEach(item => {
-                    const cls = item.type === 'penalty' ? 'penalty' : (item.type === 'bonus' ? 'bonus' : (item.type === 'bank' ? 'bank' : ''));
-                    breakdownHtml += `
-                        <div class="breakdown-item ${cls}">
-                            <span>${item.label}</span>
-                            <span>${item.points > 0 ? '+' : ''}${item.points} 點</span>
-                        </div>`;
-                });
-                breakdownHtml += `
-                    <div class="breakdown-total">
-                        <span>最終核定分數</span>
-                        <span>${status.score} 點</span>
-                    </div>
-                </div>`;
-
-                const frameClass = inventory.frame_gold > 0 ? 'frame-gold' : '';
-                const certHtml = `
-                <div class="swal-certificate ${frameClass}">
-                    ${imgHtml}
-                    <div class="cert-title">3C 設備使用授權書</div>
-                    <div class="cert-body">
-                        茲證明 <strong>森淮</strong> 今日表現優異，<br>
-                        累積點數達標 (${status.score}分)，<br>
-                        特此授予明日 3C 設備使用權限。
-                    </div>
-                    ${breakdownHtml}
-                    <div class="cert-date">授權日期：${tomorrowStr}</div>
-                    <div><div class="cert-stamp">VERIFIED ✅</div></div>
-                    <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>
-                </div>
-            `;
-                if(window.Swal) {
-                    Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
-                } else {
-                    alert('恭喜達標！請截圖保存！');
-                }
-                if(window.confetti) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
-            } else {
-                myAlert('紀錄已儲存', `今日得分：${status.score} 分。`, 'info');
-            }
-
-            let doneCustoms = []; customTasks.forEach(t => { if (document.getElementById(t.id).checked) doneCustoms.push(t.text); });
-            let violations = majorViolations.map(v => `${v.text}(-${v.points})`);
-            let appLogStr = appUsageLogs.map(a => `[${a.device}]${a.name}(${a.duration}m/預${a.planNext || 0}m)`).join(' | ');
-
-            if (status.bankTx !== 0) {
-                bankBalance -= status.bankTx;
-                localStorage.setItem('senhuai_bank_v46', bankBalance);
-                document.getElementById('bankDisplay').innerText = bankBalance;
-                myAlert('銀行交易成功', status.bankTx < 0 ? `已存入 ${Math.abs(status.bankTx)} 點！` : `已提領 ${status.bankTx} 點！`, 'success');
-            }
-
-            const record = {
-                date: dateStr, mode: currentMode === 'weekday' ? '平日' : '假日',
-                finalScore: status.score, result: resultStr,
-                earnedScore: status.earned, timePenalty: status.timePenalty, excessivePenalty: status.excessivePenalty,
-                violationPenalty: status.violationPenalty, bedtimePenalty: status.bedtimePenalty,
-                bedtimeBonus: document.getElementById('bedtimeBonus').checked ? "是" : "否",
-                bedtimeEarly: document.getElementById('bedtimeEarly').checked ? "是" : "否",
-                violationDetails: violations.join(" | ") || "無", math: document.getElementById('mathPassed').checked ? "是" : "否",
-                others: document.getElementById('otherExams').value, customs: doneCustoms.join(" | ") || "無", excessiveCount: status.excessiveCount,
-                tpCount: status.tpCount, tpHigh: status.tpHigh,
-                failedExams: status.failedExams, score80Exams: status.score80Exams,
-                appLogStr: appLogStr || "無",
-                bankTx: status.bankTx,
-                quizScore: quizScoreToday,
-                unlockTasks: unlockTasksToday.map(ut => {
-                    const done = document.getElementById(ut.id) && document.getElementById(ut.id).checked;
-                    return `${ut.text}(${done ? '✅' : '❌'})`;
-                }).join(" | ")
-            };
-
-            historyData.unshift(record);
-            updateStorageAndUI();
-            updateLevelUI(); // Update level after saving
-            localStorage.removeItem('senhuai_draft_v41');
-            document.getElementById('parentPwd').value = '';
-
-            document.getElementById('bankAction').value = 'none';
-            document.getElementById('bankAmount').value = 0;
-            checkStatus();
-        }
-
-        // --- Other Utilities ---
-        function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
-
-        function renderHistory() {
-            const list = document.getElementById('historyList'); 
-            if(!list) return;
-            list.innerHTML = '';
-            if (historyData.length === 0) { list.innerHTML = '<p style="text-align:center; padding:10px; color:#999;">目前尚無紀錄</p>'; return; }
-
-            let sorted = [...historyData].sort((a, b) => {
-                let sa = parseFloat(a.finalScore), sb = parseFloat(b.finalScore);
-                return sb !== sa ? sb - sa : new Date(b.date) - new Date(a.date);
-            });
-            let top3 = sorted.slice(0, 3);
-            let rest = historyData.filter(i => !top3.includes(i)).sort((a, b) => new Date(b.date) - new Date(a.date));
-            let displayList = [...top3, ...rest.slice(0, 7)];
-
-            displayList.forEach(item => {
-                const div = document.createElement('div'); div.className = 'history-item';
-                let rank = top3.indexOf(item), trophy = '', rankClass = '';
-                if (rank === 0) { trophy = '🏆'; rankClass = 'rank-1'; }
-                else if (rank === 1) { trophy = '🥈'; rankClass = 'rank-2'; }
-                else if (rank === 2) { trophy = '🥉'; rankClass = 'rank-3'; }
-                if (rankClass) div.classList.add(rankClass);
-
-                div.innerHTML = `<div>${item.date} <small>(${item.mode})</small></div><div><span class="trophy-icon">${trophy}</span><b>${item.finalScore}分</b> ${item.result}</div>`;
-                list.appendChild(div);
-            });
-        }
-
-        function clearHistory() {
-            myAlertConfirm('確定清空？', '', (confirmed) => {
-                if (confirmed) { historyData = []; updateStorageAndUI(); updateLevelUI(); myAlert('已刪除', '', 'success'); }
-            });
-        }
-
-        function exportToCSV() {
-            if (historyData.length === 0) { myAlert('無資料', '無法匯出', 'info'); return; }
-            let csv = "日期時間,模式,最終分數,結果,原始得分,遲延扣分,3C違規扣,3C違規次,就寢違規扣,就寢獎勵,重大違規扣,重大違規細節,數學,其他科,寫考卷,高分考卷,不及格科,>80分科,自訂任務,App使用紀錄,平日早睡,銀行存取,腦力挑戰\n";
-            historyData.forEach(row => {
-                const c = (t) => (t || "").toString().replace(/,/g, "，");
-                csv += `${row.date},${row.mode},${row.finalScore},${row.result},${row.earnedScore || 0},${row.timePenalty || 0},${row.excessivePenalty || 0},${row.excessiveCount || 0},${row.bedtimePenalty || 0},${row.bedtimeBonus || "-"},${row.violationPenalty || 0},"${c(row.violationDetails)}",${c(row.math)},${c(row.others)},${row.tpCount || 0},${row.tpHigh || 0},${row.failedExams || 0},${row.score80Exams || 0},"${c(row.customs)}","${c(row.appLogStr)}",${row.bedtimeEarly || "-"},${row.bankTx || 0},${row.quizScore || 0}\n`;
-            });
-            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `森淮規範_${new Date().toISOString().split('T')[0]}.csv`; a.click();
-        }
-
-        function importFromCSV(input) {
-            const file = input.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                const rows = e.target.result.split("\n"); const newHistory = [];
-                for (let i = 1; i < rows.length; i++) {
-                    const cols = rows[i].trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                    if (cols.length >= 5) {
-                        newHistory.push({
-                            date: cols[0], mode: cols[1], finalScore: parseFloat(cols[2]), result: cols[3],
-                            earnedScore: parseFloat(cols[4]), timePenalty: parseFloat(cols[5]), excessivePenalty: parseFloat(cols[6]),
-                            excessiveCount: parseFloat(cols[7]), bedtimePenalty: parseFloat(cols[8]), bedtimeBonus: cols[9],
-                            violationPenalty: parseFloat(cols[10]), violationDetails: cols[11].replace(/"/g, ''), math: cols[12], others: cols[13],
-                            tpCount: parseFloat(cols[14]) || 0, tpHigh: parseFloat(cols[15]) || 0,
-                            failedExams: parseFloat(cols[16]) || 0, score80Exams: parseFloat(cols[17]) || 0,
-                            customs: cols[18].replace(/"/g, ''),
-                            appLogStr: cols[19] ? cols[19].replace(/"/g, '') : "無",
-                            bedtimeEarly: cols[20] || "-",
-                            bankTx: parseFloat(cols[21]) || 0,
-                            quizScore: parseFloat(cols[22]) || 0
-                        });
-                    }
-                }
-                if (newHistory.length > 0) {
-                    myAlertConfirm(`讀取到 ${newHistory.length} 筆資料`, "是否覆蓋現有資料？(取消則為合併)", (confirmed) => {
-                        if (confirmed) { 
-                            historyData = newHistory; 
-                            updateStorageAndUI(); 
-                            updateLevelUI(); 
-                            myAlert('已覆蓋', '', 'success'); 
-                        } else { 
-                            historyData = [...newHistory, ...historyData]; 
-                            updateStorageAndUI(); 
-                            updateLevelUI(); 
-                            myAlert('已合併', '', 'success'); 
-                        }
-                    });
-                }
-            };
-            reader.readAsText(file); input.value = '';
-        }
-        
-        function clearForm() {
-            myAlertConfirm('確定清空？', '', (confirmed) => {
-                if (confirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
-            });
-        }
-        
-        function quickFillApp(appName) {
-            document.getElementById('appName').value = appName;
-            document.getElementById('appDuration').focus();
-        }
-        function toggleAppHelp() {
-            const help = document.getElementById('appHelp');
-            help.style.display = help.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function addAppLog() {
-            if (isFormLocked) return;
-            const device = document.getElementById('appDevice').value;
-            const name = document.getElementById('appName').value.trim();
-            const duration = parseInt(document.getElementById('appDuration').value) || 0;
-            const planNext = parseInt(document.getElementById('appPlanNext').value) || 0;
-
-            if (!name) { myAlert('請輸入 App', '', 'warning'); return; }
-            if (duration < 0 || planNext < 0) { myAlert('時間不能為負', '', 'warning'); return; }
-
-            appUsageLogs.push({ id: 'app_' + Date.now(), device, name, duration, planNext });
-
-            document.getElementById('appName').value = '';
-            document.getElementById('appDuration').value = '';
-            document.getElementById('appPlanNext').value = '';
-            renderAppLogs();
-        }
-
-        function addNoUsageLog() {
-            if (isFormLocked) return;
-            appUsageLogs.push({ id: 'app_' + Date.now(), device: '全裝置', name: '無使用', duration: 0, planNext: 0 });
-            renderAppLogs();
-        }
-
-        function removeAppLog(id) {
-            if (isFormLocked) return;
-            appUsageLogs = appUsageLogs.filter(app => app.id !== id);
-            renderAppLogs();
-        }
-
-        function renderAppLogs() {
-            const container = document.getElementById('appLogList');
-            const totalSpan = document.getElementById('totalAppTime');
-            const totalPlanSpan = document.getElementById('totalPlanTime');
-            container.innerHTML = '';
-
-            let total = 0;
-            let totalPlan = 0;
-
-            appUsageLogs.forEach(app => {
-                total += app.duration;
-                totalPlan += app.planNext || 0;
-
-                const div = document.createElement('div'); div.className = 'app-item';
-                div.innerHTML = `
-                <div class="app-item-header">
-                    <span><small style="color:#666; font-weight:normal; margin-right:5px;">[${app.device}]</small> ${app.name}</span>
-                    <button class="btn-delete" onclick="removeAppLog('${app.id}')">✕</button>
-                </div>
-                <div class="app-item-details">
-                    <span>今日：${app.duration}分</span>
-                    <span style="color:#f57f17;">📅 預估：${app.planNext || 0}分</span>
-                </div>
-            `;
-                container.appendChild(div);
-            });
-            totalSpan.innerText = total;
-            totalPlanSpan.innerText = totalPlan;
-        }
-
-        function toggleViolationInput(show) {
-            const zone = document.getElementById('violationInputZone');
-            if (show) {
-                zone.style.display = 'block';
-            } else {
-                zone.style.display = 'none';
-                majorViolations = [];
-                renderMajorViolations();
-                checkStatus();
-            }
-        }
-
-        function addMajorViolation() {
-            if (isFormLocked) return;
-            const name = document.getElementById('violationName').value.trim();
-            const points = parseInt(document.getElementById('violationPoints').value) || 0;
-            if (!name) { myAlert('請輸入違規', '', 'warning'); return; }
-            majorViolations.push({ id: 'violation_' + Date.now(), text: name, points });
-            document.getElementById('violationName').value = ''; document.getElementById('violationPoints').value = 1;
-            renderMajorViolations(); checkStatus();
-        }
-
-        function removeMajorViolation(id) {
-            if (isFormLocked) return;
-            majorViolations = majorViolations.filter(v => v.id !== id);
-            renderMajorViolations();
-            checkStatus();
-        }
-
-        function renderMajorViolations() {
-            const container = document.getElementById('violationList'); container.innerHTML = '';
-            majorViolations.forEach(v => {
-                const div = document.createElement('div'); div.className = 'violation-item';
-                div.innerHTML = `<span>⚠️ ${v.text}</span><div style="display:flex; align-items:center;"><span class="badge-penalty">-${v.points}點</span><button class="btn-delete" style="color:#d32f2f;" onclick="removeMajorViolation('${v.id}')">🗑️</button></div>`;
-                container.appendChild(div);
-            });
-        }
-
-        function addCustomTask() {
-            if (isFormLocked) return;
-            const name = document.getElementById('customName').value.trim();
-            const points = parseInt(document.getElementById('customPoints').value) || 0;
-            const required = document.getElementById('customRequired').checked;
-            if (!name) { myAlert('請輸入名稱', '', 'warning'); return; }
-            customTasks.push({ id: 'custom_' + Date.now(), text: name, points, required });
-            document.getElementById('customName').value = ''; document.getElementById('customPoints').value = 1; document.getElementById('customRequired').checked = false;
-            renderCustomTasks(); checkStatus();
-        }
-        function removeCustomTask(id) { if (isFormLocked) return; customTasks = customTasks.filter(t => t.id !== id); renderCustomTasks(); checkStatus(); }
-        function renderCustomTasks() {
-            const container = document.getElementById('customTaskList'); container.innerHTML = '';
-            customTasks.forEach(task => {
-                const div = document.createElement('div'); div.className = 'task-item';
-                div.innerHTML = `<input type="checkbox" id="${task.id}" value="${task.points}" onchange="checkStatus()"><label for="${task.id}" class="task-label">${task.text} ${task.required ? '<span class="badge-required">低標</span>' : ''}</label><span class="badge-point" style="background:#e3f2fd; color:#1565c0; border-color:#1565c0;">+${task.points}點</span><button class="btn-delete" onclick="removeCustomTask('${task.id}')">🗑️</button>`;
-                container.appendChild(div);
-            });
         }
     </script>
 </body>

@@ -1234,6 +1234,89 @@
             font-weight: bold;
             font-size: 0.9rem;
         }
+
+        /* 刮刮樂 Modal */
+        #scratchModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .scratch-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        #scratchCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            cursor: pointer;
+            touch-action: none;
+        }
+
+        .scratch-result {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1;
+            background: linear-gradient(135deg, #fffde7, #fff59d);
+            text-align: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .scratch-result h2 {
+            font-size: 1.8rem;
+            color: #f57f17;
+            margin: 0 0 10px 0;
+        }
+
+        .scratch-result p {
+            font-size: 1.2rem;
+            color: #333;
+            margin: 5px 0;
+        }
+
+        .scratch-result .prize-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+
+        #scratchCloseBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: white;
+            color: #333;
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 
@@ -1664,6 +1747,17 @@
                         </div>
                         <button class="btn-buy" id="buy_gacha" onclick="buyGacha()"
                             style="background:#9c27b0;">抽獎</button>
+                    </div>
+                    <!-- New Scratch Card Item -->
+                    <div class="shop-item" style="background: linear-gradient(135deg, #e0f7fa, #ffffff);">
+                        <div>
+                            <div class="shop-icon">🎫</div>
+                            <div class="shop-name">幸運刮刮樂</div>
+                            <div class="shop-price">5 點</div>
+                            <div class="shop-limit">更有趣的體驗!</div>
+                        </div>
+                        <button class="btn-buy" id="buy_scratch" onclick="buyScratchCard()"
+                            style="background:#00bcd4;">刮一張</button>
                     </div>
                     <div class="shop-item">
                         <div>
@@ -2377,6 +2471,12 @@
                 gachaBtn.disabled = bankBalance < 3;
                 gachaBtn.innerText = bankBalance < 3 ? '點數不足' : '抽獎';
             }
+
+            const scratchBtn = document.getElementById('buy_scratch');
+            if (scratchBtn) {
+                scratchBtn.disabled = bankBalance < 5;
+                scratchBtn.innerText = bankBalance < 5 ? '點數不足' : '刮一張';
+            }
         }
 
         async function buyItem(id) {
@@ -2437,6 +2537,182 @@
                     updateShopUI();
                 }
             });
+        }
+    });
+}
+
+        // ---------------------------
+        // Scratch Card Logic
+        // ---------------------------
+        let isScratching = false;
+
+        async function buyScratchCard() {
+            if (bankBalance < 5) return;
+
+            myAlertConfirm('🎫 購買幸運刮刮樂', '花費 5 點，親手刮出你的運氣！', (confirmed) => {
+                if (confirmed) {
+                    bankBalance -= 5;
+                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    document.getElementById('bankDisplay').innerText = bankBalance;
+                    updateShopUI();
+
+                    // Determine Prize
+                    const roll = Math.random() * 100;
+                    let prize = {};
+
+                    if (roll > 95) { // Top
+                        prize = { type: 'points', value: 20, text: '20 點大獎!', icon: '🏆', msg: '運氣爆棚！' };
+                    } else if (roll > 80) { // 2nd
+                        prize = { type: 'points', value: 10, text: '10 點', icon: '💰', msg: '不錯喔！賺到了' };
+                    } else if (roll > 40) { // 3rd
+                        prize = { type: 'points', value: 5, text: '5 點', icon: '↩️', msg: '保本成功，再來一張？' };
+                    } else if (roll > 20) { // Consolation
+                        prize = { type: 'item', id: 'hint', name: '提示燈泡', value: 1, text: '1點 + 燈泡', icon: '💡', msg: '沒大獎但不無小補' };
+                    } else { // Lose
+                        prize = { type: 'none', value: 0, text: '銘謝惠顧', icon: '💨', msg: '下次會更好...' };
+                    }
+
+                    initScratchCard(prize);
+                }
+            });
+        }
+
+        function initScratchCard(prizeData) {
+            const modal = document.getElementById('scratchModal');
+            const canvas = document.getElementById('scratchCanvas');
+            const ctx = canvas.getContext('2d');
+            const resultDiv = document.querySelector('.scratch-result');
+            const closeBtn = document.getElementById('scratchCloseBtn');
+
+            // Fill Result
+            let html = `<div class="prize-icon">${prizeData.icon}</div>
+                <h2>${prizeData.text}</h2>
+                <p>${prizeData.msg}</p>`;
+            resultDiv.innerHTML = html;
+
+            // Show Modal
+            modal.style.display = 'flex';
+            closeBtn.style.display = 'none';
+            canvas.style.opacity = '1';
+
+            // Setup Canvas
+            // Must handle high DPI? For now keep simple
+            const rect = canvas.getBoundingClientRect();
+            // Force reset width/height to clear and size correctly
+            canvas.width = 300;
+            canvas.height = 300;
+
+            // Fill Silver Layer
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#C0C0C0';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add Pattern
+            ctx.fillStyle = '#a0a0a0';
+            ctx.font = 'bold 30px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('刮開我', canvas.width / 2, canvas.height / 2);
+
+            for (let i = 0; i < 100; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#b0b0b0' : '#d0d0d0';
+                ctx.beginPath();
+                ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 5 + 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            let isRevealed = false;
+
+            // Handlers
+            function getPos(e) {
+                const r = canvas.getBoundingClientRect();
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+                return {
+                    x: (clientX - r.left) * (canvas.width / r.width),
+                    y: (clientY - r.top) * (canvas.height / r.height)
+                };
+            }
+
+            function scratch(e) {
+                if (!isScratching || isRevealed) return;
+                const pos = getPos(e);
+
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (Math.random() > 0.5) checkProgress();
+            }
+
+            function checkProgress() {
+                if (isRevealed) return;
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                let transparent = 0;
+                // Stride 16
+                for (let i = 0; i < data.length; i += 4 * 16) {
+                    if (data[i + 3] < 128) transparent++;
+                }
+
+                const totalSampled = data.length / (4 * 16);
+                if (transparent / totalSampled > 0.45) {
+                    revealPrize();
+                }
+            }
+
+            function revealPrize() {
+                isRevealed = true;
+                canvas.style.transition = 'opacity 0.8s';
+                canvas.style.opacity = '0';
+                setTimeout(() => {
+                    if (prizeData.type === 'points') {
+                        bankBalance += prizeData.value;
+                    } else if (prizeData.type === 'item') {
+                        bankBalance += prizeData.value;
+                        if (inventory[prizeData.id] < SHOP_ITEMS[prizeData.id].limit) {
+                            inventory[prizeData.id]++;
+                            saveInventory();
+                        } else {
+                            myAlert('背包滿了', `獲得 ${prizeData.name} 但滿了，轉為 2 點積分`, 'info');
+                            bankBalance += 2;
+                        }
+                    }
+                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    document.getElementById('bankDisplay').innerText = bankBalance;
+                    updateShopUI();
+
+                    if (window.confetti && prizeData.value >= 5) {
+                        confetti({
+                            particleCount: 150,
+                            spread: 80,
+                            origin: { y: 0.5 },
+                            zIndex: 20000
+                        });
+                    }
+
+                    closeBtn.style.display = 'block';
+                }, 500);
+            }
+
+            canvas.onmousedown = (e) => { isScratching = true; scratch(e); };
+            canvas.ontouchstart = (e) => { isScratching = true; scratch(e); };
+
+            window.onmousemove = (e) => { if (isScratching) scratch(e); };
+            window.ontouchmove = (e) => { if (isScratching) scratch(e); };
+
+            window.onmouseup = () => { isScratching = false; };
+            window.ontouchend = () => { isScratching = false; };
+        }
+
+        function closeScratchModal() {
+            document.getElementById('scratchModal').style.display = 'none';
         }
 
         function useItem(id) {
@@ -3154,6 +3430,16 @@
             }
         };
     </script>
+    <!-- Scratch Modal -->
+    <div id="scratchModal">
+        <div class="scratch-container">
+            <div class="scratch-result">
+                <!-- Content injected by JS -->
+            </div>
+            <canvas id="scratchCanvas"></canvas>
+        </div>
+        <button id="scratchCloseBtn" onclick="closeScratchModal()">關閉 / 領取</button>
+    </div>
 </body>
 
 </html>

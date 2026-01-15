@@ -17,8 +17,8 @@
             if (msg.toLowerCase().indexOf("script error") > -1) {
                 alert('Script Error: 請檢查 questions.js 是否存在');
             } else {
-                setTimeout(function(){ 
-                    alert('系統錯誤 (Line ' + lineNo + '): ' + msg); 
+                setTimeout(function () {
+                    alert('系統錯誤 (Line ' + lineNo + '): ' + msg);
                 }, 500);
             }
             return false;
@@ -64,189 +64,1176 @@
             user-select: none;
         }
 
-        input, select { -webkit-user-select: text; user-select: text; }
+        input,
+        select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
 
         /* Themes */
-        body.theme-level-1 { --primary: #2e7d32; --bg: #e8f5e9; }
-        body.theme-level-2 { --primary: #0288d1; --bg: #e1f5fe; }
-        body.theme-level-3 { --primary: #7b1fa2; --bg: #f3e5f5; }
-        body.theme-level-4 { --primary: #fbc02d; --bg: #fffde7; }
+        body.theme-level-1 {
+            --primary: #2e7d32;
+            --bg: #e8f5e9;
+        }
 
-        .container { max-width: 600px; margin: 0 auto; position: relative; z-index: 1; }
+        body.theme-level-2 {
+            --primary: #0288d1;
+            --bg: #e1f5fe;
+        }
+
+        body.theme-level-3 {
+            --primary: #7b1fa2;
+            --bg: #f3e5f5;
+        }
+
+        body.theme-level-4 {
+            --primary: #fbc02d;
+            --bg: #fffde7;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
 
         /* Header */
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: var(--primary); margin: 0; font-size: 1.5rem; line-height: 1.4; transition: color 0.5s; }
-        .header-info { display: inline-flex; justify-content: center; gap: 15px; margin-top: 8px; font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.6); padding: 5px 10px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.1); }
-        .version-tag { font-weight: bold; color: var(--primary); }
-        .time-tag { font-family: monospace; font-weight: bold; }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 1.5rem;
+            line-height: 1.4;
+            transition: color 0.5s;
+        }
+
+        .header-info {
+            display: inline-flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #555;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .version-tag {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .time-tag {
+            font-family: monospace;
+            font-weight: bold;
+        }
 
         /* Level Card */
-        .level-card { background: linear-gradient(135deg, #673ab7, #512da8); color: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3); position: relative; overflow: hidden; }
-        .level-card::after { content: "RPG"; position: absolute; right: -10px; bottom: -15px; font-size: 4rem; font-weight: 900; opacity: 0.1; transform: rotate(-15deg); }
-        .level-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5px; }
-        .level-title { font-size: 1.2rem; font-weight: bold; }
-        .level-badge { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; }
-        .xp-bar-container { background: rgba(0,0,0,0.3); height: 10px; border-radius: 5px; margin-top: 5px; overflow: hidden; }
-        .xp-bar { background: #ffeb3b; height: 100%; width: 0%; transition: width 1s ease; box-shadow: 0 0 5px #ffeb3b; }
-        .xp-text { font-size: 0.8rem; text-align: right; margin-top: 3px; opacity: 0.9; }
+        .level-card {
+            background: linear-gradient(135deg, #673ab7, #512da8);
+            color: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(103, 58, 183, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .level-card::after {
+            content: "RPG";
+            position: absolute;
+            right: -10px;
+            bottom: -15px;
+            font-size: 4rem;
+            font-weight: 900;
+            opacity: 0.1;
+            transform: rotate(-15deg);
+        }
+
+        .level-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 5px;
+        }
+
+        .level-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .level-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+        }
+
+        .xp-bar-container {
+            background: rgba(0, 0, 0, 0.3);
+            height: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .xp-bar {
+            background: #ffeb3b;
+            height: 100%;
+            width: 0%;
+            transition: width 1s ease;
+            box-shadow: 0 0 5px #ffeb3b;
+        }
+
+        .xp-text {
+            font-size: 0.8rem;
+            text-align: right;
+            margin-top: 3px;
+            opacity: 0.9;
+        }
 
         /* General UI */
-        .accordion { background-color: #fff; color: #444; cursor: pointer; padding: 15px; width: 100%; border: none; text-align: left; outline: none; font-size: 1rem; font-weight: bold; transition: 0.4s; border-radius: 12px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; -webkit-tap-highlight-color: transparent; }
-        .accordion.active, .accordion:hover { background-color: #f1f1f1; }
-        .accordion:after { content: '\002B'; color: #777; font-weight: bold; float: right; margin-left: 5px; font-size: 1.2rem; }
-        .accordion.active:after { content: "\2212"; }
-        .panel { padding: 0 18px; background-color: white; max-height: 0; overflow: hidden; transition: max-height 0.2s ease-out; border-radius: 0 0 12px 12px; margin-top: -10px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); }
-        
-        .rule-list { list-style-type: none; padding: 0; }
-        .rule-list li { margin-bottom: 8px; padding-left: 20px; position: relative; font-size: 0.9rem; line-height: 1.5; }
-        .rule-list li::before { content: "•"; position: absolute; left: 0; color: var(--primary); font-weight: bold; }
-        .rule-section-title { font-weight: bold; color: var(--primary); margin-top: 15px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
-        .definition-box { background-color: rgba(255, 255, 255, 0.8); color: #0d47a1; padding: 8px 15px; border-radius: 8px; margin-top: 10px; font-size: 0.95rem; display: inline-block; border: 1px solid #bbdefb; }
+        .accordion {
+            background-color: #fff;
+            color: #444;
+            cursor: pointer;
+            padding: 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: 0.4s;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        .card { background: var(--card-bg); border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); transition: all 0.3s; border-top: 4px solid transparent; }
-        .card.locked { opacity: 0.6; pointer-events: none; background-color: #f5f5f5; }
-        body.theme-level-1 .card { border-top-color: #2e7d32; }
-        body.theme-level-2 .card { border-top-color: #0288d1; }
-        body.theme-level-3 .card { border-top-color: #7b1fa2; }
-        body.theme-level-4 .card { border-top-color: #fbc02d; }
-        .card-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .accordion.active,
+        .accordion:hover {
+            background-color: #f1f1f1;
+        }
 
-        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-tool { flex: 1; padding: 10px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); }
-        .btn-save-draft { background-color: #607d8b; }
-        .btn-load-draft { background-color: #ff9800; }
-        .btn-clear-form { background-color: #9e9e9e; }
+        .accordion:after {
+            content: '\002B';
+            color: #777;
+            font-weight: bold;
+            float: right;
+            margin-left: 5px;
+            font-size: 1.2rem;
+        }
 
-        #lockBanner { background-color: #ffebee; border: 2px solid var(--danger); color: var(--danger); padding: 15px; border-radius: 12px; margin-bottom: 15px; text-align: center; display: none; }
-        .btn-unlock { background-color: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; font-size: 0.9rem; }
+        .accordion.active:after {
+            content: "\2212";
+        }
 
-        .progress-container { background-color: #eee; border-radius: 10px; height: 30px; width: 100%; margin-bottom: 20px; overflow: hidden; position: relative; box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2); }
-        .progress-bar { background-color: var(--primary); height: 100%; width: 0%; transition: width 0.5s ease, background-color 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.95rem; font-weight: bold; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
-        .progress-text { text-align: center; font-size: 1rem; margin-bottom: 5px; font-weight: bold; color: var(--primary); transition: color 0.5s; }
+        .panel {
+            padding: 0 18px;
+            background-color: white;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            border-radius: 0 0 12px 12px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
 
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { flex: 1; padding: 12px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.3s; }
-        .mode-btn.active { background: var(--primary); color: white; }
+        .rule-list {
+            list-style-type: none;
+            padding: 0;
+        }
 
-        .badge-bonus { background: #bbdefb; color: var(--math-color); border: 1px solid var(--math-color); font-weight: bold; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
-        .badge-point { background: #fff3e0; color: var(--warning); border: 1px solid var(--warning); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
-        .badge-penalty { background: #ffebee; color: var(--danger); border: 1px solid var(--danger); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
-        .badge-required { background: #ffebee; color: #d32f2f; border: 1px solid #d32f2f; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
-        .badge-exempt { background: #e8f5e9; color: #2e7d32; border: 1px solid #2e7d32; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 5px; }
+        .rule-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
 
-        .bedtime-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 8px; margin-bottom: 10px; }
-        .bedtime-bonus { background-color: #f3e5f5; border: 1px solid #e1bee7; }
-        .bedtime-penalty { background-color: #fff3e0; border: 1px solid #ffe0b2; }
+        .rule-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
 
-        .input-row { display: flex; gap: 8px; margin-bottom: 8px; }
-        .input-row input[type="text"] { flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
-        .input-row input[type="number"] { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
-        .input-row select { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; background-color: white; font-size: 16px; }
+        .rule-section-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 15px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 3px;
+        }
 
-        .custom-input-area { background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px dashed #0d6efd; margin-bottom: 15px; }
-        .app-input-area { background: var(--app-bg); padding: 15px; border-radius: 8px; border: 1px dashed var(--app-border); margin-bottom: 15px; }
-        .violation-input-area { background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px dashed var(--danger); margin-bottom: 15px; }
+        .definition-box {
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #0d47a1;
+            padding: 8px 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            display: inline-block;
+            border: 1px solid #bbdefb;
+        }
 
-        .btn-add { background: #0d6efd; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .btn-add-app { background: var(--app-border); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        .btn-add-violation { background: var(--danger); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            border-top: 4px solid transparent;
+        }
 
-        .violation-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ffebee; color: var(--danger); }
-        .app-item { display: flex; flex-direction: column; gap: 5px; padding: 10px; border-bottom: 1px solid #b2dfdb; color: #004d40; }
-        .app-item-header { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .app-item-details { display: flex; gap: 10px; font-size: 0.85rem; color: #00695c; }
-        .btn-delete { background: none; border: none; cursor: pointer; font-size: 1.2rem; margin-left: 10px; padding: 5px; }
+        .card.locked {
+            opacity: 0.6;
+            pointer-events: none;
+            background-color: #f5f5f5;
+        }
 
-        .task-group-title { font-size: 0.9rem; color: #666; background: #eee; padding: 5px 10px; border-radius: 4px; margin-top: 15px; font-weight: bold; }
-        .task-item { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
-        input[type="checkbox"] { width: 24px; height: 24px; margin-right: 15px; accent-color: var(--primary); cursor: pointer; }
-        .task-label { font-size: 1rem; flex: 1; cursor: pointer; }
+        body.theme-level-1 .card {
+            border-top-color: #2e7d32;
+        }
 
-        .rule-desc { font-size: 0.85rem; color: #444; margin-top: 5px; line-height: 1.5; padding: 10px; border-radius: 6px; text-align: justify; }
-        .rule-desc.warning { background: #fff3e0; border-left: 4px solid var(--warning); }
-        .rule-desc.info { background: var(--info-bg); border-left: 4px solid var(--info-border); }
+        body.theme-level-2 .card {
+            border-top-color: #0288d1;
+        }
 
-        .penalty-input-group { display: flex; gap: 10px; align-items: center; margin-top: 15px; }
-        .penalty-input-group input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 8px; width: 60px; font-size: 1rem; text-align: center; }
+        body.theme-level-3 .card {
+            border-top-color: #7b1fa2;
+        }
 
-        .exam-row { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 8px; }
-        .exam-row.math { background: #e3f2fd; border: 1px solid #bbdefb; }
-        .exam-input-group { display: flex; align-items: center; gap: 5px; }
-        .exam-input-group input { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #ddd; text-align: center; font-size: 16px; }
+        body.theme-level-4 .card {
+            border-top-color: #fbc02d;
+        }
 
-        .result-box { background: #fafafa; padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; display: none; transition: all 0.3s; }
-        .result-box.pass { background: #e8f5e9; border: 2px solid var(--success); color: var(--success); display: block; }
-        .result-box.fail { background: #ffebee; border: 2px solid var(--danger); color: var(--danger); display: block; }
+        .card-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 8px;
+        }
 
-        .btn-submit { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; margin-top: 10px; transition: background 0.3s; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-        .btn-submit.locked { background-color: #aaa; cursor: not-allowed; }
-        .btn-submit:active { transform: scale(0.98); }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
 
-        .csv-actions { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-csv { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; color: white; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
-        .btn-export { background-color: var(--btn-blue); }
-        .btn-import { background-color: #6c757d; position: relative; overflow: hidden; }
-        .btn-import input[type="file"] { position: absolute; left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .btn-tool {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
 
-        .history-log { font-size: 0.9rem; color: #666; margin-top: 10px; max-height: 350px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .history-item { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-bottom: 5px; }
-        .trophy-icon { font-size: 1.3rem; margin-right: 8px; }
-        .history-item.rank-1 { background-color: #fffde7; border: 1px solid #fbc02d; border-left: 5px solid #fbc02d; color: #333; box-shadow: 0 2px 5px rgba(251, 192, 45, 0.2); }
-        .history-item.rank-2 { background-color: #f5f5f5; border: 1px solid #9e9e9e; border-left: 5px solid #9e9e9e; color: #333; }
-        .history-item.rank-3 { background-color: #ffe0b2; border: 1px solid #ef6c00; border-left: 5px solid #ef6c00; color: #333; }
+        .btn-save-draft {
+            background-color: #607d8b;
+        }
+
+        .btn-load-draft {
+            background-color: #ff9800;
+        }
+
+        .btn-clear-form {
+            background-color: #9e9e9e;
+        }
+
+        #lockBanner {
+            background-color: #ffebee;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .btn-unlock {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        .progress-container {
+            background-color: #eee;
+            border-radius: 10px;
+            height: 30px;
+            width: 100%;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .progress-bar {
+            background-color: var(--primary);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease, background-color 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: bold;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--primary);
+            transition: color 0.5s;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .badge-bonus {
+            background: #bbdefb;
+            color: var(--math-color);
+            border: 1px solid var(--math-color);
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .badge-point {
+            background: #fff3e0;
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .badge-penalty {
+            background: #ffebee;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-required {
+            background: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #d32f2f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+
+        .badge-exempt {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #2e7d32;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+
+        .bedtime-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .bedtime-bonus {
+            background-color: #f3e5f5;
+            border: 1px solid #e1bee7;
+        }
+
+        .bedtime-penalty {
+            background-color: #fff3e0;
+            border: 1px solid #ffe0b2;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .input-row input[type="text"] {
+            flex: 2;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .input-row input[type="number"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .input-row select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            font-size: 16px;
+        }
+
+        .custom-input-area {
+            background: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #0d6efd;
+            margin-bottom: 15px;
+        }
+
+        .app-input-area {
+            background: var(--app-bg);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--app-border);
+            margin-bottom: 15px;
+        }
+
+        .violation-input-area {
+            background: #fff5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--danger);
+            margin-bottom: 15px;
+        }
+
+        .btn-add {
+            background: #0d6efd;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-add-app {
+            background: var(--app-border);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .btn-add-violation {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .violation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ffebee;
+            color: var(--danger);
+        }
+
+        .app-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            padding: 10px;
+            border-bottom: 1px solid #b2dfdb;
+            color: #004d40;
+        }
+
+        .app-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .app-item-details {
+            display: flex;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #00695c;
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 10px;
+            padding: 5px;
+        }
+
+        .task-group-title {
+            font-size: 0.9rem;
+            color: #666;
+            background: #eee;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .task-label {
+            font-size: 1rem;
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .rule-desc {
+            font-size: 0.85rem;
+            color: #444;
+            margin-top: 5px;
+            line-height: 1.5;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: justify;
+        }
+
+        .rule-desc.warning {
+            background: #fff3e0;
+            border-left: 4px solid var(--warning);
+        }
+
+        .rule-desc.info {
+            background: var(--info-bg);
+            border-left: 4px solid var(--info-border);
+        }
+
+        .penalty-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .penalty-input-group input[type="number"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 60px;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        .exam-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .exam-row.math {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+        }
+
+        .exam-input-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .exam-input-group input {
+            width: 50px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .result-box {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+            transition: all 0.3s;
+        }
+
+        .result-box.pass {
+            background: #e8f5e9;
+            border: 2px solid var(--success);
+            color: var(--success);
+            display: block;
+        }
+
+        .result-box.fail {
+            background: #ffebee;
+            border: 2px solid var(--danger);
+            color: var(--danger);
+            display: block;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-submit.locked {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        .csv-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-csv {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-export {
+            background-color: var(--btn-blue);
+        }
+
+        .btn-import {
+            background-color: #6c757d;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-import input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .history-log {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .history-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 6px;
+            margin-bottom: 5px;
+        }
+
+        .trophy-icon {
+            font-size: 1.3rem;
+            margin-right: 8px;
+        }
+
+        .history-item.rank-1 {
+            background-color: #fffde7;
+            border: 1px solid #fbc02d;
+            border-left: 5px solid #fbc02d;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(251, 192, 45, 0.2);
+        }
+
+        .history-item.rank-2 {
+            background-color: #f5f5f5;
+            border: 1px solid #9e9e9e;
+            border-left: 5px solid #9e9e9e;
+            color: #333;
+        }
+
+        .history-item.rank-3 {
+            background-color: #ffe0b2;
+            border: 1px solid #ef6c00;
+            border-left: 5px solid #ef6c00;
+            color: #333;
+        }
 
         /* Certificate & Shop */
-        .swal-certificate { background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%); border: 8px double #D4AF37; padding: 20px; text-align: center; font-family: "Times New Roman", serif; color: #333; position: relative; }
-        .cert-title { font-size: 1.8rem; font-weight: bold; color: #D4AF37; margin-bottom: 10px; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); }
-        .cert-body { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; }
-        .cert-date { font-size: 1.2rem; font-weight: bold; color: #2e7d32; margin-top: 10px; background: #e8f5e9; display: inline-block; padding: 5px 15px; border-radius: 20px; }
-        .cert-selfie-img { width: 140px; height: 140px; object-fit: cover; border-radius: 50%; border: 4px solid #D4AF37; margin-bottom: 10px; display: block; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); animation: bounce 2s infinite; }
-        .swal-certificate.frame-gold { position: relative; z-index: 1; overflow: hidden; border: 4px solid transparent; }
-        .swal-certificate.frame-gold::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: conic-gradient(transparent, #ffd700, transparent, #ffd700, transparent); animation: rotate-frame 4s linear infinite; z-index: -1; }
-        @keyframes rotate-frame { 100% { transform: rotate(1turn); } }
-        .swal-certificate.frame-gold::after { content: ''; position: absolute; inset: 8px; background: white; z-index: -1; border-radius: 8px; }
-        .cert-logo-img { width: 120px; height: auto; margin-bottom: 10px; margin: 0 auto 10px auto; display: block; animation: bounce 2s infinite; filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.1)); }
-        .cert-stamp { display: inline-block; border: 4px solid #d32f2f; color: #d32f2f; padding: 5px 15px; font-size: 1.2rem; font-weight: bold; transform: rotate(-15deg); margin: 20px; border-radius: 10px; text-shadow: none; }
+        .swal-certificate {
+            background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+            border: 8px double #D4AF37;
+            padding: 20px;
+            text-align: center;
+            font-family: "Times New Roman", serif;
+            color: #333;
+            position: relative;
+        }
 
-        .inventory-bar { background: #fff; border-bottom: 2px solid #ddd; padding: 8px 15px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; font-size: 0.9rem; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); }
-        .inventory-item { display: flex; align-items: center; gap: 5px; font-weight: bold; }
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
-        .shop-item { background: #fff; border: 2px solid #eee; border-radius: 10px; padding: 10px; text-align: center; transition: all 0.2s; display: flex; flex-direction: column; justify-content: space-between; }
-        .shop-item:hover { transform: translateY(-2px); border-color: var(--primary); }
-        .shop-icon { font-size: 2rem; margin-bottom: 5px; }
-        .shop-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 3px; }
-        .shop-price { color: #e65100; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; }
-        .shop-limit { font-size: 0.75rem; color: #888; margin-bottom: 8px; }
-        .btn-buy { background: var(--primary); color: white; border: none; padding: 6px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; font-weight: bold; }
-        .btn-buy:disabled { background: #ccc; cursor: not-allowed; }
+        .cert-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #D4AF37;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
 
-        .quiz-tools { display: flex; gap: 10px; margin-bottom: 15px; }
-        .btn-use-item { flex: 1; padding: 8px; border-radius: 8px; border: 2px solid #9c27b0; background: #fff; color: #7b1fa2; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
-        .btn-use-item:disabled { opacity: 0.5; border-color: #ccc; color: #888; }
+        .cert-body {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin: 20px 0;
+        }
 
-        .cert-breakdown { margin: 15px auto; max-width: 90%; text-align: left; font-size: 0.9rem; color: #555; background: rgba(255, 255, 255, 0.6); padding: 10px; border-radius: 8px; border: 1px dashed #D4AF37; }
-        .breakdown-item { display: flex; justify-content: space-between; margin-bottom: 3px; border-bottom: 1px dotted #eee; }
-        .breakdown-item.penalty { color: #d32f2f; }
-        .breakdown-item.bonus { color: #2e7d32; font-weight: bold; }
-        .breakdown-item.bank { color: #00897b; }
-        .breakdown-total { display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: #333; border-top: 2px solid #D4AF37; padding-top: 5px; }
+        .cert-date {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-top: 10px;
+            background: #e8f5e9;
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
 
-        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+        .cert-selfie-img {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #D4AF37;
+            margin-bottom: 10px;
+            display: block;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: bounce 2s infinite;
+        }
 
-        .parent-auth-area { background: #ffebee; border: 1px dashed var(--danger); padding: 15px; border-radius: 8px; margin-top: 10px; }
-        .auth-label { font-weight: bold; color: var(--danger); display: block; margin-bottom: 10px; }
-        .radio-group { display: flex; gap: 15px; margin-bottom: 15px; }
-        .radio-group label { cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .pwd-input { width: 100%; padding: 10px; border: 1px solid var(--danger); border-radius: 6px; margin-top: 10px; font-size: 16px; }
+        .swal-certificate.frame-gold {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            border: 4px solid transparent;
+        }
 
-        .unlock-card { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-left: 5px solid #9c27b0; border-radius: 12px; padding: 15px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(156, 39, 176, 0.1); }
-        .unlock-item { display: flex; align-items: center; justify-content: space-between; background: rgba(255, 255, 255, 0.6); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid rgba(156, 39, 176, 0.2); }
-        .unlock-item.completed { background: #e8f5e9; border-color: #2e7d32; }
-        .unlock-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
-        .unlock-badge.pending { background: #fff3e0; color: #ef6c00; }
-        .unlock-badge.done { background: #c8e6c9; color: #2e7d32; }
-        .bonus-tag { color: #9c27b0; font-weight: bold; font-size: 0.9rem; }
+        .swal-certificate.frame-gold::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, #ffd700, transparent, #ffd700, transparent);
+            animation: rotate-frame 4s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate-frame {
+            100% {
+                transform: rotate(1turn);
+            }
+        }
+
+        .swal-certificate.frame-gold::after {
+            content: '';
+            position: absolute;
+            inset: 8px;
+            background: white;
+            z-index: -1;
+            border-radius: 8px;
+        }
+
+        .cert-logo-img {
+            width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+            margin: 0 auto 10px auto;
+            display: block;
+            animation: bounce 2s infinite;
+            filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.1));
+        }
+
+        .cert-stamp {
+            display: inline-block;
+            border: 4px solid #d32f2f;
+            color: #d32f2f;
+            padding: 5px 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transform: rotate(-15deg);
+            margin: 20px;
+            border-radius: 10px;
+            text-shadow: none;
+        }
+
+        .inventory-bar {
+            background: #fff;
+            border-bottom: 2px solid #ddd;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .shop-item {
+            background: #fff;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary);
+        }
+
+        .shop-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+
+        .shop-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .shop-price {
+            color: #e65100;
+            font-weight: bold;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .shop-limit {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        .btn-buy {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .btn-buy:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .quiz-tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-use-item {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 2px solid #9c27b0;
+            background: #fff;
+            color: #7b1fa2;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .btn-use-item:disabled {
+            opacity: 0.5;
+            border-color: #ccc;
+            color: #888;
+        }
+
+        .cert-breakdown {
+            margin: 15px auto;
+            max-width: 90%;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #555;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px dashed #D4AF37;
+        }
+
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            border-bottom: 1px dotted #eee;
+        }
+
+        .breakdown-item.penalty {
+            color: #d32f2f;
+        }
+
+        .breakdown-item.bonus {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        .breakdown-item.bank {
+            color: #00897b;
+        }
+
+        .breakdown-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-weight: bold;
+            color: #333;
+            border-top: 2px solid #D4AF37;
+            padding-top: 5px;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .parent-auth-area {
+            background: #ffebee;
+            border: 1px dashed var(--danger);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .auth-label {
+            font-weight: bold;
+            color: var(--danger);
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .radio-group label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pwd-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--danger);
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+
+        .unlock-card {
+            background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+            border-left: 5px solid #9c27b0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(156, 39, 176, 0.1);
+        }
+
+        .unlock-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(156, 39, 176, 0.2);
+        }
+
+        .unlock-item.completed {
+            background: #e8f5e9;
+            border-color: #2e7d32;
+        }
+
+        .unlock-badge {
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .unlock-badge.pending {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .unlock-badge.done {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .bonus-tag {
+            color: #9c27b0;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 
@@ -295,7 +1282,8 @@
                     <li><strong>🧠 腦力激盪 (必做)：</strong>
                         <ul style="margin-top:5px;">
                             <li>每日必須參與，<span id="ruleQuizRequirement" style="color:var(--danger)">未達標將視為未完成。</span></li>
-                            <li><span style="color:var(--math-color)">新增規則：</span>數學題必須佔當日答對題數的 <strong>50%</strong> 以上。</li>
+                            <li><span style="color:var(--math-color)">新增規則：</span>數學題必須佔當日答對題數的 <strong>50%</strong> 以上。
+                            </li>
                         </ul>
                     </li>
                     <li><strong>🔥 答題神人獎勵：</strong>單日累積答對 <strong>30 題</strong>，直接獲得 <strong>30 點</strong> (神級獎勵)。</li>
@@ -674,7 +1662,8 @@
                             <div class="shop-price">3 點</div>
                             <div class="shop-limit">博機率!</div>
                         </div>
-                        <button class="btn-buy" id="buy_gacha" onclick="buyGacha()" style="background:#9c27b0;">抽獎</button>
+                        <button class="btn-buy" id="buy_gacha" onclick="buyGacha()"
+                            style="background:#9c27b0;">抽獎</button>
                     </div>
                     <div class="shop-item">
                         <div>
@@ -771,7 +1760,7 @@
         const TARGET_SCORE = 6;
         const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 750, 1050, 1400, 1800, 2500];
         const LEVEL_TITLES = ["初心者", "見習生", "冒險者", "精英", "3C 達人", "時間管理者", "學霸", "大師", "宗師", "傳說"];
-        
+
         let currentMode = 'weekday';
         let historyData = [];
         let customTasks = [];
@@ -785,17 +1774,17 @@
         let quizCorrectCountToday = 0;
         let quizMathCountToday = 0;
         let currentQuestionSubject = '';
-        
+
         const QUIZ_DAILY_LIMIT = 2;
         const QUIZ_TARGET_HIGH = 30;
         let questionBank = [];
         let unlockTasksToday = [];
-        
+
         // Globals - Safe Init
         let shopEnabled = true;
         let inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 };
         let keyLastPurchaseDate = 0;
-        
+
         const SHOP_ITEMS = {
             skip: { name: '換題券', price: 5, limit: 2, icon: '🎟️' },
             hint: { name: '提示燈泡', price: 3, limit: 2, icon: '💡' },
@@ -807,15 +1796,15 @@
 
         // --- Helpers Defined BEFORE usage ---
         function myAlert(title, text, icon) {
-            if(window.Swal) {
+            if (window.Swal) {
                 Swal.fire({ title, text, icon });
             } else {
                 alert(`${title}\n${text}`);
             }
         }
-        
+
         function myAlertConfirm(title, text, callback) {
-            if(window.Swal) {
+            if (window.Swal) {
                 Swal.fire({
                     title: title, text: text, icon: 'question',
                     showCancelButton: true, confirmButtonText: '確定'
@@ -837,7 +1826,7 @@
 
         function renderResultBox(earned, final, missing, totalPenalty, bankTx) {
             const resultArea = document.getElementById('resultArea');
-            if(!resultArea) return;
+            if (!resultArea) return;
             resultArea.className = 'result-box';
             let html = '';
 
@@ -860,33 +1849,33 @@
 
         function triggerCelebration(score) {
             let title = "", icon = "success";
-            if (score === 6) { title = "太棒了！點數已達標 (6分)！"; if(window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
-            else if (score === 7) { title = "太強了！超越極限 (7分)！"; icon = "info"; if(window.confetti) confetti({ shapes: ['star'], particleCount: 150, spread: 80, colors: ['#00BFFF', '#1E90FF'] }); }
+            if (score === 6) { title = "太棒了！點數已達標 (6分)！"; if (window.confetti) confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } }); }
+            else if (score === 7) { title = "太強了！超越極限 (7分)！"; icon = "info"; if (window.confetti) confetti({ shapes: ['star'], particleCount: 150, spread: 80, colors: ['#00BFFF', '#1E90FF'] }); }
             else if (score === 8) {
                 title = "不可思議！你是超人嗎 (8分)？"; icon = "warning";
                 var end = Date.now() + 1000, colors = ['#bb0000', '#ffffff'];
-                (function frame() { if(window.confetti) confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors }); if(window.confetti) confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors }); if (Date.now() < end) requestAnimationFrame(frame); }());
+                (function frame() { if (window.confetti) confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors }); if (window.confetti) confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors }); if (Date.now() < end) requestAnimationFrame(frame); }());
             }
             else if (score >= 9) {
                 title = "傳說級表現！已登峰造極 (9分+)！"; icon = "question";
                 var duration = 3000, end = Date.now() + duration;
-                var interval = setInterval(function () { if (Date.now() > end) return clearInterval(interval); if(window.confetti) confetti({ particleCount: 50 * ((end - Date.now()) / duration), startVelocity: 30, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } }); }, 250);
+                var interval = setInterval(function () { if (Date.now() > end) return clearInterval(interval); if (window.confetti) confetti({ particleCount: 50 * ((end - Date.now()) / duration), startVelocity: 30, spread: 360, origin: { x: Math.random(), y: Math.random() - 0.2 } }); }, 250);
             }
-            if(window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
+            if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
         function safeLoadData() {
             try {
                 const saved = localStorage.getItem('senhuai_history_v41');
                 if (saved) historyData = JSON.parse(saved);
-            } catch(e) { console.warn("History Corrupt"); historyData = []; }
+            } catch (e) { console.warn("History Corrupt"); historyData = []; }
 
             try {
                 const savedBank = localStorage.getItem('senhuai_bank_v46');
                 if (savedBank) bankBalance = parseInt(savedBank);
                 const bankDisp = document.getElementById('bankDisplay');
-                if(bankDisp) bankDisp.innerText = bankBalance;
-            } catch(e) { bankBalance = 0; }
+                if (bankDisp) bankDisp.innerText = bankBalance;
+            } catch (e) { bankBalance = 0; }
 
             try {
                 const savedQuiz = localStorage.getItem('senhuai_quiz_today');
@@ -899,7 +1888,7 @@
                     }
                 }
                 updateQuizUI();
-            } catch(e) { quizScoreToday = 0; }
+            } catch (e) { quizScoreToday = 0; }
 
             try {
                 const savedUnlock = localStorage.getItem('senhuai_unlock_today');
@@ -915,20 +1904,20 @@
                 } else {
                     pickNewUnlockTasks();
                 }
-            } catch(e) { pickNewUnlockTasks(); }
-            
+            } catch (e) { pickNewUnlockTasks(); }
+
             try {
                 let invData = localStorage.getItem('senhuai_inventory_v48');
-                if(invData) inventory = JSON.parse(invData);
-                if(!inventory.skip) inventory.skip = 0;
-                if(!inventory.hint) inventory.hint = 0;
-                if(!inventory.key) inventory.key = 0;
-                if(!inventory.shield) inventory.shield = 0;
-            } catch(e) { 
-                console.warn("Inventory Reset"); 
-                inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 }; 
+                if (invData) inventory = JSON.parse(invData);
+                if (!inventory.skip) inventory.skip = 0;
+                if (!inventory.hint) inventory.hint = 0;
+                if (!inventory.key) inventory.key = 0;
+                if (!inventory.shield) inventory.shield = 0;
+            } catch (e) {
+                console.warn("Inventory Reset");
+                inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 };
             }
-            
+
             shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
             keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
         }
@@ -936,7 +1925,7 @@
         function updateClock() {
             const now = new Date();
             const clock = document.getElementById('liveClock');
-            if(clock) clock.innerText = now.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+            if (clock) clock.innerText = now.toLocaleString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
             if (now.getSeconds() === 0) checkDeadline();
         }
 
@@ -993,7 +1982,7 @@
                 isFormLocked = false;
                 isUnlockedByParent = true;
                 const ol = document.getElementById('lockOverlay');
-                if(ol) ol.remove();
+                if (ol) ol.remove();
                 myAlert('已解鎖', '表單已暫時開放填寫', 'success');
             } else {
                 myAlert('密碼錯誤', '請輸入正確的家長密碼', 'error');
@@ -1002,17 +1991,17 @@
 
         function updateLevelUI() {
             let totalXp = historyData.reduce((acc, curr) => acc + (parseFloat(curr.finalScore) || 0), 0);
-            if(totalXp < 0) totalXp = 0;
+            if (totalXp < 0) totalXp = 0;
 
             let currentLevel = 1;
-            for(let i=0; i<LEVEL_THRESHOLDS.length; i++) {
-                if(totalXp >= LEVEL_THRESHOLDS[i]) currentLevel = i + 1;
+            for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+                if (totalXp >= LEVEL_THRESHOLDS[i]) currentLevel = i + 1;
                 else break;
             }
-            if(currentLevel > LEVEL_THRESHOLDS.length) currentLevel = LEVEL_THRESHOLDS.length;
+            if (currentLevel > LEVEL_THRESHOLDS.length) currentLevel = LEVEL_THRESHOLDS.length;
 
             const prevThreshold = LEVEL_THRESHOLDS[currentLevel - 1];
-            const nextThreshold = LEVEL_THRESHOLDS[currentLevel] || (LEVEL_THRESHOLDS[currentLevel-1] * 1.5);
+            const nextThreshold = LEVEL_THRESHOLDS[currentLevel] || (LEVEL_THRESHOLDS[currentLevel - 1] * 1.5);
             const levelRange = nextThreshold - prevThreshold;
             const currentProgress = totalXp - prevThreshold;
             const percentage = Math.min(100, Math.max(0, (currentProgress / levelRange) * 100));
@@ -1020,12 +2009,12 @@
             const lvlVal = document.getElementById('levelValue');
             const lvlTitle = document.getElementById('levelTitle');
             const xpBar = document.getElementById('xpBar');
-            
-            if(lvlVal) lvlVal.innerText = currentLevel;
-            if(lvlTitle) lvlTitle.innerText = LEVEL_TITLES[currentLevel - 1] || "傳說";
-            if(document.getElementById('totalXp')) document.getElementById('totalXp').innerText = Math.floor(totalXp);
-            if(document.getElementById('nextLevelXp')) document.getElementById('nextLevelXp').innerText = nextThreshold;
-            if(xpBar) xpBar.style.width = percentage + "%";
+
+            if (lvlVal) lvlVal.innerText = currentLevel;
+            if (lvlTitle) lvlTitle.innerText = LEVEL_TITLES[currentLevel - 1] || "傳說";
+            if (document.getElementById('totalXp')) document.getElementById('totalXp').innerText = Math.floor(totalXp);
+            if (document.getElementById('nextLevelXp')) document.getElementById('nextLevelXp').innerText = nextThreshold;
+            if (xpBar) xpBar.style.width = percentage + "%";
         }
 
         function pickNewUnlockTasks() {
@@ -1051,8 +2040,8 @@
         function renderUnlockCards() {
             const container = document.getElementById('unlockTaskList');
             const card = document.getElementById('unlockCard');
-            if(!container || !card) return;
-            
+            if (!container || !card) return;
+
             if (unlockTasksToday.length === 0) {
                 card.style.display = 'none';
                 return;
@@ -1078,21 +2067,21 @@
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
             if (mode === 'weekday') {
                 const btn = document.querySelectorAll('.mode-btn')[0];
-                if(btn) btn.classList.add('active');
-                if(document.getElementById('listTitle')) document.getElementById('listTitle').innerText = "日常任務清單";
-                if(document.getElementById('bedtimeEarlyRow')) document.getElementById('bedtimeEarlyRow').style.display = 'flex';
+                if (btn) btn.classList.add('active');
+                if (document.getElementById('listTitle')) document.getElementById('listTitle').innerText = "日常任務清單";
+                if (document.getElementById('bedtimeEarlyRow')) document.getElementById('bedtimeEarlyRow').style.display = 'flex';
                 renderTasks(tasks.weekday, false);
             } else {
                 const btn = document.querySelectorAll('.mode-btn')[1];
-                if(btn) btn.classList.add('active');
-                if(document.getElementById('listTitle')) document.getElementById('listTitle').innerText = "假日綜合清單";
-                if(document.getElementById('bedtimeEarlyRow')) document.getElementById('bedtimeEarlyRow').style.display = 'none';
+                if (btn) btn.classList.add('active');
+                if (document.getElementById('listTitle')) document.getElementById('listTitle').innerText = "假日綜合清單";
+                if (document.getElementById('bedtimeEarlyRow')) document.getElementById('bedtimeEarlyRow').style.display = 'none';
                 const early = document.getElementById('bedtimeEarly');
-                if(early) early.checked = false;
+                if (early) early.checked = false;
                 renderTasks([], true);
             }
             checkStatus();
-            if(window.Swal) {
+            if (window.Swal) {
                 Swal.fire({
                     title: mode === 'weekday' ? '📅 已切換至平日模式' : '⚽ 已切換至假日模式',
                     toast: true, position: 'top', showConfirmButton: false, timer: 1000,
@@ -1103,7 +2092,7 @@
 
         function renderTasks(taskList, showGroups) {
             const container = document.getElementById('taskList');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '';
             if (showGroups) {
                 const title1 = document.createElement('div'); title1.className = 'task-group-title'; title1.innerText = '平日基礎'; container.appendChild(title1);
@@ -1133,29 +2122,29 @@
 
         function updateQuizUI() {
             const scoreEl = document.getElementById('quizTodayScore');
-            if(scoreEl) scoreEl.innerText = quizScoreToday;
-            
+            if (scoreEl) scoreEl.innerText = quizScoreToday;
+
             const streakArea = document.getElementById('quizStreakDisplay');
             const streakSpan = document.getElementById('quizCurrentCount');
             const mathSpan = document.getElementById('mathCountDisplay');
             const startArea = document.getElementById('quizStartArea');
             const cooldownMsg = document.getElementById('quizCooldownMsg');
-            
+
             const reqText = document.getElementById('quizRequirementText');
             const ruleText = document.getElementById('ruleQuizRequirement');
-            
+
             const isHardMode = Date.now() < HARD_MODE_DEADLINE;
-            
+
             if (reqText) {
                 if (isHardMode) {
-                     reqText.innerHTML = `最低要求：30 題 <span style='font-size:0.8rem'>(特訓期間)</span>`;
-                     reqText.style.color = '#d32f2f'; 
+                    reqText.innerHTML = `最低要求：30 題 <span style='font-size:0.8rem'>(特訓期間)</span>`;
+                    reqText.style.color = '#d32f2f';
                 } else {
-                     reqText.innerText = "最低要求：2 點 (8題)。";
-                     reqText.style.color = '#d32f2f';
+                    reqText.innerText = "最低要求：2 點 (8題)。";
+                    reqText.style.color = '#d32f2f';
                 }
             }
-            
+
             if (ruleText) {
                 if (isHardMode) {
                     ruleText.innerHTML = `特訓期間未達 <strong style="color:red">30 題</strong> 將視為未完成。`;
@@ -1168,10 +2157,10 @@
                 if (quizCorrectCountToday > 0 && quizScoreToday < 30) {
                     streakArea.style.display = 'block';
                     streakSpan.innerText = quizCorrectCountToday;
-                    
+
                     let mathPct = quizCorrectCountToday > 0 ? Math.round((quizMathCountToday / quizCorrectCountToday) * 100) : 0;
                     let warning = mathPct < 50 ? "⚠️" : "✅";
-                    if(mathSpan) {
+                    if (mathSpan) {
                         mathSpan.innerText = `數學：${quizMathCountToday} (${mathPct}%) ${warning}`;
                         mathSpan.style.color = mathPct < 50 ? '#d32f2f' : '#2e7d32';
                     }
@@ -1184,7 +2173,7 @@
                 const startBtn = startArea.querySelector('button');
                 if (quizScoreToday >= 30) {
                     startArea.style.display = 'block';
-                    if(startBtn) {
+                    if (startBtn) {
                         startBtn.disabled = true;
                         startBtn.innerText = '🔥 毅力驚人：30 點達成！';
                         startBtn.style.backgroundColor = '#f57f17';
@@ -1193,20 +2182,20 @@
                     cooldownMsg.innerText = "太強了！已答對 30 題，獲得神級獎勵！";
                 } else if (quizScoreToday >= QUIZ_DAILY_LIMIT) {
                     startArea.style.display = 'block';
-                    if(startBtn) {
+                    if (startBtn) {
                         startBtn.disabled = false;
                         startBtn.innerText = isHardMode ? `⚠️ 尚未達標 (${quizCorrectCountToday}/30)` : '✅ 基礎已滿，繼續挑戰？';
-                        startBtn.style.backgroundColor = isHardMode ? '#ef5350' : '#66bb6a'; 
+                        startBtn.style.backgroundColor = isHardMode ? '#ef5350' : '#66bb6a';
                     }
                     cooldownMsg.style.display = 'block';
                     cooldownMsg.innerHTML = `距離大獎還差 <strong>${30 - quizCorrectCountToday}</strong> 題！`;
                 } else {
-                     if(startBtn) {
+                    if (startBtn) {
                         startBtn.disabled = false;
                         startBtn.innerText = '🚀 開始挑戰';
                         startBtn.style.backgroundColor = '#ab47bc';
-                     }
-                     cooldownMsg.style.display = 'none';
+                    }
+                    cooldownMsg.style.display = 'none';
                 }
             }
             updateQuizTools();
@@ -1219,8 +2208,8 @@
                 tools.style.display = 'flex';
                 const skipBtn = document.getElementById('useSkipBtn');
                 const hintBtn = document.getElementById('useHintBtn');
-                if(skipBtn) skipBtn.disabled = inventory.skip <= 0;
-                if(hintBtn) hintBtn.disabled = inventory.hint <= 0;
+                if (skipBtn) skipBtn.disabled = inventory.skip <= 0;
+                if (hintBtn) hintBtn.disabled = inventory.hint <= 0;
             } else if (tools) {
                 tools.style.display = 'none';
             }
@@ -1237,7 +2226,7 @@
 
             const qIdx = Math.floor(Math.random() * questionBank.length);
             const q = questionBank[qIdx];
-            
+
             currentQuestionSubject = q.s;
 
             document.getElementById('quizSubject').innerText = q.s;
@@ -1270,25 +2259,25 @@
             if (isCorrect) {
                 btnElement.style.backgroundColor = '#dcedc8';
                 quizCorrectCountToday++;
-                
-                if(currentQuestionSubject === '數學') {
+
+                if (currentQuestionSubject === '數學') {
                     quizMathCountToday++;
                 }
-                
+
                 if (quizScoreToday < QUIZ_DAILY_LIMIT) {
                     quizScoreToday += 0.25;
                 }
-                
+
                 let rewardMsg = "";
 
                 if (quizCorrectCountToday >= QUIZ_TARGET_HIGH) {
                     quizScoreToday = 30;
                     rewardMsg = '<span style="color:#f57f17; font-weight:bold;">🔥 毅力驚人！累積 30 題正確，獲得 30 點！</span>';
-                    if(window.confetti) confetti({ particleCount: 200, spread: 100 });
+                    if (window.confetti) confetti({ particleCount: 200, spread: 100 });
                 } else {
                     rewardMsg = `<span style="color:#2e7d32">🎉 答對了！ 目前累積：${quizCorrectCountToday}/30</span>`;
                 }
-                
+
                 feedback.innerHTML = rewardMsg;
                 localStorage.setItem('senhuai_quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
@@ -1348,22 +2337,22 @@
 
         function updateShopUI() {
             const card = document.getElementById('shopCard');
-            if(card) card.style.display = shopEnabled ? 'block' : 'none';
-            
-            const invBar = document.getElementById('inventoryBar');
-            if(invBar) invBar.style.display = (inventory.skip > 0 || inventory.hint > 0 || inventory.key > 0) ? 'flex' : 'none';
+            if (card) card.style.display = shopEnabled ? 'block' : 'none';
 
-            if(document.getElementById('inv_skip')) document.getElementById('inv_skip').innerText = inventory.skip;
-            if(document.getElementById('inv_hint')) document.getElementById('inv_hint').innerText = inventory.hint;
-            if(document.getElementById('inv_key')) document.getElementById('inv_key').innerText = inventory.key;
-            if(document.getElementById('inv_shield')) document.getElementById('inv_shield').innerText = inventory.shield;
-            if(document.getElementById('inv_frame_gold')) document.getElementById('inv_frame_gold').innerText = inventory.frame_gold;
-            if(document.getElementById('inv_check')) document.getElementById('inv_check').innerText = inventory.check;
+            const invBar = document.getElementById('inventoryBar');
+            if (invBar) invBar.style.display = (inventory.skip > 0 || inventory.hint > 0 || inventory.key > 0) ? 'flex' : 'none';
+
+            if (document.getElementById('inv_skip')) document.getElementById('inv_skip').innerText = inventory.skip;
+            if (document.getElementById('inv_hint')) document.getElementById('inv_hint').innerText = inventory.hint;
+            if (document.getElementById('inv_key')) document.getElementById('inv_key').innerText = inventory.key;
+            if (document.getElementById('inv_shield')) document.getElementById('inv_shield').innerText = inventory.shield;
+            if (document.getElementById('inv_frame_gold')) document.getElementById('inv_frame_gold').innerText = inventory.frame_gold;
+            if (document.getElementById('inv_check')) document.getElementById('inv_check').innerText = inventory.check;
 
             // Buy buttons
             for (let id in SHOP_ITEMS) {
                 const btn = document.getElementById(`buy_${id}`);
-                if(!btn) continue;
+                if (!btn) continue;
                 const item = SHOP_ITEMS[id];
                 const affordable = bankBalance >= item.price;
                 const underLimit = inventory[id] < item.limit;
@@ -1382,12 +2371,12 @@
                 }
                 else btn.innerText = '購買';
             }
-            
-             const gachaBtn = document.getElementById('buy_gacha');
-             if(gachaBtn) {
-                 gachaBtn.disabled = bankBalance < 3;
-                 gachaBtn.innerText = bankBalance < 3 ? '點數不足' : '抽獎';
-             }
+
+            const gachaBtn = document.getElementById('buy_gacha');
+            if (gachaBtn) {
+                gachaBtn.disabled = bankBalance < 3;
+                gachaBtn.innerText = bankBalance < 3 ? '點數不足' : '抽獎';
+            }
         }
 
         async function buyItem(id) {
@@ -1413,7 +2402,7 @@
                 }
             });
         }
-        
+
         async function buyGacha() {
             if (bankBalance < 3) return;
             myAlertConfirm('📦 購買驚喜盲盒', '花費 3 點，可能獲得高價值道具，也可能...什麼都沒有！', (confirmed) => {
@@ -1421,22 +2410,22 @@
                     bankBalance -= 3;
                     localStorage.setItem('senhuai_bank_v46', bankBalance);
                     document.getElementById('bankDisplay').innerText = bankBalance;
-                    
+
                     const roll = Math.random() * 100;
                     let prize = null;
                     let prizeName = "";
-                    
+
                     if (roll > 98) { prize = 'key'; prizeName = "🔓 應急鑰匙 (大獎!)"; }
                     else if (roll > 90) { prize = 'shield'; prizeName = "🛡️ 連勝保險"; }
                     else if (roll > 70) { prize = 'hint'; prizeName = "💡 提示燈泡"; }
                     else if (roll > 40) { prize = 'skip'; prizeName = "🎟️ 換題券"; }
-                    
+
                     if (prize) {
                         if (inventory[prize] < SHOP_ITEMS[prize].limit) {
                             inventory[prize]++;
                             saveInventory();
                             myAlert('🎉 中獎啦！', `你獲得了：${prizeName}`, 'success');
-                            if(window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                            if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                         } else {
                             bankBalance += 2;
                             localStorage.setItem('senhuai_bank_v46', bankBalance);
@@ -1491,7 +2480,7 @@
                     isFormLocked = false;
                     isUnlockedByParent = true;
                     const ol = document.getElementById('lockOverlay');
-                    if(ol) ol.remove();
+                    if (ol) ol.remove();
                     myAlert('鑰匙已使用', '表單已解鎖', 'success');
                     updateQuizTools();
                 }
@@ -1499,9 +2488,9 @@
         }
 
         function openAdminBankMode() {
-            if(!window.Swal) {
+            if (!window.Swal) {
                 var p = prompt('請輸入管理員金鑰：');
-                if(p === 'bankjeffjasmine') {
+                if (p === 'bankjeffjasmine') {
                     var n = prompt('目前餘額：' + bankBalance + '\n請輸入新餘額：');
                     bankBalance = parseInt(n) || bankBalance;
                     localStorage.setItem('senhuai_bank_v46', bankBalance);
@@ -1511,7 +2500,7 @@
                 }
                 return;
             }
-            
+
             Swal.fire({
                 title: '🛠️ 管理員模式',
                 text: '請輸入管理員金鑰以修改銀行餘額：',
@@ -1784,43 +2773,8 @@
             }
 
             // Check pass status from the calculation we did earlier
-            if (status.passed) {
-                if(window.Swal) {
-                    const { value: file } = await Swal.fire({
-                        title: '📸 請拍攝今日認證照',
-                        text: '分數已達標！請拍攝一張帥氣的照片來製作授權書。',
-                        input: 'file',
-                        inputAttributes: { 'accept': 'image/*', 'capture': 'user' },
-                        confirmButtonText: '產生證書',
-                        showCancelButton: true,
-                        cancelButtonText: '跳過'
-                    });
-
-                    if (file) {
-                        const readImageData = (file) => {
-                            return new Promise((resolve, reject) => {
-                                const reader = new FileReader();
-                                reader.onload = (e) => resolve(e.target.result);
-                                reader.onerror = (err) => reject(err);
-                                reader.readAsDataURL(file);
-                            });
-                        };
-                        try {
-                            Swal.showLoading();
-                            const imageData = await readImageData(file);
-                            setTimeout(() => { finishSaveProcess(status, imageData); }, 100);
-                        } catch (error) {
-                            finishSaveProcess(status, null);
-                        }
-                    } else {
-                        finishSaveProcess(status, null);
-                    }
-                } else {
-                    finishSaveProcess(status, null);
-                }
-            } else {
-                finishSaveProcess(status, null);
-            }
+            // 直接完成儲存流程，省略拍照確認
+            finishSaveProcess(status, null);
         }
 
         function finishSaveProcess(status, selfieUrl) {
@@ -1873,12 +2827,12 @@
                     <div style="margin-top:20px; font-size:0.8rem; color:#666;">請截圖此畫面保存</div>
                 </div>
             `;
-                if(window.Swal) {
+                if (window.Swal) {
                     Swal.fire({ html: certHtml, width: 600, padding: 0, showConfirmButton: true, confirmButtonText: '太棒了 (關閉)', backdrop: `rgba(0,0,0,0.8)` });
                 } else {
                     alert('恭喜達標！請截圖保存！');
                 }
-                if(window.confetti) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+                if (window.confetti) confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
             } else {
                 myAlert('紀錄已儲存', `今日得分：${status.score} 分。`, 'info');
             }
@@ -1928,8 +2882,8 @@
         function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
 
         function renderHistory() {
-            const list = document.getElementById('historyList'); 
-            if(!list) return;
+            const list = document.getElementById('historyList');
+            if (!list) return;
             list.innerHTML = '';
             if (historyData.length === 0) { list.innerHTML = '<p style="text-align:center; padding:10px; color:#999;">目前尚無紀錄</p>'; return; }
 
@@ -1996,29 +2950,29 @@
                 }
                 if (newHistory.length > 0) {
                     myAlertConfirm(`讀取到 ${newHistory.length} 筆資料`, "是否覆蓋現有資料？(取消則為合併)", (confirmed) => {
-                        if (confirmed) { 
-                            historyData = newHistory; 
-                            updateStorageAndUI(); 
-                            updateLevelUI(); 
-                            myAlert('已覆蓋', '', 'success'); 
-                        } else { 
-                            historyData = [...newHistory, ...historyData]; 
-                            updateStorageAndUI(); 
-                            updateLevelUI(); 
-                            myAlert('已合併', '', 'success'); 
+                        if (confirmed) {
+                            historyData = newHistory;
+                            updateStorageAndUI();
+                            updateLevelUI();
+                            myAlert('已覆蓋', '', 'success');
+                        } else {
+                            historyData = [...newHistory, ...historyData];
+                            updateStorageAndUI();
+                            updateLevelUI();
+                            myAlert('已合併', '', 'success');
                         }
                     });
                 }
             };
             reader.readAsText(file); input.value = '';
         }
-        
+
         function clearForm() {
             myAlertConfirm('確定清空？', '', (confirmed) => {
                 if (confirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
             });
         }
-        
+
         function quickFillApp(appName) {
             document.getElementById('appName').value = appName;
             document.getElementById('appDuration').focus();
@@ -2154,12 +3108,12 @@
                 } else {
                     console.error("Failed to load questions.js");
                     const quizArea = document.getElementById('quizStartArea');
-                    if(quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
+                    if (quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
                 }
 
                 const today = new Date();
                 const day = today.getDay();
-                
+
                 safeLoadData();
 
                 if (day === 0 || day === 6) setMode('weekend');
@@ -2186,14 +3140,14 @@
 
                 if (localStorage.getItem('senhuai_draft_v41')) {
                     myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
-                        if(isConfirmed) loadDraft();
+                        if (isConfirmed) loadDraft();
                     });
                 }
-                
+
                 const shopToggle = document.getElementById('shopEnabledToggle');
-                if(shopToggle) shopToggle.checked = shopEnabled;
+                if (shopToggle) shopToggle.checked = shopEnabled;
                 updateShopUI();
-                
+
             } catch (e) {
                 console.error(e);
                 alert('初始化嚴重錯誤，請截圖回報: ' + e.message);
@@ -2201,4 +3155,5 @@
         };
     </script>
 </body>
+
 </html>

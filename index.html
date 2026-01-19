@@ -2538,8 +2538,6 @@
                 }
             });
         }
-    });
-}
 
         // ---------------------------
         // Scratch Card Logic
@@ -3378,29 +3376,44 @@
 
         // --- Window Onload (At the END) ---
         window.onload = function () {
+            console.log('🚀 Starting application initialization...');
+
             try {
+                // CRITICAL: Initialize questionBank first (for quiz functionality)
                 if (typeof QUESTION_BANK_DATA !== 'undefined') {
                     questionBank = QUESTION_BANK_DATA;
+                    console.log('✅ Question bank loaded:', questionBank.length, 'questions');
                 } else {
-                    console.error("Failed to load questions.js");
+                    console.error('❌ Failed to load questions.js - QUESTION_BANK_DATA is undefined');
                     const quizArea = document.getElementById('quizStartArea');
                     if (quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
                 }
 
-                const today = new Date();
-                const day = today.getDay();
+                // CRITICAL: Initialize clock immediately (for time display)
+                console.log('⏰ Starting clock...');
+                updateClock();
+                setInterval(updateClock, 1000);
+                console.log('✅ Clock initialized');
 
+                // Load saved data
+                console.log('💾 Loading saved data...');
                 safeLoadData();
 
-                if (day === 0 || day === 6) setMode('weekend');
-                else setMode('weekday');
+                // Set mode based on day of week
+                const today = new Date();
+                const day = today.getDay();
+                const mode = (day === 0 || day === 6) ? 'weekend' : 'weekday';
+                console.log('📅 Setting mode:', mode);
+                setMode(mode);
 
+                // Initialize UI components
+                console.log('🎨 Initializing UI...');
                 renderHistory();
                 updateLevelUI();
                 checkDeadline();
-                updateClock();
-                setInterval(updateClock, 1000);
 
+                // Setup accordion functionality
+                console.log('📂 Setting up accordions...');
                 var acc = document.getElementsByClassName("accordion");
                 for (var i = 0; i < acc.length; i++) {
                     acc[i].addEventListener("click", function () {
@@ -3414,19 +3427,34 @@
                     });
                 }
 
+                // Check for draft
                 if (localStorage.getItem('senhuai_draft_v41')) {
+                    console.log('📝 Draft found, prompting user...');
                     myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
                         if (isConfirmed) loadDraft();
                     });
                 }
 
+                // Initialize shop
                 const shopToggle = document.getElementById('shopEnabledToggle');
                 if (shopToggle) shopToggle.checked = shopEnabled;
                 updateShopUI();
 
+                console.log('✨ Application initialization complete!');
+
             } catch (e) {
-                console.error(e);
-                alert('初始化嚴重錯誤，請截圖回報: ' + e.message);
+                console.error('💥 Critical initialization error:', e);
+                console.error('Stack trace:', e.stack);
+
+                // Try to at least get the clock working even if other things fail
+                try {
+                    updateClock();
+                    setInterval(updateClock, 1000);
+                } catch (clockError) {
+                    console.error('❌ Even clock initialization failed:', clockError);
+                }
+
+                alert('初始化錯誤: ' + e.message + '\n\n詳細資訊請查看瀏覽器控制台 (F12)');
             }
         };
     </script>

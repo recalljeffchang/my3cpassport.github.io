@@ -31,14 +31,20 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-    
-    <div id="mascotDiv" style="position: fixed; top: 10px; right: 10px; font-size: 2.5rem; z-index: 1000; transition: transform 0.3s, opacity 0.3s; cursor: pointer;" class="hover-scale" onclick="SoundEngine.playPop(); this.style.transform='scale(1.3) rotate(15deg)'; setTimeout(()=>this.style.transform='none',200);" title="森淮小助手">
+
+    <div id="mascotDiv"
+        style="position: fixed; top: 10px; right: 10px; font-size: 2.5rem; z-index: 1000; transition: transform 0.3s, opacity 0.3s; cursor: pointer;"
+        class="hover-scale"
+        onclick="SoundEngine.playPop(); this.style.transform='scale(1.3) rotate(15deg)'; setTimeout(()=>this.style.transform='none',200);"
+        title="森淮小助手">
         🤖
     </div>
 
@@ -207,7 +213,8 @@
             </div>
 
             <div class="card" style="border-left: 5px solid #9c27b0;">
-                <div class="card-title" style="color: #9c27b0;">🧠 智者試煉：腦力激盪 <span class="badge-required">(每日必做)</span></div>
+                <div class="card-title" style="color: #9c27b0;">🧠 智者試煉：腦力激盪 <span class="badge-required">(每日必做)</span>
+                </div>
                 <div style="font-size:0.9rem; margin-bottom:10px; color:#666;">
                     國中學科挑戰！答對一題 +0.25 點。<br>
                     <span id="quizRequirementText" style="color:#d32f2f; font-weight:bold;">最低要求：2 點 (8題)。</span><br>
@@ -547,49 +554,49 @@
     </div>
 
     <script>
-        
+
         // --- GAMIFICATION: Sound Engine ---
-        const SoundEngine = (function() {
+        const SoundEngine = (function () {
             let AudioContext = window.AudioContext || window.webkitAudioContext;
             let ctx = null;
             let enabled = true;
-            
-            function init() { if(!ctx && AudioContext) ctx = new AudioContext(); }
-            
-            function playTone(freq, type, duration, vol=0.1) {
-                if(!enabled) return;
+
+            function init() { if (!ctx && AudioContext) ctx = new AudioContext(); }
+
+            function playTone(freq, type, duration, vol = 0.1) {
+                if (!enabled) return;
                 try {
                     init();
-                    if(ctx.state === 'suspended') ctx.resume();
+                    if (ctx.state === 'suspended') ctx.resume();
                     const osc = ctx.createOscillator();
                     const gain = ctx.createGain();
                     osc.type = type;
                     osc.frequency.setValueAtTime(freq, ctx.currentTime);
-                    
+
                     gain.gain.setValueAtTime(vol, ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
-                    
+
                     osc.connect(gain);
                     gain.connect(ctx.destination);
                     osc.start();
                     osc.stop(ctx.currentTime + duration);
-                } catch(e) {}
+                } catch (e) { }
             }
-            
+
             return {
                 playPop: () => playTone(600, 'sine', 0.1, 0.1),
-                playCheck: () => { playTone(523.25, 'sine', 0.1); setTimeout(()=>playTone(659.25, 'sine', 0.2), 100); },
+                playCheck: () => { playTone(523.25, 'sine', 0.1); setTimeout(() => playTone(659.25, 'sine', 0.2), 100); },
                 playWrong: () => playTone(150, 'sawtooth', 0.3, 0.2),
-                playTada: () => { 
-                    playTone(523.25, 'triangle', 0.2, 0.2); 
-                    setTimeout(()=>playTone(659.25, 'triangle', 0.2, 0.2), 150);
-                    setTimeout(()=>playTone(783.99, 'triangle', 0.4, 0.2), 300);
+                playTada: () => {
+                    playTone(523.25, 'triangle', 0.2, 0.2);
+                    setTimeout(() => playTone(659.25, 'triangle', 0.2, 0.2), 150);
+                    setTimeout(() => playTone(783.99, 'triangle', 0.4, 0.2), 300);
                 },
                 playLevelUp: () => {
-                    playTone(440, 'square', 0.2, 0.1); 
-                    setTimeout(()=>playTone(554.37, 'square', 0.2, 0.1), 150);
-                    setTimeout(()=>playTone(659.25, 'square', 0.4, 0.1), 300);
-                    setTimeout(()=>playTone(880, 'square', 0.6, 0.1), 450);
+                    playTone(440, 'square', 0.2, 0.1);
+                    setTimeout(() => playTone(554.37, 'square', 0.2, 0.1), 150);
+                    setTimeout(() => playTone(659.25, 'square', 0.4, 0.1), 300);
+                    setTimeout(() => playTone(880, 'square', 0.6, 0.1), 450);
                 },
                 setMute: (m) => enabled = !m
             };
@@ -877,7 +884,7 @@
             const lvlTitle = document.getElementById('levelTitle');
             const xpBar = document.getElementById('xpBar');
 
-            
+
             if (lastLevel !== null && currentLevel > lastLevel) {
                 // Level Up Trigger!
                 SoundEngine.playLevelUp();
@@ -894,7 +901,7 @@
                 if (window.confetti) confetti({ particleCount: 300, spread: 160, origin: { y: 0.6 } });
             }
             lastLevel = currentLevel;
-            
+
             if (lvlVal) lvlVal.innerText = currentLevel;
 
             if (lvlTitle) lvlTitle.innerText = LEVEL_TITLES[currentLevel - 1] || "傳說";
@@ -1146,7 +1153,7 @@
                 btnElement.style.backgroundColor = '#dcedc8';
                 quizCorrectCountToday++;
                 currentCombo++;
-                if(currentCombo >= 3) { SoundEngine.playTada(); showComboStreak(currentCombo); setMascot('😎'); }
+                if (currentCombo >= 3) { SoundEngine.playTada(); showComboStreak(currentCombo); setMascot('😎'); }
                 else { SoundEngine.playCheck(); setMascot('🎉'); }
 
 
@@ -1956,11 +1963,11 @@
             checkStatus();
         }
 
-        
+
         // Global listener for sound clicks
-        document.addEventListener('change', function(e) {
-            if(e.target && e.target.type === 'checkbox') {
-                if(e.target.checked) {
+        document.addEventListener('change', function (e) {
+            if (e.target && e.target.type === 'checkbox') {
+                if (e.target.checked) {
                     SoundEngine.playPop();
                     setMascot('😄');
                 } else {
@@ -1968,90 +1975,105 @@
                 }
             }
         });
-        
+
         function setMascot(face) {
             const m = document.getElementById('mascotDiv');
-            if(m) {
+            if (m) {
                 m.innerText = face;
                 m.classList.remove('pop-in');
                 void m.offsetWidth; // trigger reflow
                 m.classList.add('pop-in');
-                setTimeout(()=> { if(m.innerText === face) m.innerText = '🤖'; }, 2000);
+                setTimeout(() => { if (m.innerText === face) m.innerText = '🤖'; }, 2000);
             }
         }
-        
+
         function showComboStreak(count) {
             const el = document.createElement('div');
             el.innerHTML = `🔥 Combo x${count}!`;
             el.style.cssText = "position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.5); font-size:4rem; color:#F59E0B; font-weight:900; z-index:9999; text-shadow:0 4px 15px rgba(245, 158, 11, 0.6); opacity:0; pointer-events:none; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);";
             document.body.appendChild(el);
-            
+
             // Animate in
             setTimeout(() => {
                 el.style.opacity = '1';
                 el.style.transform = 'translate(-50%,-50%) scale(1.2) rotate(-5deg)';
             }, 50);
-            
+
             // Animate out
             setTimeout(() => {
                 el.style.opacity = '0';
                 el.style.transform = 'translate(-50%,-50%) scale(1.5) rotate(5deg)';
-                setTimeout(()=>el.remove(), 500);
+                setTimeout(() => el.remove(), 500);
             }, 1000);
         }
 
-        
-        // --- GAMIFICATION: Random Mascot Popup ---
-        const MascotPopupEngine = (function() {
-            const mascots = [
-                { icon: '🐹', messages: ["哈囉！我是三線鼠🐹", "要不要吃葵瓜子？🌻", "我來巡邏囉！🐹"] },
-                { icon: '🦊', messages: ["我是聰明的小狐狸🦊", "今天過得好嗎？🐾", "跟我一起闖關吧！"] },
-                { icon: '🦉', messages: ["咕咕！我是貓頭鷹🦉", "記得多喝水喔！💧", "智慧與你同在！🧠"] },
-                { icon: '🐈', messages: ["喵～我是小橘貓🐈", "森淮好棒！🌟", "來摸摸我的肚子！🐾"] },
-                { icon: '🐉', messages: ["吼！我是守護小飛龍🐉", "加油加油！✨", "看到我代表有好運🍀"] },
-                { icon: '🦄', messages: ["我是夢幻獨角獸🦄", "今天會有魔法發生喔！✨", "這關很簡單的！🌈"] }
+
+        // --- GAMIFICATION: Mascot Joke Dialogue Engine ---
+        const MascotPopupEngine = (function () {
+            const jokes = [
+                [{ icon: '🐢', msg: '哪種動物最愛問為什麼？' }, { icon: '🦉', msg: '不知道耶 🤔' }, { icon: '🐢', msg: '是豬！因為「豬道為什麼」(不知道為什麼) 🤣' }],
+                [{ icon: '🍔', msg: '漢堡跟熱狗誰跑得比較快？' }, { icon: '🌭', msg: '熱狗嗎？' }, { icon: '🍔', msg: '是漢堡！因為漢堡跑(包) 🏃‍♂️💨' }],
+                [{ icon: '🍏', msg: '蘋果跟梨子誰比較可憐？' }, { icon: '🍐', msg: '梨子？' }, { icon: '🍏', msg: '對！因為梨子(離職)了 💼' }],
+                [{ icon: '🐻', msg: '小明遇到熊，為何沒被吃？' }, { icon: '🐰', msg: '他裝死？' }, { icon: '🐻', msg: '因為那是一隻「無尾熊」🐨' }],
+                [{ icon: '🐺', msg: '有隻狼寶寶不吃肉只吃素，為何？' }, { icon: '🦊', msg: '我想想...' }, { icon: '🐺', msg: '因為他是「布朗尼」(不狼泥) 🍫' }],
+                [{ icon: '🦖', msg: '綠豆哪裡人？' }, { icon: '🦕', msg: '嘉義人！' }, { icon: '🦖', msg: '沒錯！因為綠豆「加薏仁」🥣' }],
+                [{ icon: '🐧', msg: '企鵝肚子為何是白色的？' }, { icon: '🦆', msg: '怕弄髒嗎？' }, { icon: '🐧', msg: '因為手太短，洗不到後背啊... 🚿' }]
             ];
-            
-            function showRandomMascot() {
-                const existing = document.getElementById('hamsterPopup'); // We reuse the CSS class!
-                if (existing) existing.remove();
-                
-                const popup = document.createElement('div');
-                popup.id = 'hamsterPopup';
-                popup.className = 'hamster-popup show';
-                
-                const mascot = mascots[Math.floor(Math.random() * mascots.length)];
-                const msg = mascot.messages[Math.floor(Math.random() * mascot.messages.length)];
-                popup.innerHTML = `<div class="hamster-icon">${mascot.icon}</div><div class="hamster-text">${msg}</div>`;
-                
-                // Random height between 20% and 80% to avoid covering important top/bottom UI
-                popup.style.top = Math.floor(Math.random() * 60 + 20) + '%';
-                
-                document.body.appendChild(popup);
-                SoundEngine.playPop(); // Little sound when it appears
-                
-                setTimeout(() => {
-                    popup.className = 'hamster-popup hide';
-                    setTimeout(() => popup.remove(), 600);
-                }, 4000); // Show for 4 seconds
+
+            function showJokeDialogue() {
+                // remove existing
+                document.querySelectorAll('.joke-popup').forEach(e => e.remove());
+
+                const jokeLines = jokes[Math.floor(Math.random() * jokes.length)];
+
+                // Random starting height between 10% and 40%
+                const startTop = Math.floor(Math.random() * 30 + 10);
+
+                let activePopups = [];
+
+                jokeLines.forEach((line, idx) => {
+                    setTimeout(() => {
+                        const popup = document.createElement('div');
+                        popup.className = 'hamster-popup show joke-popup';
+                        popup.innerHTML = `<div class="hamster-icon">${line.icon}</div><div class="hamster-text">${line.msg}</div>`;
+
+                        // Stack down
+                        popup.style.top = (startTop + idx * 14) + '%';
+                        popup.style.zIndex = 10000 + idx; // Ensure newer ones are on top if they overlap
+
+                        document.body.appendChild(popup);
+                        SoundEngine.playPop(); // Little sound when each character appears
+                        activePopups.push(popup);
+
+                        // If it's the last line, wait a bit then hide them all together
+                        if (idx === jokeLines.length - 1) {
+                            setTimeout(() => {
+                                activePopups.forEach(p => {
+                                    p.className = 'hamster-popup hide joke-popup';
+                                    setTimeout(() => p.remove(), 600);
+                                });
+                            }, 4500); // 4.5 seconds to read the punchline before hiding
+                        }
+                    }, idx * 2500); // 2.5 seconds delay between each speaker
+                });
             }
 
             function scheduleNext() {
-                // Random interval between 20 seconds and 90 seconds for testing/fun
-                const nextTime = Math.floor(Math.random() * (90000 - 20000)) + 20000;
+                // Random interval between 30 seconds and 90 seconds for testing/fun
+                const nextTime = Math.floor(Math.random() * (90000 - 30000)) + 30000;
                 setTimeout(() => {
-                    showRandomMascot();
+                    showJokeDialogue();
                     scheduleNext();
                 }, nextTime);
             }
 
-            return { 
+            return {
                 start: () => {
                     // Give an initial delay before the first appearance
                     setTimeout(() => {
-                        showRandomMascot();
+                        showJokeDialogue();
                         scheduleNext();
-                    }, 5000);
+                    }, 8000);
                 }
             };
         })();

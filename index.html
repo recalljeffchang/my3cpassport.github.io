@@ -2000,6 +2000,69 @@
             }, 1000);
         }
 
+        
+        // --- GAMIFICATION: Hamster Popup ---
+        const HamsterEngine = (function() {
+            const messages = [
+                "哈囉！我是三線鼠🐹",
+                "今天過得好嗎？🐾",
+                "記得多喝水喔！💧",
+                "森淮好棒！🌟",
+                "要不要吃葵瓜子？🌻",
+                "我來巡邏囉！🐹",
+                "加油加油！✨",
+                "這關很簡單的！🧠",
+                "看到我代表有好運🍀"
+            ];
+            
+            function showRandomHamster() {
+                const existing = document.getElementById('hamsterPopup');
+                if (existing) existing.remove();
+                
+                const popup = document.createElement('div');
+                popup.id = 'hamsterPopup';
+                popup.className = 'hamster-popup show';
+                
+                const msg = messages[Math.floor(Math.random() * messages.length)];
+                popup.innerHTML = `<div class="hamster-icon">🐹</div><div class="hamster-text">${msg}</div>`;
+                
+                // Random height between 20% and 80% to avoid covering important top/bottom UI
+                popup.style.top = Math.floor(Math.random() * 60 + 20) + '%';
+                
+                document.body.appendChild(popup);
+                SoundEngine.playPop(); // Little sound when it appears
+                
+                setTimeout(() => {
+                    popup.className = 'hamster-popup hide';
+                    setTimeout(() => popup.remove(), 600);
+                }, 4000); // Show for 4 seconds
+            }
+
+            function scheduleNext() {
+                // Random interval between 20 seconds and 90 seconds for testing/fun
+                const nextTime = Math.floor(Math.random() * (90000 - 20000)) + 20000;
+                setTimeout(() => {
+                    showRandomHamster();
+                    scheduleNext();
+                }, nextTime);
+            }
+
+            return { 
+                start: () => {
+                    // Give an initial delay before the first appearance
+                    setTimeout(() => {
+                        showRandomHamster();
+                        scheduleNext();
+                    }, 5000);
+                }
+            };
+        })();
+
+        // Start hamster engine
+        window.addEventListener('load', () => {
+            HamsterEngine.start();
+        });
+
         function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
 
         function renderHistory() {

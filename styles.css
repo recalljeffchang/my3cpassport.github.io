@@ -1678,3 +1678,51 @@
 .pop-in {
     animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
 }
+
+
+/* Hamster Popup */
+@keyframes slideInRightHamster {
+    from { transform: translateX(150%) translateY(-50%); opacity: 0; }
+    to { transform: translateX(0) translateY(-50%); opacity: 1; }
+}
+@keyframes slideOutRightHamster {
+    from { transform: translateX(0) translateY(-50%); opacity: 1; }
+    to { transform: translateX(150%) translateY(-50%); opacity: 0; }
+}
+
+.hamster-popup {
+    position: fixed;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 3px solid #F59E0B;
+    border-radius: 30px;
+    padding: 10px 20px;
+    box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    color: #333;
+    pointer-events: none;
+}
+.hamster-popup.show {
+    animation: slideInRightHamster 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+.hamster-popup.hide {
+    animation: slideOutRightHamster 0.6s ease-in forwards;
+}
+.hamster-icon {
+    font-size: 2.5rem;
+    animation: bounce 1s infinite alternate;
+}
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
+}
+.hamster-text {
+    font-size: 1.1rem;
+    white-space: nowrap;
+}

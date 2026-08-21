@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v51.0)</title>
+    <title>3C 使用規範</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="森淮規範">
+    <meta name="apple-mobile-web-app-title" content="3C 規範">
     <link rel="apple-touch-icon" href="logo.png">
 
     <script>
@@ -44,15 +44,15 @@
         style="position: fixed; top: 10px; right: 10px; font-size: 2.5rem; z-index: 1000; transition: transform 0.3s, opacity 0.3s; cursor: pointer;"
         class="hover-scale"
         onclick="SoundEngine.playPop(); this.style.transform='scale(1.3) rotate(15deg)'; setTimeout(()=>this.style.transform='none',200);"
-        title="森淮小助手">
+        title="小助手">
         🤖
     </div>
 
     <div class="container">
         <div class="header">
-            <h1>🦊 森淮手機，平板，電視，電腦使用規範 🎮</h1>
+            <h1>🦊 <span class="child-name"></span>手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag">ver 51.0 (Stable)</span>
+                <span class="version-tag" id="versionTag">ver 52.0 (Stable)</span>
                 <span>|</span>
                 <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
@@ -62,7 +62,7 @@
 
         <div class="level-card" id="levelCard">
             <div class="level-header">
-                <div class="level-title">🔰 森淮冒險等級 Lv.<span id="levelValue">1</span></div>
+                <div class="level-title">🔰 <span class="child-name"></span>冒險等級 Lv.<span id="levelValue">1</span></div>
                 <div class="level-badge" id="levelTitle">初心者</div>
             </div>
             <div class="xp-bar-container">
@@ -106,12 +106,6 @@
                     </li>
                 </ul>
             </div>
-        </div>
-
-        <div id="lockBanner">
-            <h3 style="margin:0 0 10px 0;">⛔ 已超過當天最晚填寫時間</h3>
-            <p style="margin:0; font-size:0.9rem;" id="lockMessage">目前表單已鎖定，無法進行任何操作。</p>
-            <button class="btn-unlock" onclick="unlockForm()">🔐 經家長同意，解鎖一次</button>
         </div>
 
         <div id="mainForm">
@@ -548,6 +542,14 @@
                 <button class="btn-csv btn-import">📥 讀取 CSV<input type="file" id="csvFileInput" accept=".csv"
                         onchange="importFromCSV(this)"></button>
             </div>
+            <div class="toolbar" style="margin-top:10px;">
+                <button class="btn-csv btn-export" onclick="exportConfigFile()">⚙️ 匯出設定檔</button>
+                <button class="btn-csv btn-import">⚙️ 匯入設定檔<input type="file" id="configFileInput"
+                        accept=".json,application/json" onchange="importConfigFile(this.files[0])"></button>
+            </div>
+            <p style="font-size:0.78rem; color:#888; margin:6px 0 0;">
+                💡 換手機或重裝時，先匯出設定檔，在新裝置上匯入即可沿用名字、密碼與任務清單。
+            </p>
             <div id="historyList" class="history-log"></div>
             <button onclick="clearHistory()"
                 style="width:100%; margin-top:10px; padding:8px; background:#fff; border:1px solid #ddd; color:#d32f2f; cursor:pointer;">🗑️
@@ -604,19 +606,180 @@
             };
         })();
 
+        // =====================================================================
+        //  儲存層：所有資料都放在使用者自己的瀏覽器，沒有任何伺服器。
+        //  舊版把鍵名寫死成 senhuai_*（單一小孩專用）。改成統一前綴，
+        //  好讓其他家庭也能用同一份程式。
+        // =====================================================================
+        const STORE_PREFIX = 'family3c_';
+
+        const Store = {
+            get: (name) => localStorage.getItem(STORE_PREFIX + name),
+            set: (name, value) => localStorage.setItem(STORE_PREFIX + name, value),
+            remove: (name) => localStorage.removeItem(STORE_PREFIX + name)
+        };
+
+        // 舊鍵名 -> 新名稱。搬移時只「複製」，永不刪除舊鍵，
+        // 萬一新版有問題，原始紀錄仍完好留在 senhuai_* 底下。
+        const LEGACY_KEYS = {
+            'senhuai_history_v41': 'history',
+            'senhuai_draft_v41': 'draft',
+            'senhuai_bank_v46': 'bank',
+            'senhuai_inventory_v48': 'inventory',
+            'senhuai_key_last_buy': 'key_last_buy',
+            'senhuai_quiz_today': 'quiz_today',
+            'senhuai_shop_enabled': 'shop_enabled',
+            'senhuai_unlock_today': 'unlock_today'
+        };
+
+        function hasLegacyData() {
+            return Object.keys(LEGACY_KEYS).some(k => localStorage.getItem(k) !== null);
+        }
+
+        // 冪等：已經有新鍵就不覆蓋，可重複執行而不會弄壞較新的資料。
+        function migrateLegacyStorage() {
+            const copied = [];
+            for (const [oldKey, name] of Object.entries(LEGACY_KEYS)) {
+                const value = localStorage.getItem(oldKey);
+                if (value !== null && Store.get(name) === null) {
+                    Store.set(name, value);
+                    copied.push(name);
+                }
+            }
+            if (copied.length) console.log('📦 已搬移舊資料 (原鍵保留備份):', copied.join(', '));
+            return copied;
+        }
+
+        // =====================================================================
+        //  家庭設定：每個家庭第一次開啟時自行設定，只存在自己的瀏覽器裡。
+        //  這些原本是寫死的常數（只適用森淮一個人），現在改由設定驅動，
+        //  其他家庭才能用同一份程式。
+        // =====================================================================
+        const CONFIG_VERSION = 1;
+
+        // 全新家庭的預設值：中性內容，不含任何特定小孩的資料。
+        const DEFAULT_CONFIG = {
+            version: CONFIG_VERSION,
+            childName: '',
+            targetScore: 6,
+            parentPwdHash: '',
+            adminPwdHash: '',
+            weekdayTasks: [
+                { id: 'w1', text: '功課寫完', points: 1 },
+                { id: 'w2', text: '閱讀 30 分鐘', points: 1 },
+                { id: 'w3', text: '收拾書包', points: 1 },
+                { id: 'w4', text: '幫忙做家事', points: 1 },
+                { id: 'w5', text: '準時就寢', points: 1 }
+            ],
+            weekendTasks: [
+                { id: 'e1', text: '戶外活動一小時', points: 1 },
+                { id: 'e2', text: '整理房間', points: 1 },
+                { id: 'e3', text: '作息正常', points: 1 }
+            ],
+            deadlines: { weekdayHour: 22, weekdayMinute: 30, weekendHour: 23, weekendMinute: 30 },
+            quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: null }
+        };
+
+        // 原始安裝（森淮家）的設定。只在偵測到舊資料時套用，
+        // 讓既有安裝升級後行為完全不變。
+        const LEGACY_CONFIG = {
+            version: CONFIG_VERSION,
+            childName: '森淮',
+            targetScore: 6,
+            parentPwdHash: 'ef400ac6580776393961c296709500a6e174f0977613cc88490f8950fbc81b35',
+            adminPwdHash: '062156cd9f1ff6ea7036921a2d63b3c813ce2a51488b51c9e89f31d3d2ebc54d',
+            weekdayTasks: [
+                { id: 'w2', text: '連續讀書一小時', points: 3 },
+                { id: 'w10', text: '找家長討論數學', points: 1 },
+                { id: 'w11', text: '幫忙曬衣服', points: 1 },
+                { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
+                { id: 'w4', text: '功課寫完', points: 1 },
+                { id: 'w5', text: '洗便當', points: 1 },
+                { id: 'w6', text: '洗澡 (個人衛生)', points: 1 },
+                { id: 'w8', text: '洗餐具', points: 1 },
+                { id: 'w9', text: '丟環保垃圾', points: 1 }
+            ],
+            weekendTasks: [
+                { id: 'e1', text: '戶外運動一小時', points: 1 },
+                { id: 'e2', text: '吃三餐 (作息正常)', points: 1 },
+                { id: 'e3', text: '整理衣櫃', points: 1 },
+                { id: 'e4', text: '床上沒食物', points: 1 },
+                { id: 'e5', text: '九點前洗澡', points: 1 },
+                { id: 'e6', text: '折衣服', points: 1 }
+            ],
+            deadlines: { weekdayHour: 22, weekdayMinute: 30, weekendHour: 23, weekendMinute: 30 },
+            quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: '2026-02-13T00:00:00' }
+        };
+
+        // 缺欄位時用預設補齊，避免舊設定檔升級後出現 undefined。
+        function normalizeConfig(raw) {
+            const d = DEFAULT_CONFIG;
+            const c = Object.assign({}, d, raw || {});
+            c.deadlines = Object.assign({}, d.deadlines, (raw && raw.deadlines) || {});
+            c.quiz = Object.assign({}, d.quiz, (raw && raw.quiz) || {});
+            if (!Array.isArray(c.weekdayTasks) || !c.weekdayTasks.length) c.weekdayTasks = d.weekdayTasks;
+            if (!Array.isArray(c.weekendTasks) || !c.weekendTasks.length) c.weekendTasks = d.weekendTasks;
+            c.version = CONFIG_VERSION;
+            return c;
+        }
+
+        function loadConfig() {
+            try {
+                const raw = Store.get('config');
+                if (raw) return normalizeConfig(JSON.parse(raw));
+            } catch (e) { console.warn('設定檔損毀，改用預設值'); }
+
+            // 沒有設定檔但有舊資料 => 這是升級前的原始安裝，沿用原本設定
+            if (hasLegacyData()) {
+                console.log('🔁 偵測到舊安裝，沿用原本設定');
+                const c = normalizeConfig(LEGACY_CONFIG);
+                Store.set('config', JSON.stringify(c));
+                return c;
+            }
+            return normalizeConfig(null);   // 全新家庭 -> 需要跑設定流程
+        }
+
+        function saveConfig(c) {
+            config = normalizeConfig(c);
+            Store.set('config', JSON.stringify(config));
+            return config;
+        }
+
+        // 尚未設定完成（沒有小孩名字或沒有家長密碼）就需要跑設定流程
+        function needsSetup() {
+            return !config.childName || !config.parentPwdHash;
+        }
+
+        let config = loadConfig();
+
         // --- 家長密碼：只存 salted SHA-256，不再把明碼寫在原始碼裡 ---
         // 注意：純前端驗證本質上可被會用 devtools 的人繞過，這裡的目的是
         // 讓「檢視原始碼」看不到密碼，而不是提供真正的存取控制。
+        // 鹽值固定不可改：改了會讓所有已儲存的密碼雜湊失效。
         const PWD_SALT = "senhuai3c:";
-        const PARENT_PWD_HASH = "ef400ac6580776393961c296709500a6e174f0977613cc88490f8950fbc81b35";
-        const ADMIN_PWD_HASH = "062156cd9f1ff6ea7036921a2d63b3c813ce2a51488b51c9e89f31d3d2ebc54d";
+
+        // 以下由 config 衍生。保留原本的常數名稱，是為了不必改動散落在
+        // 各處的數十個使用點（設定變更後會重新載入頁面，故不會有過期問題）。
+        let PARENT_PWD_HASH = config.parentPwdHash;
+        let ADMIN_PWD_HASH = config.adminPwdHash;
+
+        function hashPwd(input) {
+            return sha256Hex(PWD_SALT + String(input || ''));
+        }
 
         function checkParentPwd(input) {
-            return sha256Hex(PWD_SALT + String(input || '')) === PARENT_PWD_HASH;
+            return !!PARENT_PWD_HASH && hashPwd(input) === PARENT_PWD_HASH;
         }
 
         function checkAdminPwd(input) {
-            return sha256Hex(PWD_SALT + String(input || '')) === ADMIN_PWD_HASH;
+            return !!ADMIN_PWD_HASH && hashPwd(input) === ADMIN_PWD_HASH;
+        }
+
+        function formatDeadline(isLateNight) {
+            const dl = config.deadlines;
+            const h = isLateNight ? dl.weekendHour : dl.weekdayHour;
+            const m = isLateNight ? dl.weekendMinute : dl.weekdayMinute;
+            return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
         }
 
         // 同步 SHA-256（不依賴 crypto.subtle，故 file:// 開啟也能用）
@@ -668,35 +831,20 @@
         // --- 特訓模式：每日答題門檻由 8 題提高到 30 題 ---
         // HARD_MODE_UNTIL 設為 null = 永久關閉；設為日期字串 = 在該日之前啟用。
         // 到期會自動關閉，所以請看頁面頂端的模式標籤確認目前狀態，不要靠記憶。
-        const HARD_MODE_UNTIL = '2026-02-13T00:00:00';   // 已於 2026-02-13 到期
-        const HARD_MODE_DEADLINE = HARD_MODE_UNTIL ? new Date(HARD_MODE_UNTIL).getTime() : 0;
+        let HARD_MODE_UNTIL = config.quiz.hardModeUntil;
+        let HARD_MODE_DEADLINE = HARD_MODE_UNTIL ? new Date(HARD_MODE_UNTIL).getTime() : 0;
 
         function isHardModeActive() {
             return Date.now() < HARD_MODE_DEADLINE;
         }
 
-        const baseWeekdayTasks = [
-            { id: 'w2', text: '連續讀書一小時', points: 3 },
-            { id: 'w10', text: '找家長討論數學', points: 1 },
-            { id: 'w11', text: '幫忙曬衣服', points: 1 },
-            { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
-            { id: 'w4', text: '功課寫完', points: 1 },
-            { id: 'w5', text: '洗便當', points: 1 },
-            { id: 'w6', text: '洗澡 (個人衛生)', points: 1 },
-            { id: 'w8', text: '洗餐具', points: 1 },
-            { id: 'w9', text: '丟環保垃圾', points: 1 }
-        ];
-        const baseWeekendTasks = [
-            { id: 'e1', text: '戶外運動一小時', points: 1 },
-            { id: 'e2', text: '吃三餐 (作息正常)', points: 1 },
-            { id: 'e3', text: '整理衣櫃', points: 1 },
-            { id: 'e4', text: '床上沒食物', points: 1 },
-            { id: 'e5', text: '九點前洗澡', points: 1 },
-            { id: 'e6', text: '折衣服', points: 1 }
-        ];
+        let baseWeekdayTasks = config.weekdayTasks;
+        let baseWeekendTasks = config.weekendTasks;
 
-        const tasks = { weekday: baseWeekdayTasks, weekend: [...baseWeekendTasks, ...baseWeekendTasks] };
-        const TARGET_SCORE = 6;
+        // 假日模式由 renderTasks(showGroups) 自行組合平日+假日兩組，
+        // 所以這裡只需要平日清單。
+        const tasks = { weekday: baseWeekdayTasks };
+        let TARGET_SCORE = config.targetScore;
         const LEVEL_THRESHOLDS = [0, 50, 150, 300, 500, 750, 1050, 1400, 1800, 2500];
         const LEVEL_TITLES = ["初心者", "見習生", "冒險者", "精英", "3C 達人", "時間管理者", "學霸", "大師", "宗師", "傳說"];
 
@@ -714,8 +862,8 @@
         let quizMathCountToday = 0;
         let currentQuestionSubject = '';
 
-        const QUIZ_DAILY_LIMIT = 2;
-        const QUIZ_TARGET_HIGH = 30;
+        let QUIZ_DAILY_LIMIT = config.quiz.dailyLimit;
+        let QUIZ_TARGET_HIGH = config.quiz.targetHigh;
         const QUIZ_MATH_SHARE = 0.5;   // 數學至少要佔答對題數的一半
         let questionBank = [];
 
@@ -821,21 +969,150 @@
             if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
+        const APP_VERSION = '52.0';
+
+        // 把設定套用到畫面上會出現小孩名字的地方
+        function applyConfigToUI() {
+            const name = config.childName || '孩子';
+            document.querySelectorAll('.child-name').forEach(el => el.innerText = name);
+            document.title = name + ' 3C 規範 (v' + APP_VERSION + ')';
+            const meta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+            if (meta) meta.setAttribute('content', name + '規範');
+            const mascot = document.getElementById('mascotDiv');
+            if (mascot) mascot.title = name + '小助手';
+            const vt = document.getElementById('versionTag');
+            if (vt) vt.innerText = 'ver ' + APP_VERSION + ' (Stable)';
+        }
+
+        // =====================================================================
+        //  首次設定流程：新家庭第一次開啟時填名字與家長密碼。
+        //  刻意只問最少的東西 —— 問太多沒人會設定完。
+        //  任務清單等細項透過「匯出/匯入設定檔」調整。
+        // =====================================================================
+        function showSetupWizard() {
+            if (document.getElementById('setupOverlay')) return;
+
+            const overlay = document.createElement('div');
+            overlay.id = 'setupOverlay';
+            overlay.style.cssText = "position:fixed; inset:0; background:rgba(15,23,42,0.94); z-index:10100; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; overflow-y:auto;";
+            overlay.innerHTML = `
+                <div style="background:#fff; color:#333; padding:26px 22px; border-radius:16px; max-width:420px; width:100%; box-sizing:border-box;">
+                    <div style="font-size:2.4rem; text-align:center;">🦊</div>
+                    <h2 style="margin:6px 0 4px; text-align:center; font-size:1.25rem;">歡迎使用 3C 使用規範</h2>
+                    <p style="font-size:0.85rem; color:#666; text-align:center; margin:0 0 18px;">
+                        資料只會存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。
+                    </p>
+
+                    <label style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:4px;">孩子的名字</label>
+                    <input type="text" id="setupName" placeholder="例如：小明" maxlength="12"
+                           style="width:100%; padding:11px; border:2px solid #e5e7eb; border-radius:8px; font-size:16px; box-sizing:border-box;">
+
+                    <label style="display:block; font-weight:bold; font-size:0.9rem; margin:14px 0 4px;">家長密碼</label>
+                    <input type="password" id="setupPwd" placeholder="儲存紀錄與解鎖時要用" maxlength="40"
+                           style="width:100%; padding:11px; border:2px solid #e5e7eb; border-radius:8px; font-size:16px; box-sizing:border-box;">
+                    <input type="password" id="setupPwd2" placeholder="再輸入一次" maxlength="40"
+                           style="width:100%; padding:11px; border:2px solid #e5e7eb; border-radius:8px; font-size:16px; box-sizing:border-box; margin-top:8px;">
+                    <p style="font-size:0.78rem; color:#888; margin:6px 0 0;">
+                        ⚠️ 密碼只以雜湊形式存在本機，忘記無法找回，只能重設全部設定。
+                    </p>
+
+                    <label style="display:block; font-weight:bold; font-size:0.9rem; margin:14px 0 4px;">每日及格點數</label>
+                    <input type="number" id="setupTarget" value="6" min="1" max="50"
+                           style="width:100%; padding:11px; border:2px solid #e5e7eb; border-radius:8px; font-size:16px; box-sizing:border-box;">
+                    <p style="font-size:0.78rem; color:#888; margin:6px 0 0;">達到這個點數，隔天才可以使用 3C。之後可以再改。</p>
+
+                    <div id="setupError" style="display:none; background:#ffebee; color:#c62828; padding:9px; border-radius:8px; font-size:0.85rem; margin-top:12px;"></div>
+
+                    <button id="setupSaveBtn"
+                            style="width:100%; margin-top:18px; padding:13px; border:none; border-radius:10px; background:#6366f1; color:#fff; font-size:1rem; font-weight:bold; cursor:pointer;">
+                        開始使用
+                    </button>
+
+                    <div style="text-align:center; margin-top:14px; border-top:1px solid #eee; padding-top:14px;">
+                        <span style="font-size:0.82rem; color:#666;">已經有設定檔？</span>
+                        <button id="setupImportBtn"
+                                style="background:none; border:none; color:#6366f1; font-weight:bold; cursor:pointer; font-size:0.85rem; text-decoration:underline;">
+                            匯入設定檔
+                        </button>
+                        <input type="file" id="setupImportInput" accept=".json,application/json" style="display:none;">
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+
+            const err = (msg) => {
+                const e = document.getElementById('setupError');
+                e.style.display = 'block'; e.innerText = msg;
+            };
+
+            document.getElementById('setupSaveBtn').onclick = () => {
+                const name = document.getElementById('setupName').value.trim();
+                const p1 = document.getElementById('setupPwd').value;
+                const p2 = document.getElementById('setupPwd2').value;
+                const target = parseInt(document.getElementById('setupTarget').value, 10);
+
+                if (!name) return err('請輸入孩子的名字。');
+                if (p1.length < 4) return err('家長密碼至少 4 個字。');
+                if (p1 !== p2) return err('兩次輸入的密碼不一樣。');
+                if (!(target >= 1 && target <= 50)) return err('每日及格點數請填 1 到 50 之間。');
+
+                const hash = hashPwd(p1);
+                saveConfig(Object.assign({}, DEFAULT_CONFIG, {
+                    childName: name,
+                    targetScore: target,
+                    parentPwdHash: hash,
+                    adminPwdHash: hash        // 新家庭共用一組密碼，不必記兩個
+                }));
+                location.reload();
+            };
+
+            document.getElementById('setupImportBtn').onclick = () =>
+                document.getElementById('setupImportInput').click();
+            document.getElementById('setupImportInput').onchange = (ev) =>
+                importConfigFile(ev.target.files[0], err);
+        }
+
+        function exportConfigFile() {
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = (config.childName || '3C') + '_設定備份.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function importConfigFile(file, onError) {
+            const fail = onError || ((m) => myAlert('匯入失敗', m, 'error'));
+            if (!file) return fail('沒有選到檔案。');
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const parsed = JSON.parse(reader.result);
+                    if (!parsed || typeof parsed !== 'object') return fail('設定檔格式不正確。');
+                    if (!parsed.childName || !parsed.parentPwdHash)
+                        return fail('這個檔案缺少名字或密碼，不是有效的設定檔。');
+                    saveConfig(parsed);
+                    location.reload();
+                } catch (e) { fail('設定檔無法解析：' + e.message); }
+            };
+            reader.onerror = () => fail('讀取檔案失敗。');
+            reader.readAsText(file);
+        }
+
         function safeLoadData() {
             try {
-                const saved = localStorage.getItem('senhuai_history_v41');
+                const saved = Store.get('history');
                 if (saved) historyData = JSON.parse(saved);
             } catch (e) { console.warn("History Corrupt"); historyData = []; }
 
             try {
-                const savedBank = localStorage.getItem('senhuai_bank_v46');
+                const savedBank = Store.get('bank');
                 if (savedBank) bankBalance = parseInt(savedBank);
                 const bankDisp = document.getElementById('bankDisplay');
                 if (bankDisp) bankDisp.innerText = bankBalance;
             } catch (e) { bankBalance = 0; }
 
             try {
-                const savedQuiz = localStorage.getItem('senhuai_quiz_today');
+                const savedQuiz = Store.get('quiz_today');
                 if (savedQuiz) {
                     const p = JSON.parse(savedQuiz);
                     if (p.date === new Date().toLocaleDateString()) {
@@ -848,7 +1125,7 @@
             } catch (e) { quizScoreToday = 0; }
 
             try {
-                const savedUnlock = localStorage.getItem('senhuai_unlock_today');
+                const savedUnlock = Store.get('unlock_today');
                 const todayStr = new Date().toLocaleDateString();
                 if (savedUnlock) {
                     const p = JSON.parse(savedUnlock);
@@ -864,7 +1141,7 @@
             } catch (e) { pickNewUnlockTasks(); }
 
             try {
-                let invData = localStorage.getItem('senhuai_inventory_v48');
+                let invData = Store.get('inventory');
                 if (invData) inventory = JSON.parse(invData);
                 if (!inventory.skip) inventory.skip = 0;
                 if (!inventory.hint) inventory.hint = 0;
@@ -875,8 +1152,8 @@
                 inventory = { skip: 0, hint: 0, key: 0, shield: 0, frame_gold: 0, check: 0 };
             }
 
-            shopEnabled = localStorage.getItem('senhuai_shop_enabled') !== 'false';
-            keyLastPurchaseDate = localStorage.getItem('senhuai_key_last_buy') || 0;
+            shopEnabled = Store.get('shop_enabled') !== 'false';
+            keyLastPurchaseDate = Store.get('key_last_buy') || 0;
         }
 
         function updateClock() {
@@ -890,8 +1167,9 @@
             const now = new Date();
             const day = now.getDay();
             const isLateNight = (day === 5 || day === 6);
-            const deadlineHour = isLateNight ? 23 : 22;
-            const deadlineMinute = 30;
+            const dl = config.deadlines;
+            const deadlineHour = isLateNight ? dl.weekendHour : dl.weekdayHour;
+            const deadlineMinute = isLateNight ? dl.weekendMinute : dl.weekdayMinute;
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
 
@@ -918,7 +1196,7 @@
                 <div style="text-align:center; background:#fff; color:#333; padding:30px; border-radius:15px; max-width:90%;">
                     <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
                     <h2 style="margin:0 0 10px 0;">時間已截止</h2>
-                    <p>本日紀錄填寫時間已過 (${isLateNight ? '23:30' : '22:30'} 為限)。</p>
+                    <p>本日紀錄填寫時間已過 (${formatDeadline(isLateNight)} 為限)。</p>
                     <p>請在此鎖定畫面請家長輸入密碼解鎖：</p>
                     <input type="password" id="unlockPwd" class="pwd-input" placeholder="家長密碼" style="margin-top:10px;">
                     <button class="btn-unlock" onclick="unlockFormByParent()">家長密碼解鎖</button>
@@ -975,7 +1253,7 @@
                 if (window.Swal) {
                     Swal.fire({
                         title: `🎉 升級啦！`,
-                        html: `森淮達到了 <b>Lv.${currentLevel} ${LEVEL_TITLES[currentLevel - 1] || "傳說"}</b>！<br>繼續保持好習慣！`,
+                        html: `${config.childName} 達到了 <b>Lv.${currentLevel} ${LEVEL_TITLES[currentLevel - 1] || "傳說"}</b>！<br>繼續保持好習慣！`,
                         icon: 'success',
                         confirmButtonText: '繼續努力！',
                         backdrop: `rgba(79, 70, 229, 0.8)`
@@ -1006,7 +1284,7 @@
             const shuffled = uniqueTasks.sort(() => 0.5 - Math.random());
             unlockTasksToday = shuffled.slice(0, 3).map(t => ({ id: t.id, text: t.text }));
 
-            localStorage.setItem('senhuai_unlock_today', JSON.stringify({
+            Store.set('unlock_today', JSON.stringify({
                 date: new Date().toLocaleDateString(),
                 tasks: unlockTasksToday
             }));
@@ -1280,7 +1558,7 @@
                 }
 
                 feedback.innerHTML = rewardMsg;
-                localStorage.setItem('senhuai_quiz_today', JSON.stringify({
+                Store.set('quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
                     correctCount: quizCorrectCountToday,
@@ -1306,7 +1584,7 @@
                     feedback.innerHTML = `<span style="color:#d32f2f">😅 答錯了！正確答案是：${correctAnsText}</span>`;
                 }
                 updateQuizUI();
-                localStorage.setItem('senhuai_quiz_today', JSON.stringify({
+                Store.set('quiz_today', JSON.stringify({
                     date: new Date().toLocaleDateString(),
                     score: quizScoreToday,
                     correctCount: quizCorrectCountToday,
@@ -1328,7 +1606,7 @@
                     quizScoreToday = 0;
                     quizCorrectCountToday = 0;
                     quizMathCountToday = 0;
-                    localStorage.removeItem('senhuai_quiz_today');
+                    Store.remove('quiz_today');
                     updateQuizUI();
                     checkStatus();
                     myAlert('已重置', '您可以重新挑戰了！', 'success');
@@ -1338,7 +1616,7 @@
 
         function toggleShop(enabled) {
             shopEnabled = enabled;
-            localStorage.setItem('senhuai_shop_enabled', shopEnabled);
+            Store.set('shop_enabled', shopEnabled);
             updateShopUI();
         }
 
@@ -1401,11 +1679,11 @@
                 if (confirmed) {
                     bankBalance -= item.price;
                     inventory[id]++;
-                    localStorage.setItem('senhuai_bank_v46', bankBalance);
-                    localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
+                    Store.set('bank', bankBalance);
+                    Store.set('inventory', JSON.stringify(inventory));
                     if (id === 'key') {
                         keyLastPurchaseDate = Date.now();
-                        localStorage.setItem('senhuai_key_last_buy', keyLastPurchaseDate);
+                        Store.set('key_last_buy', keyLastPurchaseDate);
                     }
 
                     document.getElementById('bankDisplay').innerText = bankBalance;
@@ -1421,7 +1699,7 @@
             myAlertConfirm('📦 購買驚喜盲盒', '花費 3 點，可能獲得高價值道具，也可能...什麼都沒有！', (confirmed) => {
                 if (confirmed) {
                     bankBalance -= 3;
-                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    Store.set('bank', bankBalance);
                     document.getElementById('bankDisplay').innerText = bankBalance;
 
                     const roll = Math.random() * 100;
@@ -1441,7 +1719,7 @@
                             if (window.confetti) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
                         } else {
                             bankBalance += 2;
-                            localStorage.setItem('senhuai_bank_v46', bankBalance);
+                            Store.set('bank', bankBalance);
                             myAlert('背包已滿', `你抽到了 ${prizeName}，但背包滿了。退還 2 點安慰獎。`, 'info');
                         }
                     } else {
@@ -1463,7 +1741,7 @@
             myAlertConfirm('🎫 購買幸運刮刮樂', '花費 5 點，親手刮出你的運氣！', (confirmed) => {
                 if (confirmed) {
                     bankBalance -= 5;
-                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    Store.set('bank', bankBalance);
                     document.getElementById('bankDisplay').innerText = bankBalance;
                     updateShopUI();
 
@@ -1596,7 +1874,7 @@
                             bankBalance += 2;
                         }
                     }
-                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    Store.set('bank', bankBalance);
                     document.getElementById('bankDisplay').innerText = bankBalance;
                     updateShopUI();
 
@@ -1657,7 +1935,7 @@
         }
 
         function saveInventory() {
-            localStorage.setItem('senhuai_inventory_v48', JSON.stringify(inventory));
+            Store.set('inventory', JSON.stringify(inventory));
         }
 
         function useEmergencyKey() {
@@ -1681,7 +1959,7 @@
                 if (checkAdminPwd(p)) {
                     var n = prompt('目前餘額：' + bankBalance + '\n請輸入新餘額：');
                     bankBalance = parseInt(n) || bankBalance;
-                    localStorage.setItem('senhuai_bank_v46', bankBalance);
+                    Store.set('bank', bankBalance);
                     document.getElementById('bankDisplay').innerText = bankBalance;
                     updateShopUI();
                     checkStatus();
@@ -1713,7 +1991,7 @@
                             if (newVal.isConfirmed) {
                                 const finalVal = parseInt(newVal.value) || 0;
                                 bankBalance = finalVal;
-                                localStorage.setItem('senhuai_bank_v46', bankBalance);
+                                Store.set('bank', bankBalance);
                                 document.getElementById('bankDisplay').innerText = bankBalance;
                                 updateShopUI();
                                 checkStatus();
@@ -2005,7 +2283,7 @@
                     ${imgHtml}
                     <div class="cert-title">3C 設備使用授權書</div>
                     <div class="cert-body">
-                        茲證明 <strong>森淮</strong> 今日表現優異，<br>
+                        茲證明 <strong>${config.childName}</strong> 今日表現優異，<br>
                         累積點數達標 (${status.score}分)，<br>
                         特此授予明日 3C 設備使用權限。
                     </div>
@@ -2031,7 +2309,7 @@
 
             if (status.bankTx !== 0) {
                 bankBalance -= status.bankTx;
-                localStorage.setItem('senhuai_bank_v46', bankBalance);
+                Store.set('bank', bankBalance);
                 document.getElementById('bankDisplay').innerText = bankBalance;
                 myAlert('銀行交易成功', status.bankTx < 0 ? `已存入 ${Math.abs(status.bankTx)} 點！` : `已提領 ${status.bankTx} 點！`, 'success');
             }
@@ -2059,7 +2337,7 @@
             historyData.unshift(record);
             updateStorageAndUI();
             updateLevelUI(); // Update level after saving
-            localStorage.removeItem('senhuai_draft_v41');
+            Store.remove('draft');
             document.getElementById('parentPwd').value = '';
 
             document.getElementById('bankAction').value = 'none';
@@ -2197,12 +2475,12 @@
             };
         })();
 
-        // Start random mascot engine
+        // Start random mascot engine — 設定流程還沒完成時不要跳笑話蓋住表單
         window.addEventListener('load', () => {
-            MascotPopupEngine.start();
+            if (!needsSetup()) MascotPopupEngine.start();
         });
 
-        function updateStorageAndUI() { localStorage.setItem('senhuai_history_v41', JSON.stringify(historyData)); renderHistory(); }
+        function updateStorageAndUI() { Store.set('history', JSON.stringify(historyData)); renderHistory(); }
 
         function renderHistory() {
             const list = document.getElementById('historyList');
@@ -2245,7 +2523,7 @@
                 csv += `${row.date},${row.mode},${row.finalScore},${row.result},${row.earnedScore || 0},${row.timePenalty || 0},${row.excessivePenalty || 0},${row.excessiveCount || 0},${row.bedtimePenalty || 0},${row.bedtimeBonus || "-"},${row.violationPenalty || 0},"${c(row.violationDetails)}",${c(row.math)},${c(row.others)},${row.tpCount || 0},${row.tpHigh || 0},${row.failedExams || 0},${row.score80Exams || 0},"${c(row.customs)}","${c(row.appLogStr)}",${row.bedtimeEarly || "-"},${row.bankTx || 0},${row.quizScore || 0}\n`;
             });
             const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `森淮規範_${new Date().toISOString().split('T')[0]}.csv`; a.click();
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${config.childName}規範_${new Date().toISOString().split('T')[0]}.csv`; a.click();
         }
 
         function importFromCSV(input) {
@@ -2290,9 +2568,123 @@
             reader.readAsText(file); input.value = '';
         }
 
+        // =====================================================================
+        //  暫存 / 讀取進度
+        //  這兩個按鈕從一開始就沒有實作（saveDraft / loadDraft 未定義），
+        //  按下去會丟 ReferenceError 並彈出「系統錯誤」。這裡補上。
+        //  只存「已確定的資料」，不存輸入中的暫存欄位，也絕不存密碼。
+        // =====================================================================
+        const DRAFT_CHECKBOXES = ['mathPassed', 'bedtimeEarly', 'bedtimeBonus', 'bedtimePenalty'];
+        const DRAFT_VALUES = ['otherExams', 'failedExams', 'score80Exams', 'testPaperCount',
+            'testPaperHigh', 'overtimeMinutes', 'excessiveCount', 'bankAction', 'bankAmount'];
+
+        function collectDraft() {
+            const draft = {
+                savedAt: new Date().toISOString(),
+                date: new Date().toLocaleDateString(),
+                mode: currentMode,
+                checkboxes: {},
+                values: {},
+                taskChecks: {},
+                violationStatus: null,
+                customTasks: customTasks,
+                majorViolations: majorViolations,
+                appUsageLogs: appUsageLogs
+            };
+            DRAFT_CHECKBOXES.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) draft.checkboxes[id] = el.checked;
+            });
+            DRAFT_VALUES.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) draft.values[id] = el.value;
+            });
+            // 日常任務與自訂任務的勾選狀態（兩個不同容器）
+            document.querySelectorAll('#taskList input[type="checkbox"], #customTaskList input[type="checkbox"]')
+                .forEach(c => { if (c.id) draft.taskChecks[c.id] = c.checked; });
+            const vs = document.querySelector('input[name="violationStatus"]:checked');
+            if (vs) draft.violationStatus = vs.value;
+            return draft;
+        }
+
+        function saveDraft() {
+            if (isFormLocked) { myAlert('已鎖定', '表單已鎖定，無法暫存。', 'error'); return; }
+            try {
+                Store.set('draft', JSON.stringify(collectDraft()));
+                SoundEngine.playCheck();
+                myAlert('已暫存進度', '資料存在這台裝置，稍後可以按「讀取暫存」繼續。', 'success');
+            } catch (e) {
+                myAlert('暫存失敗', e.message, 'error');
+            }
+        }
+
+        function loadDraft(interactive) {
+            const raw = Store.get('draft');
+            if (!raw) {
+                if (interactive) myAlert('沒有暫存', '目前沒有暫存的進度。', 'info');
+                return;
+            }
+            let draft;
+            try {
+                draft = JSON.parse(raw);
+            } catch (e) {
+                Store.remove('draft');
+                myAlert('讀取失敗', '暫存檔已損毀，已清除。', 'error');
+                return;
+            }
+            // 不同日期的暫存要先問過，避免把昨天的資料當成今天的紀錄
+            if (draft.date && draft.date !== new Date().toLocaleDateString()) {
+                myAlertConfirm('這是舊日期的暫存', `暫存日期為 ${draft.date}，仍要載入嗎？`,
+                    (ok) => { if (ok) applyDraft(draft); });
+                return;
+            }
+            applyDraft(draft);
+        }
+
+        function applyDraft(draft) {
+            if (isFormLocked) { myAlert('已鎖定', '表單已鎖定，無法載入。', 'error'); return; }
+
+            // 1. 模式要先切換：setMode 會重繪 #taskList，把勾選狀態清掉
+            if (draft.mode && draft.mode !== currentMode) setMode(draft.mode);
+
+            // 2. 違規狀態要在還原違規清單「之前」設定：
+            //    toggleViolationInput(false) 會清空 majorViolations
+            if (draft.violationStatus) {
+                const radio = document.querySelector('input[name="violationStatus"][value="' + draft.violationStatus + '"]');
+                if (radio) {
+                    radio.checked = true;
+                    toggleViolationInput(draft.violationStatus === 'exist');
+                }
+            }
+
+            // 3. 動態清單還原後重繪（會建立自訂任務的 checkbox）
+            if (Array.isArray(draft.customTasks)) { customTasks = draft.customTasks; renderCustomTasks(); }
+            if (Array.isArray(draft.majorViolations)) { majorViolations = draft.majorViolations; renderMajorViolations(); }
+            if (Array.isArray(draft.appUsageLogs)) { appUsageLogs = draft.appUsageLogs; renderAppLogs(); }
+
+            // 4. 單一欄位
+            Object.entries(draft.checkboxes || {}).forEach(([id, checked]) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = !!checked;
+            });
+            Object.entries(draft.values || {}).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            });
+
+            // 5. 勾選狀態最後還原（前面的重繪都已完成，id 才存在）
+            Object.entries(draft.taskChecks || {}).forEach(([id, checked]) => {
+                const el = document.getElementById(id);
+                if (el) el.checked = !!checked;
+            });
+
+            checkStatus();
+            myAlert('已載入暫存', '已回復上次暫存的進度。', 'success');
+        }
+
         function clearForm() {
             myAlertConfirm('確定清空？', '', (confirmed) => {
-                if (confirmed) { localStorage.removeItem('senhuai_draft_v41'); location.reload(); }
+                if (confirmed) { Store.remove('draft'); location.reload(); }
             });
         }
 
@@ -2428,6 +2820,12 @@
             console.log('🚀 Starting application initialization...');
 
             try {
+                // 全新家庭：先跑首次設定，設定完會 reload
+                if (needsSetup()) {
+                    console.log('🆕 尚未設定，顯示首次設定流程');
+                    showSetupWizard();
+                }
+
                 // CRITICAL: Initialize questionBank first (for quiz functionality)
                 if (typeof QUESTION_BANK_DATA !== 'undefined') {
                     questionBank = QUESTION_BANK_DATA;
@@ -2444,6 +2842,9 @@
                 setInterval(updateClock, 1000);
                 console.log('✅ Clock initialized');
 
+                // 先把舊鍵名的資料複製到新鍵名（只複製、不刪除），再讀取
+                migrateLegacyStorage();
+
                 // Load saved data
                 console.log('💾 Loading saved data...');
                 safeLoadData();
@@ -2457,6 +2858,7 @@
 
                 // Initialize UI components
                 console.log('🎨 Initializing UI...');
+                applyConfigToUI();
                 renderHistory();
                 updateLevelUI();
                 checkDeadline();
@@ -2477,7 +2879,7 @@
                 }
 
                 // Check for draft
-                if (localStorage.getItem('senhuai_draft_v41')) {
+                if (Store.get('draft') && !needsSetup()) {
                     console.log('📝 Draft found, prompting user...');
                     myAlertConfirm('發現暫存檔', "載入上次進度？", (isConfirmed) => {
                         if (isConfirmed) loadDraft();

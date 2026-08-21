@@ -52,7 +52,7 @@
         <div class="header">
             <h1>🦊 <span class="child-name"></span>手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag" id="versionTag">ver 52.0 (Stable)</span>
+                <span class="version-tag" id="versionTag">ver 52.1 (Stable)</span>
                 <span>|</span>
                 <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
@@ -608,7 +608,7 @@
 
         // =====================================================================
         //  儲存層：所有資料都放在使用者自己的瀏覽器，沒有任何伺服器。
-        //  舊版把鍵名寫死成 senhuai_*（單一小孩專用）。改成統一前綴，
+        //  舊版把鍵名寫死成單一小孩專用的前綴。改成統一前綴，
         //  好讓其他家庭也能用同一份程式。
         // =====================================================================
         const STORE_PREFIX = 'family3c_';
@@ -620,7 +620,7 @@
         };
 
         // 舊鍵名 -> 新名稱。搬移時只「複製」，永不刪除舊鍵，
-        // 萬一新版有問題，原始紀錄仍完好留在 senhuai_* 底下。
+        // 萬一新版有問題，原始紀錄仍完好留在舊鍵底下。
         const LEGACY_KEYS = {
             'senhuai_history_v41': 'history',
             'senhuai_draft_v41': 'draft',
@@ -652,7 +652,7 @@
 
         // =====================================================================
         //  家庭設定：每個家庭第一次開啟時自行設定，只存在自己的瀏覽器裡。
-        //  這些原本是寫死的常數（只適用森淮一個人），現在改由設定驅動，
+        //  這些項目原本是寫死的常數（只適用單一小孩），改由設定驅動後
         //  其他家庭才能用同一份程式。
         // =====================================================================
         const CONFIG_VERSION = 1;
@@ -680,37 +680,6 @@
             quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: null }
         };
 
-        // 原始安裝（森淮家）的設定。只在偵測到舊資料時套用，
-        // 讓既有安裝升級後行為完全不變。
-        const LEGACY_CONFIG = {
-            version: CONFIG_VERSION,
-            childName: '森淮',
-            targetScore: 6,
-            parentPwdHash: 'ef400ac6580776393961c296709500a6e174f0977613cc88490f8950fbc81b35',
-            adminPwdHash: '062156cd9f1ff6ea7036921a2d63b3c813ce2a51488b51c9e89f31d3d2ebc54d',
-            weekdayTasks: [
-                { id: 'w2', text: '連續讀書一小時', points: 3 },
-                { id: 'w10', text: '找家長討論數學', points: 1 },
-                { id: 'w11', text: '幫忙曬衣服', points: 1 },
-                { id: 'w3', text: '睡眠 (需滿 7.5 小時)', points: 1 },
-                { id: 'w4', text: '功課寫完', points: 1 },
-                { id: 'w5', text: '洗便當', points: 1 },
-                { id: 'w6', text: '洗澡 (個人衛生)', points: 1 },
-                { id: 'w8', text: '洗餐具', points: 1 },
-                { id: 'w9', text: '丟環保垃圾', points: 1 }
-            ],
-            weekendTasks: [
-                { id: 'e1', text: '戶外運動一小時', points: 1 },
-                { id: 'e2', text: '吃三餐 (作息正常)', points: 1 },
-                { id: 'e3', text: '整理衣櫃', points: 1 },
-                { id: 'e4', text: '床上沒食物', points: 1 },
-                { id: 'e5', text: '九點前洗澡', points: 1 },
-                { id: 'e6', text: '折衣服', points: 1 }
-            ],
-            deadlines: { weekdayHour: 22, weekdayMinute: 30, weekendHour: 23, weekendMinute: 30 },
-            quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: '2026-02-13T00:00:00' }
-        };
-
         // 缺欄位時用預設補齊，避免舊設定檔升級後出現 undefined。
         function normalizeConfig(raw) {
             const d = DEFAULT_CONFIG;
@@ -729,14 +698,10 @@
                 if (raw) return normalizeConfig(JSON.parse(raw));
             } catch (e) { console.warn('設定檔損毀，改用預設值'); }
 
-            // 沒有設定檔但有舊資料 => 這是升級前的原始安裝，沿用原本設定
-            if (hasLegacyData()) {
-                console.log('🔁 偵測到舊安裝，沿用原本設定');
-                const c = normalizeConfig(LEGACY_CONFIG);
-                Store.set('config', JSON.stringify(c));
-                return c;
-            }
-            return normalizeConfig(null);   // 全新家庭 -> 需要跑設定流程
+            // 沒有設定檔 -> 需要跑設定流程。
+            // 若這台裝置有舊版紀錄，紀錄本身會照常搬移（見 migrateLegacyStorage），
+            // 只是名字與任務清單要靠匯入設定檔取回。
+            return normalizeConfig(null);
         }
 
         function saveConfig(c) {
@@ -969,7 +934,7 @@
             if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
-        const APP_VERSION = '52.0';
+        const APP_VERSION = '52.1';
 
         // 把設定套用到畫面上會出現小孩名字的地方
         function applyConfigToUI() {
@@ -1002,6 +967,12 @@
                     <p style="font-size:0.85rem; color:#666; text-align:center; margin:0 0 18px;">
                         資料只會存在這台裝置的瀏覽器裡，不會上傳到任何伺服器。
                     </p>
+                    ${hasLegacyData() ? `
+                    <div style="background:#e8f5e9; border:1px solid #a5d6a7; color:#1b5e20; padding:11px 13px; border-radius:10px; font-size:0.84rem; line-height:1.55; margin-bottom:16px;">
+                        📦 <strong>偵測到這台裝置有舊版紀錄</strong><br>
+                        歷史紀錄、點數銀行與背包<strong>都已自動保留</strong>。<br>
+                        若要沿用原本的名字與任務清單，請按下方的「匯入設定檔」。
+                    </div>` : ''}
 
                     <label style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:4px;">孩子的名字</label>
                     <input type="text" id="setupName" placeholder="例如：小明" maxlength="12"
@@ -1029,7 +1000,7 @@
                     </button>
 
                     <div style="text-align:center; margin-top:14px; border-top:1px solid #eee; padding-top:14px;">
-                        <span style="font-size:0.82rem; color:#666;">已經有設定檔？</span>
+                        <span style="font-size:0.82rem; color:#666;">${hasLegacyData() ? '沿用原本設定：' : '已經有設定檔？'}</span>
                         <button id="setupImportBtn"
                                 style="background:none; border:none; color:#6366f1; font-weight:bold; cursor:pointer; font-size:0.85rem; text-decoration:underline;">
                             匯入設定檔

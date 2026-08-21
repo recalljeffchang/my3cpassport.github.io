@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>森淮 3C 規範 (v50.8)</title>
+    <title>森淮 3C 規範 (v51.0)</title>
 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -52,7 +52,9 @@
         <div class="header">
             <h1>🦊 森淮手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag">ver 50.8 (Stable)</span>
+                <span class="version-tag">ver 51.0 (Stable)</span>
+                <span>|</span>
+                <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
             </div>
@@ -602,8 +604,76 @@
             };
         })();
 
-        const PARENT_PWD = "jeffjasmine";
-        const HARD_MODE_DEADLINE = new Date('2026-02-13T00:00:00').getTime();
+        // --- 家長密碼：只存 salted SHA-256，不再把明碼寫在原始碼裡 ---
+        // 注意：純前端驗證本質上可被會用 devtools 的人繞過，這裡的目的是
+        // 讓「檢視原始碼」看不到密碼，而不是提供真正的存取控制。
+        const PWD_SALT = "senhuai3c:";
+        const PARENT_PWD_HASH = "ef400ac6580776393961c296709500a6e174f0977613cc88490f8950fbc81b35";
+        const ADMIN_PWD_HASH = "062156cd9f1ff6ea7036921a2d63b3c813ce2a51488b51c9e89f31d3d2ebc54d";
+
+        function checkParentPwd(input) {
+            return sha256Hex(PWD_SALT + String(input || '')) === PARENT_PWD_HASH;
+        }
+
+        function checkAdminPwd(input) {
+            return sha256Hex(PWD_SALT + String(input || '')) === ADMIN_PWD_HASH;
+        }
+
+        // 同步 SHA-256（不依賴 crypto.subtle，故 file:// 開啟也能用）
+        function sha256Hex(msg) {
+            const K = [
+                0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+                0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+                0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+                0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+                0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+                0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+                0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+                0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
+            const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+            const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+            const bytes = Array.from(new TextEncoder().encode(msg));
+            const bitLen = bytes.length * 8;
+            bytes.push(0x80);
+            while (bytes.length % 64 !== 56) bytes.push(0);
+            bytes.push(0, 0, 0, 0, (bitLen >>> 24) & 0xff, (bitLen >>> 16) & 0xff, (bitLen >>> 8) & 0xff, bitLen & 0xff);
+
+            const w = new Array(64);
+            for (let off = 0; off < bytes.length; off += 64) {
+                for (let i = 0; i < 16; i++) {
+                    const j = off + i * 4;
+                    w[i] = (bytes[j] << 24) | (bytes[j + 1] << 16) | (bytes[j + 2] << 8) | bytes[j + 3];
+                }
+                for (let i = 16; i < 64; i++) {
+                    const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+                    const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+                    w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+                }
+                let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+                for (let i = 0; i < 64; i++) {
+                    const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+                    const t1 = (h + S1 + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0;
+                    const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+                    const t2 = (S0 + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+                    h = g; g = f; f = e; e = (d + t1) | 0;
+                    d = c; c = b; b = a; a = (t1 + t2) | 0;
+                }
+                H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+                H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+            }
+            return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+        }
+
+        // --- 特訓模式：每日答題門檻由 8 題提高到 30 題 ---
+        // HARD_MODE_UNTIL 設為 null = 永久關閉；設為日期字串 = 在該日之前啟用。
+        // 到期會自動關閉，所以請看頁面頂端的模式標籤確認目前狀態，不要靠記憶。
+        const HARD_MODE_UNTIL = '2026-02-13T00:00:00';   // 已於 2026-02-13 到期
+        const HARD_MODE_DEADLINE = HARD_MODE_UNTIL ? new Date(HARD_MODE_UNTIL).getTime() : 0;
+
+        function isHardModeActive() {
+            return Date.now() < HARD_MODE_DEADLINE;
+        }
 
         const baseWeekdayTasks = [
             { id: 'w2', text: '連續讀書一小時', points: 3 },
@@ -646,7 +716,20 @@
 
         const QUIZ_DAILY_LIMIT = 2;
         const QUIZ_TARGET_HIGH = 30;
+        const QUIZ_MATH_SHARE = 0.5;   // 數學至少要佔答對題數的一半
         let questionBank = [];
+
+        // 題庫只有 35% 是數學，但規則要求數學佔答對題數的 50%。
+        // 若照題庫比例隨機抽題，答滿 8 題只有約 29% 機率過關 —— 靠運氣而非努力。
+        // 因此改為：數學不足時大幅偏向出數學題，足夠時再放寬，讓比例自動收斂在 50% 上下。
+        const QUIZ_MATH_BIAS_SHORT = 0.75;
+        const QUIZ_MATH_BIAS_OK = 0.4;
+
+        // 今日數學佔比是否還沒達標（0 題時視為尚未開始，不算不足）
+        function isMathShareShort() {
+            if (quizCorrectCountToday === 0) return false;
+            return (quizMathCountToday / quizCorrectCountToday) < QUIZ_MATH_SHARE;
+        }
 
         // --- GAMIFICATION: State ---
         let currentCombo = 0;
@@ -852,7 +935,7 @@
 
         function unlockFormByParent() {
             const password = document.getElementById('unlockPwd').value;
-            if (password === PARENT_PWD) {
+            if (checkParentPwd(password)) {
                 isFormLocked = false;
                 isUnlockedByParent = true;
                 const ol = document.getElementById('lockOverlay');
@@ -1026,7 +1109,14 @@
             const reqText = document.getElementById('quizRequirementText');
             const ruleText = document.getElementById('ruleQuizRequirement');
 
-            const isHardMode = Date.now() < HARD_MODE_DEADLINE;
+            const isHardMode = isHardModeActive();
+
+            const modeTag = document.getElementById('modeTag');
+            if (modeTag) {
+                modeTag.innerText = isHardMode ? '🔥 特訓 30題' : '🌱 一般 8題';
+                modeTag.style.color = isHardMode ? '#d32f2f' : '#2e7d32';
+                modeTag.style.fontWeight = 'bold';
+            }
 
             if (reqText) {
                 if (isHardMode) {
@@ -1047,7 +1137,7 @@
             }
 
             if (streakArea && streakSpan) {
-                if (quizCorrectCountToday > 0 && quizScoreToday < 30) {
+                if (quizCorrectCountToday > 0 && (quizScoreToday < 30 || isMathShareShort())) {
                     streakArea.style.display = 'block';
                     streakSpan.innerText = quizCorrectCountToday;
 
@@ -1066,13 +1156,16 @@
                 const startBtn = startArea.querySelector('button');
                 if (quizScoreToday >= 30) {
                     startArea.style.display = 'block';
+                    const mathShort = isMathShareShort();
                     if (startBtn) {
-                        startBtn.disabled = true;
-                        startBtn.innerText = '🔥 毅力驚人：30 點達成！';
-                        startBtn.style.backgroundColor = '#f57f17';
+                        startBtn.disabled = !mathShort;
+                        startBtn.innerText = mathShort ? '📐 補答數學題 (佔比未達 50%)' : '🔥 毅力驚人：30 點達成！';
+                        startBtn.style.backgroundColor = mathShort ? '#ef5350' : '#f57f17';
                     }
                     cooldownMsg.style.display = 'block';
-                    cooldownMsg.innerText = "太強了！已答對 30 題，獲得神級獎勵！";
+                    cooldownMsg.innerText = mathShort
+                        ? '已獲得 30 點！但數學佔比還不到 50%，請再答幾題數學才算完成。'
+                        : '太強了！已答對 30 題，獲得神級獎勵！';
                 } else if (quizScoreToday >= QUIZ_DAILY_LIMIT) {
                     startArea.style.display = 'block';
                     if (startBtn) {
@@ -1108,8 +1201,20 @@
             }
         }
 
+        // 依 QUIZ_MATH_BIAS_* 偏向抽出數學題，讓 50% 數學規則實際可達成。
+        function pickWeightedQuestion() {
+            const mathPool = questionBank.filter(q => q.s === '數學');
+            const otherPool = questionBank.filter(q => q.s !== '數學');
+            const bias = isMathShareShort() ? QUIZ_MATH_BIAS_SHORT : QUIZ_MATH_BIAS_OK;
+            let pool = (Math.random() < bias) ? mathPool : otherPool;
+            if (pool.length === 0) pool = questionBank;
+            return pool[Math.floor(Math.random() * pool.length)];
+        }
+
         function startQuiz() {
-            if (quizScoreToday >= 30) return;
+            // 拿到 30 點大獎後就不再加分 —— 但若數學佔比還沒達標，仍須讓他繼續答題，
+            // 否則「缺必做」永遠無法解除（分數已滿，卻卡在未達標，且無法再出題）。
+            if (quizScoreToday >= 30 && !isMathShareShort()) return;
             if (questionBank.length === 0) { myAlert('讀取中', '題庫載入中，請稍後再試...', 'info'); return; }
 
             document.getElementById('quizStartArea').style.display = 'none';
@@ -1117,8 +1222,7 @@
             document.getElementById('quizFeedback').innerText = '';
             updateQuizTools();
 
-            const qIdx = Math.floor(Math.random() * questionBank.length);
-            const q = questionBank[qIdx];
+            const q = pickWeightedQuestion();
 
             currentQuestionSubject = q.s;
 
@@ -1574,7 +1678,7 @@
         function openAdminBankMode() {
             if (!window.Swal) {
                 var p = prompt('請輸入管理員金鑰：');
-                if (p === 'bankjeffjasmine') {
+                if (checkAdminPwd(p)) {
                     var n = prompt('目前餘額：' + bankBalance + '\n請輸入新餘額：');
                     bankBalance = parseInt(n) || bankBalance;
                     localStorage.setItem('senhuai_bank_v46', bankBalance);
@@ -1595,7 +1699,7 @@
                 cancelButtonText: '取消'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    if (result.value === 'bankjeffjasmine') {
+                    if (checkAdminPwd(result.value)) {
                         Swal.fire({
                             title: '修改餘額',
                             text: `目前餘額：${bankBalance} 點。請輸入新的總額：`,
@@ -1700,12 +1804,12 @@
                 breakdown.push({ label: '⚡ 額外早睡獎勵', points: 1, type: 'bonus' });
             }
 
-            const isHardMode = Date.now() < HARD_MODE_DEADLINE;
+            const isHardMode = isHardModeActive();
             const requiredCount = isHardMode ? 30 : 8;
 
             if (quizCorrectCountToday < requiredCount) {
                 missingRequired.push(`🧠 腦力激盪 (需滿${requiredCount}題)`);
-            } else if ((quizMathCountToday / quizCorrectCountToday) < 0.5) {
+            } else if (isMathShareShort()) {
                 missingRequired.push(`🧠 腦力激盪 (數學佔比不足50%)`);
             }
 
@@ -1851,7 +1955,7 @@
             }
 
             const pwd = document.getElementById('parentPwd').value;
-            if (pwd !== PARENT_PWD) {
+            if (!checkParentPwd(pwd)) {
                 myAlert('密碼錯誤', '家長簽核密碼不正確！', 'error');
                 return;
             }

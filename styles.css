@@ -771,38 +771,36 @@
             margin-bottom: 8px;
         }
 
-        .input-row input[type="text"], .input-row input[type="number"], .input-row select {
-    padding: 12px 14px;
-    border: 2px solid transparent;
-    background: rgba(243, 244, 246, 0.8);
-    border-radius: var(--radius-md);
-    font-size: 16px;
-    transition: all 0.3s ease;
-    font-family: inherit;
-}
-
-.input-row input[type="text"]:focus, .input-row input[type="number"]:focus, .input-row select:focus {
-    outline: none;
-    border-color: var(--primary-light);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-}
-
-        .input-row input[type="number"] {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 16px;
+        /* Flex children default to min-width:auto, so an input never shrinks below
+           its ~188px intrinsic width and two side by side overflow a 375px phone. */
+        .input-row > * {
+            min-width: 0;
         }
 
+        .input-row input[type="text"],
+        .input-row input[type="number"],
         .input-row select {
             flex: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background-color: white;
+            padding: 12px 14px;
+            border: 2px solid transparent;
+            background: rgba(243, 244, 246, 0.8);
+            border-radius: var(--radius-md);
             font-size: 16px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .input-row input[type="text"] {
+            flex: 2;
+        }
+
+        .input-row input[type="text"]:focus,
+        .input-row input[type="number"]:focus,
+        .input-row select:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
         .custom-input-area {
@@ -1725,4 +1723,32 @@
 .hamster-text {
     font-size: 1.1rem;
     white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------
+   The mascot is position:fixed at the top-right, so the title has to
+   reserve room for it. Measured: the two stop meeting at ~580px, so
+   keep the gutter until 600px.
+   --------------------------------------------------------------- */
+@media (max-width: 600px) {
+    .header h1 {
+        padding-right: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Shrink just enough that the title still lands in two lines at 375px. */
+    .header h1 {
+        font-size: 1.35rem;
+    }
+
+    /* Version + mode + clock: break between items rather than mid-label. */
+    .header-info {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .header-info > * {
+        white-space: nowrap;
+    }
 }

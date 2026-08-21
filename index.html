@@ -52,7 +52,7 @@
         <div class="header">
             <h1>🦊 <span class="child-name"></span>手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag" id="versionTag">ver 52.1 (Stable)</span>
+                <span class="version-tag" id="versionTag">ver 53.0 (Stable)</span>
                 <span>|</span>
                 <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
@@ -93,7 +93,7 @@
                     <li><strong>🧠 腦力激盪 (必做)：</strong>
                         <ul style="margin-top:5px;">
                             <li>每日必須參與，<span id="ruleQuizRequirement" style="color:var(--danger)">未達標將視為未完成。</span></li>
-                            <li><span style="color:var(--math-color)">新增規則：</span>數學題必須佔當日答對題數的 <strong>50%</strong> 以上。
+                            <li id="ruleMathShare"><span style="color:var(--math-color)">新增規則：</span>數學題必須佔當日答對題數的 <strong>50%</strong> 以上。
                             </li>
                         </ul>
                     </li>
@@ -550,6 +550,22 @@
             <p style="font-size:0.78rem; color:#888; margin:6px 0 0;">
                 💡 換手機或重裝時，先匯出設定檔，在新裝置上匯入即可沿用名字、密碼與任務清單。
             </p>
+
+            <div style="margin-top:16px; border-top:1px solid #eee; padding-top:14px;">
+                <div style="font-weight:bold; font-size:0.95rem; margin-bottom:6px;">🧠 題庫</div>
+                <p id="bankInfo" style="font-size:0.82rem; color:#555; margin:0 0 10px; line-height:1.6;"></p>
+                <div class="toolbar">
+                    <button class="btn-csv btn-export" onclick="exportQuestionBank()">📤 匯出題庫</button>
+                    <button class="btn-csv btn-import">📥 匯入題庫<input type="file" id="bankFileInput"
+                            accept=".json,application/json" onchange="importQuestionBank(this.files[0]); this.value='';"></button>
+                    <button class="btn-csv btn-clear-form" onclick="resetQuestionBank()">↩️ 還原內建</button>
+                </div>
+                <p style="font-size:0.78rem; color:#888; margin:6px 0 0; line-height:1.6;">
+                    💡 內建題庫是國中的題目。換年級時可先「匯出題庫」當範本，改好再匯入。<br>
+                    格式：<code>[{"s":"科目","q":"題目","o":["選項1","選項2"],"a":0}]</code>
+                    —— <code>a</code> 是正解的索引（從 0 算起）。
+                </p>
+            </div>
             <div id="historyList" class="history-log"></div>
             <button onclick="clearHistory()"
                 style="width:100%; margin-top:10px; padding:8px; background:#fff; border:1px solid #ddd; color:#d32f2f; cursor:pointer;">🗑️
@@ -677,7 +693,7 @@
                 { id: 'e3', text: '作息正常', points: 1 }
             ],
             deadlines: { weekdayHour: 22, weekdayMinute: 30, weekendHour: 23, weekendMinute: 30 },
-            quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: null }
+            quiz: { dailyLimit: 2, targetHigh: 30, hardModeUntil: null, mathSubject: '數學' }
         };
 
         // 缺欄位時用預設補齊，避免舊設定檔升級後出現 undefined。
@@ -832,6 +848,86 @@
         const QUIZ_MATH_SHARE = 0.5;   // 數學至少要佔答對題數的一半
         let questionBank = [];
 
+        // =====================================================================
+        //  題庫：內建題庫（questions.js）針對特定年級，其他家庭需要自己的題目。
+        //  家長可匯入自訂題庫；沒有匯入時就用內建的。
+        //  格式：[{ s: 科目, q: 題目, o: [選項...], a: 正解索引, t: 'MCQ'|'TF'（可省略）}]
+        // =====================================================================
+        let questionBankSource = 'builtin';
+        let questionBankStats = { total: 0, bySubject: {}, math: 0, mathShare: 0 };
+
+        // 全有或全無：有任何一題格式錯誤就整份拒絕，
+        // 避免載入半殘的題庫之後才在答題中途爆掉。
+        function validateQuestionBank(data) {
+            if (!Array.isArray(data)) return { ok: false, errors: ['題庫最外層必須是陣列 (JSON array)。'] };
+            if (!data.length) return { ok: false, errors: ['題庫是空的，至少要有一題。'] };
+
+            const errors = [];
+            const bank = [];
+            data.forEach((item, i) => {
+                const at = '第 ' + (i + 1) + ' 題';
+                if (!item || typeof item !== 'object' || Array.isArray(item)) {
+                    errors.push(at + '：不是一個物件。');
+                    return;
+                }
+                const subject = typeof item.s === 'string' ? item.s.trim() : '';
+                const text = typeof item.q === 'string' ? item.q.trim() : '';
+                if (!subject) errors.push(at + '：缺少科目欄位 s。');
+                if (!text) errors.push(at + '：缺少題目欄位 q。');
+                if (!Array.isArray(item.o) || item.o.length < 2) {
+                    errors.push(at + '：選項 o 必須是陣列且至少 2 個。');
+                    return;
+                }
+                const options = item.o.map(o => String(o));
+                if (options.some(o => !o.trim())) errors.push(at + '：有空白選項。');
+                if (!Number.isInteger(item.a) || item.a < 0 || item.a >= options.length) {
+                    errors.push(at + '：正解 a 必須是 0 到 ' + (options.length - 1) + ' 的整數。');
+                    return;
+                }
+                if (!subject || !text) return;
+                bank.push({
+                    s: subject,
+                    // t 可省略：兩個選項視為是非題，其餘視為選擇題
+                    t: (item.t === 'TF' || item.t === 'MCQ') ? item.t : (options.length === 2 ? 'TF' : 'MCQ'),
+                    q: text,
+                    o: options,
+                    a: item.a
+                });
+            });
+            if (errors.length) return { ok: false, errors };
+            return { ok: true, bank };
+        }
+
+        function computeBankStats(bank) {
+            const bySubject = {};
+            bank.forEach(q => { bySubject[q.s] = (bySubject[q.s] || 0) + 1; });
+            const math = bySubject[config.quiz.mathSubject] || 0;
+            return { total: bank.length, bySubject, math, mathShare: bank.length ? math / bank.length : 0 };
+        }
+
+        // 自訂題庫優先，其次內建題庫
+        function loadQuestionBank() {
+            const builtin = (typeof QUESTION_BANK_DATA !== 'undefined' && Array.isArray(QUESTION_BANK_DATA))
+                ? QUESTION_BANK_DATA : [];
+            try {
+                const raw = Store.get('questions');
+                if (raw) {
+                    const result = validateQuestionBank(JSON.parse(raw));
+                    if (result.ok) return { bank: result.bank, source: 'custom' };
+                    console.warn('自訂題庫格式有問題，改用內建題庫：', result.errors[0]);
+                }
+            } catch (e) {
+                console.warn('自訂題庫讀取失敗，改用內建題庫：', e.message);
+            }
+            return { bank: builtin, source: 'builtin' };
+        }
+
+        // 若題庫裡完全沒有數學題，50% 數學規則就不能套用 ——
+        // 否則「缺必做」永遠無法解除（跟先前 30 題死路同一類問題）。
+        function mathRuleApplies() {
+            return questionBankStats.math > 0;
+        }
+
         // 題庫只有 35% 是數學，但規則要求數學佔答對題數的 50%。
         // 若照題庫比例隨機抽題，答滿 8 題只有約 29% 機率過關 —— 靠運氣而非努力。
         // 因此改為：數學不足時大幅偏向出數學題，足夠時再放寬，讓比例自動收斂在 50% 上下。
@@ -840,6 +936,7 @@
 
         // 今日數學佔比是否還沒達標（0 題時視為尚未開始，不算不足）
         function isMathShareShort() {
+            if (!mathRuleApplies()) return false;
             if (quizCorrectCountToday === 0) return false;
             return (quizMathCountToday / quizCorrectCountToday) < QUIZ_MATH_SHARE;
         }
@@ -934,7 +1031,7 @@
             if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
-        const APP_VERSION = '52.1';
+        const APP_VERSION = '53.0';
 
         // 把設定套用到畫面上會出現小孩名字的地方
         function applyConfigToUI() {
@@ -1040,6 +1137,90 @@
                 document.getElementById('setupImportInput').click();
             document.getElementById('setupImportInput').onchange = (ev) =>
                 importConfigFile(ev.target.files[0], err);
+        }
+
+        // ---- 題庫管理 ----
+        function exportQuestionBank() {
+            const blob = new Blob([JSON.stringify(questionBank, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = '題庫_' + questionBank.length + '題.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function importQuestionBank(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                let parsed;
+                try {
+                    parsed = JSON.parse(reader.result);
+                } catch (e) {
+                    myAlert('匯入失敗', '這不是有效的 JSON 檔案：' + e.message, 'error');
+                    return;
+                }
+                const result = validateQuestionBank(parsed);
+                if (!result.ok) {
+                    const shown = result.errors.slice(0, 5).join('\n');
+                    const more = result.errors.length > 5 ? `\n（另有 ${result.errors.length - 5} 個問題未列出）` : '';
+                    myAlert('題庫格式有問題', shown + more, 'error');
+                    return;
+                }
+                const stats = (() => {
+                    const by = {};
+                    result.bank.forEach(q => { by[q.s] = (by[q.s] || 0) + 1; });
+                    return { total: result.bank.length, by, math: by[config.quiz.mathSubject] || 0 };
+                })();
+                const breakdown = Object.entries(stats.by)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([k, v]) => `${k} ${v}`).join('、');
+                // 數學題數會直接影響 50% 數學規則能不能達成，必須講清楚
+                let note = '';
+                if (stats.math === 0) {
+                    note = `\n\n⚠️ 這份題庫沒有「${config.quiz.mathSubject}」科目，` +
+                           `因此「數學佔 50%」的規則會自動停用。`;
+                } else if (stats.math / stats.total < 0.35) {
+                    note = `\n\n💡 數學題只佔 ${Math.round(stats.math / stats.total * 100)}%，` +
+                           `出題會自動偏向數學以達成 50% 規則。`;
+                }
+                myAlertConfirm('確認匯入題庫？',
+                    `共 ${stats.total} 題（${breakdown}）。\n匯入後會取代目前題庫。${note}`,
+                    (ok) => {
+                        if (!ok) return;
+                        Store.set('questions', JSON.stringify(result.bank));
+                        location.reload();
+                    });
+            };
+            reader.onerror = () => myAlert('匯入失敗', '讀取檔案失敗。', 'error');
+            reader.readAsText(file);
+        }
+
+        function resetQuestionBank() {
+            if (questionBankSource !== 'custom') {
+                myAlert('目前就是內建題庫', '沒有自訂題庫需要還原。', 'info');
+                return;
+            }
+            myAlertConfirm('還原成內建題庫？', '自訂題庫會從這台裝置移除。', (ok) => {
+                if (!ok) return;
+                Store.remove('questions');
+                location.reload();
+            });
+        }
+
+        function renderBankInfo() {
+            const el = document.getElementById('bankInfo');
+            if (!el) return;
+            const st = questionBankStats;
+            if (!st.total) { el.innerHTML = '<span style="color:#d32f2f">⚠️ 題庫是空的</span>'; return; }
+            const breakdown = Object.entries(st.bySubject)
+                .sort((a, b) => b[1] - a[1])
+                .map(([k, v]) => `${k} ${v}`).join('、');
+            const src = questionBankSource === 'custom' ? '自訂題庫' : '內建題庫';
+            const mathNote = st.math === 0
+                ? `　<span style="color:#e65100">（無${config.quiz.mathSubject}題，50% 規則已停用）</span>`
+                : `　${config.quiz.mathSubject}佔 ${Math.round(st.mathShare * 100)}%`;
+            el.innerHTML = `目前使用<strong>${src}</strong>：共 ${st.total} 題（${breakdown}）${mathNote}`;
         }
 
         function exportConfigFile() {
@@ -1360,6 +1541,9 @@
 
             const isHardMode = isHardModeActive();
 
+            const ruleMathShare = document.getElementById('ruleMathShare');
+            if (ruleMathShare) ruleMathShare.style.display = mathRuleApplies() ? '' : 'none';
+
             const modeTag = document.getElementById('modeTag');
             if (modeTag) {
                 modeTag.innerText = isHardMode ? '🔥 特訓 30題' : '🌱 一般 8題';
@@ -1393,7 +1577,9 @@
                     let mathPct = quizCorrectCountToday > 0 ? Math.round((quizMathCountToday / quizCorrectCountToday) * 100) : 0;
                     let warning = mathPct < 50 ? "⚠️" : "✅";
                     if (mathSpan) {
-                        mathSpan.innerText = `數學：${quizMathCountToday} (${mathPct}%) ${warning}`;
+                        // 題庫沒有數學題時，這個比例毫無意義，直接不顯示
+                        mathSpan.style.display = mathRuleApplies() ? '' : 'none';
+                        mathSpan.innerText = `${config.quiz.mathSubject}：${quizMathCountToday} (${mathPct}%) ${warning}`;
                         mathSpan.style.color = mathPct < 50 ? '#d32f2f' : '#2e7d32';
                     }
                 } else {
@@ -1452,8 +1638,9 @@
 
         // 依 QUIZ_MATH_BIAS_* 偏向抽出數學題，讓 50% 數學規則實際可達成。
         function pickWeightedQuestion() {
-            const mathPool = questionBank.filter(q => q.s === '數學');
-            const otherPool = questionBank.filter(q => q.s !== '數學');
+            const mathSubject = config.quiz.mathSubject;
+            const mathPool = questionBank.filter(q => q.s === mathSubject);
+            const otherPool = questionBank.filter(q => q.s !== mathSubject);
             const bias = isMathShareShort() ? QUIZ_MATH_BIAS_SHORT : QUIZ_MATH_BIAS_OK;
             let pool = (Math.random() < bias) ? mathPool : otherPool;
             if (pool.length === 0) pool = questionBank;
@@ -1510,7 +1697,7 @@
                 else { SoundEngine.playCheck(); setMascot('🎉'); }
 
 
-                if (currentQuestionSubject === '數學') {
+                if (currentQuestionSubject === config.quiz.mathSubject) {
                     quizMathCountToday++;
                 }
 
@@ -2798,13 +2985,18 @@
                 }
 
                 // CRITICAL: Initialize questionBank first (for quiz functionality)
-                if (typeof QUESTION_BANK_DATA !== 'undefined') {
-                    questionBank = QUESTION_BANK_DATA;
-                    console.log('✅ Question bank loaded:', questionBank.length, 'questions');
+                const loaded = loadQuestionBank();
+                questionBank = loaded.bank;
+                questionBankSource = loaded.source;
+                questionBankStats = computeBankStats(questionBank);
+                if (questionBank.length) {
+                    console.log('✅ Question bank loaded:', questionBank.length, 'questions',
+                        '(' + (questionBankSource === 'custom' ? '自訂題庫' : '內建題庫') + ')',
+                        '數學', questionBankStats.math, '題');
                 } else {
-                    console.error('❌ Failed to load questions.js - QUESTION_BANK_DATA is undefined');
+                    console.error('❌ 題庫是空的：questions.js 未載入且沒有自訂題庫');
                     const quizArea = document.getElementById('quizStartArea');
-                    if (quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗</p>';
+                    if (quizArea) quizArea.innerHTML = '<p style="color:red">⚠️ 題庫載入失敗，請匯入自訂題庫</p>';
                 }
 
                 // CRITICAL: Initialize clock immediately (for time display)
@@ -2830,6 +3022,7 @@
                 // Initialize UI components
                 console.log('🎨 Initializing UI...');
                 applyConfigToUI();
+                renderBankInfo();
                 renderHistory();
                 updateLevelUI();
                 checkDeadline();

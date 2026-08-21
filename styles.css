@@ -1739,10 +1739,16 @@
         font-size: 0.85rem;
     }
 
-    /* Version + mode + clock: break between items rather than mid-label. */
+    /* Version + mode + clock + sound: break between items rather than mid-label.
+       "(Stable)" is dropped so all four fit on one line at 375px instead of
+       orphaning the sound toggle onto a second row. */
     .header-info {
         flex-wrap: wrap;
         gap: 8px;
+    }
+
+    .version-extra {
+        display: none;
     }
 
     .header-info > * {
@@ -1815,4 +1821,18 @@
     font-family: inherit;
     cursor: pointer;
     max-width: 100%;
+}
+
+/* Sound on/off toggle in the header chrome.
+   Tucked against the clock rather than sitting as its own separated item,
+   which keeps the pill at two rows on a 375px phone instead of three. */
+.sound-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-left: -6px;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    font-family: inherit;
 }

@@ -52,11 +52,12 @@
         <div class="header">
             <h1>🦊 <span class="child-name"></span>手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag" id="versionTag">ver 53.1 (Stable)</span>
+                <span class="version-tag" id="versionTag">ver 53.2<span class="version-extra"> (Stable)</span></span>
                 <span>|</span>
                 <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
                 <span id="liveClock" class="time-tag">載入中...</span>
+                <button id="soundToggle" class="sound-toggle" type="button" onclick="toggleSound()">🔊</button>
             </div>
         </div>
 
@@ -658,6 +659,28 @@
             remove: (name) => localStorage.removeItem(STORE_PREFIX + name)
         };
 
+        // 音效開關：屬於「這台裝置」的偏好（爸爸手機想靜音、小孩平板不用），
+        // 所以不放進會跨裝置匯出的 config，而是獨立的儲存鍵。
+        let soundEnabled = true;
+
+        function applySoundSetting() {
+            SoundEngine.setMute(!soundEnabled);
+            const btn = document.getElementById('soundToggle');
+            if (!btn) return;
+            btn.innerText = soundEnabled ? '🔊' : '🔇';
+            const label = soundEnabled ? '音效開啟中（點一下關閉）' : '音效已關閉（點一下開啟）';
+            btn.title = label;
+            btn.setAttribute('aria-label', label);
+            btn.setAttribute('aria-pressed', String(!soundEnabled));
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            Store.set('sound', soundEnabled ? 'on' : 'off');
+            applySoundSetting();
+            if (soundEnabled) SoundEngine.playPop();   // 開啟時回饋一聲
+        }
+
         // 舊鍵名 -> 新名稱。搬移時只「複製」，永不刪除舊鍵，
         // 萬一新版有問題，原始紀錄仍完好留在舊鍵底下。
         const LEGACY_KEYS = {
@@ -1054,7 +1077,7 @@
             if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
-        const APP_VERSION = '53.1';
+        const APP_VERSION = '53.2';
 
         // 頁尾：免費說明 + 自願贊助 + 分享連結。沒設定贊助就不顯示。
         function renderFooter() {
@@ -1122,7 +1145,7 @@
             const mascot = document.getElementById('mascotDiv');
             if (mascot) mascot.title = name + '小助手';
             const vt = document.getElementById('versionTag');
-            if (vt) vt.innerText = 'ver ' + APP_VERSION + ' (Stable)';
+            if (vt) vt.innerHTML = 'ver ' + APP_VERSION + '<span class="version-extra"> (Stable)</span>';
         }
 
         // =====================================================================
@@ -3086,6 +3109,10 @@
 
                 // 先把舊鍵名的資料複製到新鍵名（只複製、不刪除），再讀取
                 migrateLegacyStorage();
+
+                // 音效偏好要在任何音效有機會播放之前套用
+                soundEnabled = Store.get('sound') !== 'off';
+                applySoundSetting();
 
                 // Load saved data
                 console.log('💾 Loading saved data...');

@@ -52,7 +52,7 @@
         <div class="header">
             <h1>🦊 <span class="child-name"></span>手機，平板，電視，電腦使用規範 🎮</h1>
             <div class="header-info">
-                <span class="version-tag" id="versionTag">ver 53.0 (Stable)</span>
+                <span class="version-tag" id="versionTag">ver 53.1 (Stable)</span>
                 <span>|</span>
                 <span id="modeTag" class="time-tag"></span>
                 <span>|</span>
@@ -571,6 +571,8 @@
                 style="width:100%; margin-top:10px; padding:8px; background:#fff; border:1px solid #ddd; color:#d32f2f; cursor:pointer;">🗑️
                 清除所有紀錄</button>
         </div>
+
+        <footer id="siteFooter" class="site-footer" style="display:none;"></footer>
     </div>
 
     <script>
@@ -621,6 +623,27 @@
                 setMute: (m) => enabled = !m
             };
         })();
+
+        // =====================================================================
+        //  站台層級設定（不是家庭設定）：贊助連結對所有訪客都一樣，
+        //  所以寫在原始碼裡，而不是各家庭的 localStorage。
+        //
+        //  原則：工具完全免費、不設門檻。贊助純屬自願，不解鎖任何功能。
+        //  刻意只用「連結」而不是嵌入式贊助小工具 —— 嵌入會載入第三方
+        //  JavaScript，違背本頁「資料不會上傳到任何伺服器」的承諾。
+        //
+        //  留空的項目不顯示；全部留空時整個頁尾不會出現。
+        // =====================================================================
+        const SITE = {
+            donateUrl: '',        // 例：'https://ko-fi.com/你的帳號'
+            donateLabel: '',      // 按鈕文字，留空用預設
+            donateQrImage: '',    // 例：'donate-qr.png'（LINE Pay / 街口收款碼）
+            donateQrCaption: ''   // QR 下方說明，例：'LINE Pay / 街口'
+        };
+
+        function siteHasDonation() {
+            return !!(SITE.donateUrl || SITE.donateQrImage);
+        }
 
         // =====================================================================
         //  儲存層：所有資料都放在使用者自己的瀏覽器，沒有任何伺服器。
@@ -1031,7 +1054,63 @@
             if (window.Swal) Swal.fire({ position: 'top-end', icon, title, showConfirmButton: false, timer: 2500, toast: true, background: 'rgba(255, 255, 255, 0.95)' });
         }
 
-        const APP_VERSION = '53.0';
+        const APP_VERSION = '53.1';
+
+        // 頁尾：免費說明 + 自願贊助 + 分享連結。沒設定贊助就不顯示。
+        function renderFooter() {
+            const el = document.getElementById('siteFooter');
+            if (!el) return;
+            if (!siteHasDonation()) { el.style.display = 'none'; return; }
+
+            const parts = [];
+            parts.push(`<p class="footer-note">
+                這個工具完全免費，資料只存在你自己的裝置上。<br>
+                如果它對你家有幫助，歡迎小額贊助支持維護 —— <strong>贊助不會解鎖任何功能</strong>。
+            </p>`);
+
+            if (SITE.donateUrl) {
+                const label = SITE.donateLabel || '☕ 請我喝杯咖啡';
+                parts.push(`<a class="footer-donate" href="${SITE.donateUrl}"
+                    target="_blank" rel="noopener noreferrer">${label}</a>`);
+            }
+            if (SITE.donateQrImage) {
+                parts.push(`<div class="footer-qr">
+                    <img src="${SITE.donateQrImage}" alt="贊助收款碼" loading="lazy">
+                    ${SITE.donateQrCaption ? `<span>${SITE.donateQrCaption}</span>` : ''}
+                </div>`);
+            }
+            parts.push(`<button class="footer-share" onclick="copySiteLink(this)">🔗 複製本站連結分享給其他家長</button>`);
+
+            el.innerHTML = parts.join('');
+            el.style.display = '';
+        }
+
+        function copySiteLink(btn) {
+            const url = location.origin + location.pathname;
+            const done = () => {
+                const original = btn.innerText;
+                btn.innerText = '✅ 已複製連結';
+                setTimeout(() => { btn.innerText = original; }, 2000);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(done).catch(() => fallbackCopy(url, done));
+            } else {
+                fallbackCopy(url, done);
+            }
+        }
+
+        function fallbackCopy(text, done) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:absolute; left:-9999px;';
+            document.body.appendChild(ta);
+            ta.select();
+            let ok = false;
+            try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+            ta.remove();
+            if (ok) { done(); } else { myAlert('無法自動複製', text, 'info'); }
+        }
 
         // 把設定套用到畫面上會出現小孩名字的地方
         function applyConfigToUI() {
@@ -3022,6 +3101,7 @@
                 // Initialize UI components
                 console.log('🎨 Initializing UI...');
                 applyConfigToUI();
+                renderFooter();
                 renderBankInfo();
                 renderHistory();
                 updateLevelUI();

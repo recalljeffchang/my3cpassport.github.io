@@ -1749,3 +1749,70 @@
         white-space: nowrap;
     }
 }
+
+/* ---------------------------------------------------------------
+   Site footer: free-tool note + voluntary donation + share link.
+   Hidden by JS when no donation channel is configured.
+   --------------------------------------------------------------- */
+.site-footer {
+    margin: 26px 0 40px;
+    padding: 22px 18px;
+    background: var(--card-bg, #fff);
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.footer-note {
+    margin: 0 0 16px;
+    font-size: 0.85rem;
+    line-height: 1.75;
+    color: #555;
+}
+
+.footer-donate {
+    display: inline-block;
+    padding: 11px 22px;
+    border-radius: 999px;
+    background: #ff5f5f;
+    color: #fff;
+    font-weight: bold;
+    font-size: 0.95rem;
+    text-decoration: none;
+    box-shadow: 0 3px 10px rgba(255, 95, 95, 0.35);
+}
+
+.footer-qr {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.footer-qr img {
+    width: 148px;
+    max-width: 60%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.footer-qr span {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.footer-share {
+    display: block;
+    margin: 18px auto 0;
+    padding: 9px 16px;
+    border: 1px solid #ddd;
+    border-radius: 999px;
+    background: #fafafa;
+    color: #555;
+    font-size: 0.83rem;
+    font-family: inherit;
+    cursor: pointer;
+    max-width: 100%;
+}
